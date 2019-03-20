@@ -1,6 +1,12 @@
-export SLACK_BOT_TOKEN="xoxb-175230034435-584636481942-VvmeNSsBMlqUDtQ3HDnFXmol"
+import configparser
+from slackclient import SlackClient
 
-self.slackbot = SlackClient(str(self.config.get('slackbot', 'api_key')))
+config = configparser.ConfigParser()
+config.read('init.ini')
 
-self.slackbot.send_message(self.slack_channel, message)
+SLACK_BOT_TOKEN=config.get('SLACK_BOT_TOKEN')
+
+slackbot = SlackClient(str(SLACK_BOT_TOKEN))
+
+slackbot.send_message(slack_channel, message)
 
