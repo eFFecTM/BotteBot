@@ -45,17 +45,6 @@ slackbot.rtm_connect(with_team_state=False)
 bot_id = slackbot.api_call("auth.test")["user_id"]
 public_channel_ids = [element["id"] for element in slackbot.api_call("channels.list")["channels"]]
 
-while(True):
+while True:
     parse(slackbot.rtm_read())
     time.sleep(1)
-
-
-
-# print(events)
-
-# print(slackbot.api_call("chat.postMessage", as_user="true", channel=channel, text=message))
-
-# slackbot.rtm_send_message('random', 'am testing')
-
-# slackbot.send_message(slack_channel, message)
-

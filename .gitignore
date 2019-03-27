@@ -106,3 +106,6 @@ venv.bak/
 .ini
 
 .idea
+
+# Confidential data
+init.ini
