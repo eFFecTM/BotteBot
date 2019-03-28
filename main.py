@@ -1,12 +1,29 @@
 import configparser
 import time
+import requests
 
 from slackclient import SlackClient
+
+insult_triggers = ["insult", "got em"]
+
+
+def send_message(text_to_send, channel):
+    slackbot.api_call("chat.postMessage", as_user="true", channel=channel, text=text_to_send)
 
 
 def check_random_keywords(user_name, text_received, channel):
     """To check for words used in normal conversation, adding instults and gifs/images"""
-    pass
+    if any(word in text_received for word in insult_triggers):
+        found = False
+        for user_id_mention in user_ids:
+            if '@{}'.format(user_id_mention) in text_received:
+                found = True
+                url = "https://insult.mattbas.org/api/insult?who=" \
+                      + slackbot.api_call("users.info", user=user_id_mention)["user"]["profile"]["first_name"]
+                r = requests.get(url)
+        if not found:
+            r = requests.get("https://insult.mattbas.org/api/insult")
+        send_message(r.content, channel)
 
 
 def check_general_keywords(user_name, text_received, channel):
@@ -43,6 +60,7 @@ slackbot = SlackClient(SLACK_BOT_TOKEN)
 slackbot.rtm_connect(with_team_state=False)
 
 bot_id = slackbot.api_call("auth.test")["user_id"]
+user_ids = [element["id"] for element in slackbot.api_call("users.list")["members"]]
 public_channel_ids = [element["id"] for element in slackbot.api_call("channels.list")["channels"]]
 
 while(True):
