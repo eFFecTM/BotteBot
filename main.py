@@ -1,6 +1,7 @@
 import configparser
 import time
 import requests
+from weather import Weather, Unit
 
 from slackclient import SlackClient
 
@@ -34,8 +35,18 @@ def check_general_keywords(user_name, text_received, channel):
 def mention_question(user_name, text_received, channel):
     """bot got mentioned or pm'd, answer the question"""
     check_general_keywords(user_name, text_received, channel)
-    message = "hello " + user_name + ", you rule"
+    message = "Hello " + user_name + ", you mentioned me!"
     slackbot.api_call("chat.postMessage", as_user="true", channel=channel, text=message)
+
+    if 'weather' in text_received or 'forecast' in text_received:
+        # weather = Weather(unit=Unit.CELSIUS)
+        # location = weather.lookup_by_location('antwerp')
+        # condition = location.condition
+        # print(condition.text)
+        # message = 'Currently: ' + condition.text
+        message = "There will be rainbows tomorrow!"
+        # TODO Use https://bigl.es/using-python-to-get-weather-data/
+        slackbot.api_call("chat.postMessage", as_user="true", channel=channel, text=message)
 
 
 def parse(events):
