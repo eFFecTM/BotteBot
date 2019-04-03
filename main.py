@@ -101,9 +101,6 @@ def get_weather_message(text_received):
 def mention_question(user_name, text_received, channel):
     """bot got mentioned or pm'd, answer the question"""
     check_general_keywords(user_name, text_received, channel)
-    message = "Hello " + user_name + ", you mentioned me!"
-    slackbot.api_call("chat.postMessage", as_user="true", channel=channel, text=message)
-
     if any(word in text_received for word in weather_triggers):
         message = get_weather_message(text_received)
         send_message(message, channel)
