@@ -2,12 +2,15 @@ import configparser
 import time
 import requests
 import pyowm
+import json
+from googletrans import Translator
 from slackclient import SlackClient
 from nltk import word_tokenize, pos_tag, ne_chunk, Tree
+from oxforddictionaries.words import OxfordDictionaries
 
-insult_triggers = ["insult", "got em"]
 weather_triggers = ['forecast', 'weather', 'weer', 'voorspelling']
-
+insult_triggers = ["insult", "got em", "scheld", "jan", "bot", "botte"]
+def_triggers = ["thefuck", "def", "definitie"]
 
 def send_message(text_to_send, channel):
     slackbot.api_call("chat.postMessage", as_user="true", channel=channel, text=text_to_send)
@@ -25,7 +28,26 @@ def check_random_keywords(user_name, text_received, channel):
                 r = requests.get(url)
         if not found:
             r = requests.get("https://insult.mattbas.org/api/insult")
-        send_message(r.content, channel)
+        translated = trans.translate(r.text, dest='nl', src='en')
+        send_message(translated.text, channel)
+    found = False
+    for word in def_triggers:
+        if word in text_received:
+            triggered_word = word
+            found = True
+    if found:
+        list_of_words = text_received.split()
+        next_word = list_of_words[list_of_words.index(triggered_word) + 1]
+        translated = trans.translate(next_word, dest='en')
+        info = oxford.get_info_about_word(translated.text)
+        try:
+            json_info = json.loads(info.text)
+            answer = str(json_info['results'][0]['lexicalEntries'][0]['entries'][0]['senses'][0]['definitions'][0])
+            translated = trans.translate(answer, src='en', dest='nl')
+            send_message(translated.text, channel)
+        except ValueError as e:
+            r = requests.get("https://insult.mattbas.org/api/adjective")
+            send_message("You " + r.text + " person, that's no word!", channel)
 
 
 def check_general_keywords(user_name, text_received, channel):
@@ -105,6 +127,10 @@ config.read('init.ini')
 SLACK_BOT_TOKEN = str(config.get('slackbot', 'SLACK_BOT_TOKEN'))
 API_KEY = str(config.get('open_weather_map', 'API_KEY'))
 
+OXFORD_ID = str(config.get('oxford', 'ID'))
+OXFORD_KEY = str(config.get('oxford', 'KEY'))
+oxford = OxfordDictionaries(app_id=OXFORD_ID, app_key=OXFORD_KEY)
+
 # Connect to Slack
 slackbot = SlackClient(SLACK_BOT_TOKEN)
 slackbot.rtm_connect(with_team_state=False)
@@ -114,6 +140,8 @@ print("Started Slackbot")
 bot_id = slackbot.api_call("auth.test")["user_id"]
 user_ids = [element["id"] for element in slackbot.api_call("users.list")["members"]]
 public_channel_ids = [element["id"] for element in slackbot.api_call("channels.list")["channels"]]
+
+trans = Translator()
 
 # Keep checking for incoming mentions or keywords
 while True:
