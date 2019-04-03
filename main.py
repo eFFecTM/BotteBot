@@ -3,6 +3,7 @@ import time
 import requests
 import pyowm
 from slackclient import SlackClient
+from nltk import word_tokenize, pos_tag, ne_chunk, Tree
 
 insult_triggers = ["insult", "got em"]
 
@@ -31,9 +32,28 @@ def check_general_keywords(user_name, text_received, channel):
     pass
 
 
-def get_weather_message():
+def get_location(text):
+    chunked = ne_chunk(pos_tag(word_tokenize(text)))
+    continuous_chunk = []
+    current_chunk = []
+
+    for subtree in chunked:
+        if type(subtree) == Tree and subtree.label() == 'GPE':
+            current_chunk.append(" ".join([token for token, pos in subtree.leaves()]))
+        elif current_chunk:
+            named_entity = " ".join(current_chunk)
+            if named_entity not in continuous_chunk:
+                continuous_chunk.append(named_entity)
+                current_chunk = []
+        else:
+            continue
+
+    return continuous_chunk[0]
+
+
+def get_weather_message(text_received):
     owm = pyowm.OWM(API_KEY)
-    location = 'Antwerp'
+    location = get_location(text_received)
     observation = owm.weather_at_place(location)
     w = observation.get_weather()
     status = w.get_detailed_status()
@@ -43,9 +63,9 @@ def get_weather_message():
     sunrise = w.get_sunrise_time('iso')
     sunset = w.get_sunset_time('iso')
 
-    msg = "In {}, it is currently {}°C (min = {}°C, max = {}°C)\nStatus: {}\nWind: {} km/h\nSunrise is at {}, " \
-          "sunset is at {}. ".format(location, temperature['temp'], temperature['temp_min'], temperature['temp_max'],
-                                      status, wind['speed'], sunrise, sunset)
+    msg = "Current status in {}: {} :thermometer: {}°C (min = {}°C, max = {}°C) :tornado_cloud: {} km/h\n" \
+          "Sunrise :sunrise: is at {}, sunset :city_sunset: is at {}. ".format(location, status, temperature['temp'],
+            temperature['temp_min'], temperature['temp_max'], wind['speed'], sunrise, sunset)
     return msg
 
 
@@ -55,8 +75,8 @@ def mention_question(user_name, text_received, channel):
     message = "Hello " + user_name + ", you mentioned me!"
     slackbot.api_call("chat.postMessage", as_user="true", channel=channel, text=message)
 
-    if 'weather' in text_received or 'forecast' in text_received:
-        message = get_weather_message()
+    if 'weather' in text_received or 'forecast' in text_received or 'weer' in text_received:
+        message = get_weather_message(text_received)
         send_message(message, channel)
 
 
@@ -81,6 +101,7 @@ API_KEY = str(config.get('open_weather_map', 'API_KEY'))
 # Connect to Slack
 slackbot = SlackClient(SLACK_BOT_TOKEN)
 slackbot.rtm_connect(with_team_state=False)
+print("Started Slackbot")
 
 # Get all user IDs and channel IDs
 bot_id = slackbot.api_call("auth.test")["user_id"]
