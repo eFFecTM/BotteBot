@@ -104,8 +104,17 @@ venv.bak/
 .mypy_cache/
 
 .ini
+# ---------------------------------------------
 
-.idea/
+# Stupid .idea files
+*/.idea/
+.idea/BotteBot.iml
+.idea/misc.xml
+.idea/modules.xml
+.idea/vcs.xml
+.idea/workspace.xml
+.idea/inspectionProfiles/Project_Default.xml
+**/.idea/workspace.xml
 
 # Confidential data
 init.ini
