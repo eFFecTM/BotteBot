@@ -6,6 +6,7 @@ from slackclient import SlackClient
 from nltk import word_tokenize, pos_tag, ne_chunk, Tree
 
 insult_triggers = ["insult", "got em"]
+weather_triggers = ['forecast', 'weather', 'weer', 'voorspelling']
 
 
 def send_message(text_to_send, channel):
@@ -33,6 +34,7 @@ def check_general_keywords(user_name, text_received, channel):
 
 
 def get_location(text):
+    """Get location in a sentence or question from the user"""
     chunked = ne_chunk(pos_tag(word_tokenize(text)))
     continuous_chunk = []
     current_chunk = []
@@ -48,18 +50,23 @@ def get_location(text):
         else:
             continue
 
-    return continuous_chunk[0]
+    if current_chunk:
+        return continuous_chunk[0]
+    else:
+        return None
 
 
 def get_weather_message(text_received):
+    """Get the current weather at a given location. Default location is Antwerp."""
     owm = pyowm.OWM(API_KEY)
     location = get_location(text_received)
+    if location is None:
+        location = 'Antwerp'  # Default location
     observation = owm.weather_at_place(location)
     w = observation.get_weather()
     status = w.get_detailed_status()
     temperature = w.get_temperature('celsius')
     wind = w.get_wind()
-    rain = w.get_rain()
     sunrise = w.get_sunrise_time('iso')
     sunset = w.get_sunset_time('iso')
 
@@ -75,7 +82,7 @@ def mention_question(user_name, text_received, channel):
     message = "Hello " + user_name + ", you mentioned me!"
     slackbot.api_call("chat.postMessage", as_user="true", channel=channel, text=message)
 
-    if 'weather' in text_received or 'forecast' in text_received or 'weer' in text_received:
+    if any(word in text_received for word in weather_triggers):
         message = get_weather_message(text_received)
         send_message(message, channel)
 
