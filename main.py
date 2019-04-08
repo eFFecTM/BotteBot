@@ -8,9 +8,12 @@ from slackclient import SlackClient
 from nltk import word_tokenize, pos_tag, ne_chunk, Tree
 from oxforddictionaries.words import OxfordDictionaries
 
+from FoodBot import process_call
+
 weather_triggers = ['forecast', 'weather', 'weer', 'voorspelling']
 insult_triggers = ["insult", "got em", "scheld", "jan", "bot", "botte"]
 def_triggers = ["thefuck", "def", "definitie"]
+
 
 def send_message(text_to_send, channel):
     slackbot.api_call("chat.postMessage", as_user="true", channel=channel, text=text_to_send)
@@ -52,7 +55,8 @@ def check_random_keywords(user_name, text_received, channel):
 
 def check_general_keywords(user_name, text_received, channel):
     """Check for serious shit. Predefined commands etc."""
-    pass
+    if text_received.startswith("food"):
+        send_message(process_call(user_name, text_received, channel), channel)
 
 
 def get_location(text):
