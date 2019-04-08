@@ -4,3 +4,4 @@ pyowm
 googletrans
 oxforddictionaries
 nltk
+numpy
