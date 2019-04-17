@@ -21,6 +21,14 @@ def send_message(text_to_send, channel):
     slackbot.api_call("chat.postMessage", as_user="true", channel=channel, text=text_to_send)
 
 
+def check_channel(text_received, channel):
+    for channel_id in public_channel_ids:
+        if '#{}'.format(channel_id) in text_received:
+            channel = channel_id
+            break
+    return channel
+
+
 def check_random_keywords(user_name, text_received, channel):
     """To check for words used in normal conversation, adding instults and gifs/images"""
     global used_sentence
@@ -36,10 +44,8 @@ def check_random_keywords(user_name, text_received, channel):
                 break
         if not found:
             r = requests.get("https://insult.mattbas.org/api/insult")
-        for channel_id in public_channel_ids:
-            if '#{}'.format(channel_id) in text_received:
-                channel = channel_id
         translated = trans.translate(r.text, dest='nl', src='en')
+        channel = check_channel(text_received, channel)
         send_message(translated.text, channel)
     if not used_sentence:
         found = False
@@ -58,9 +64,11 @@ def check_random_keywords(user_name, text_received, channel):
                 json_info = json.loads(info.text)
                 answer = str(json_info['results'][0]['lexicalEntries'][0]['entries'][0]['senses'][0]['definitions'][0])
                 translated = trans.translate(answer, src='en', dest='nl')
+                channel = check_channel(text_received, channel)
                 send_message(translated.text, channel)
             except ValueError as e:
                 r = requests.get("https://insult.mattbas.org/api/adjective")
+                channel = check_channel(text_received, channel)
                 send_message("You " + r.text + " person, that's no word!", channel)
 
 
@@ -68,6 +76,7 @@ def check_general_keywords(user_name, text_received, channel):
     """Check for serious shit. Predefined commands etc."""
     global used_sentence
     if text_received.startswith("food"):
+        channel = check_channel(text_received, channel)
         send_message(process_call(user_name, text_received, channel), channel)
         used_sentence = True
 
@@ -123,6 +132,7 @@ def mention_question(user_name, text_received, channel):
     if not used_sentence:
         if any(word in text_received for word in weather_triggers):
             message = get_weather_message(text_received)
+            channel = check_channel(text_received, channel)
             send_message(message, channel)
             used_sentence = True
     if not used_sentence:
