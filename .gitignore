@@ -118,3 +118,4 @@ venv.bak/
 
 # Confidential data
 init.ini
+/data/

@@ -1,5 +1,4 @@
 import configparser
-import time
 import requests
 import pyowm
 import json
@@ -7,12 +6,15 @@ from googletrans import Translator
 from slackclient import SlackClient
 from nltk import word_tokenize, pos_tag, ne_chunk, Tree
 from oxforddictionaries.words import OxfordDictionaries
+from timeloop import Timeloop
+from datetime import timedelta
 
-from FoodBot import process_call
+from FoodBot import process_call, save_data
 
 weather_triggers = ['forecast', 'weather', 'weer', 'voorspelling']
 insult_triggers = ["insult", "got em", "scheld", "jan", "bot", "botte"]
 def_triggers = ["thefuck", "def", "definitie"]
+food_triggers = ["food"]
 
 used_sentence = False
 
@@ -75,7 +77,7 @@ def check_random_keywords(user_name, text_received, channel):
 def check_general_keywords(user_name, text_received, channel):
     """Check for serious shit. Predefined commands etc."""
     global used_sentence
-    if text_received.startswith("food"):
+    if any(word in text_received.lower() for word in food_triggers):
         channel = check_channel(text_received, channel)
         send_message(process_call(user_name, text_received, channel), channel)
         used_sentence = True
@@ -176,6 +178,15 @@ public_channel_ids = [element["id"] for element in slackbot.api_call("channels.l
 trans = Translator()
 
 # Keep checking for incoming mentions or keywords
-while True:
+t = Timeloop()
+
+
+@t.job(interval=timedelta(seconds=1))
+def main_loop_job():
     parse(slackbot.rtm_read())
-    time.sleep(1)
+
+
+t.start(block=True)
+
+save_data()
+# Code when the application is shutting down and you for example need to save data to files or whatever
