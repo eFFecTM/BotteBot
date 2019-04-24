@@ -12,6 +12,7 @@ import FoodBot
 weather_triggers = ['forecast', 'weather', 'weer', 'voorspelling']
 insult_triggers = ["insult", "got em", "scheld", "jan", "bot", "botte"]
 def_triggers = ["thefuck", "def", "definitie"]
+lmgtfy_triggers = ["lmgtfy", "opzoeken"]
 food_triggers = ["food"]
 
 used_sentence = False
@@ -22,11 +23,37 @@ def send_message(text_to_send, channel):
 
 
 def check_channel(text_received, channel):
+    """Check whether a channel got mentioned"""
     for channel_id in public_channel_ids:
         if '#{}'.format(channel_id) in text_received:
             channel = channel_id
             break
     return channel
+
+
+def lmgtfy(user_name, text_received, channel):
+    """let me google that for you with link shortener"""
+    global used_sentence
+    found = False
+    if not used_sentence:
+        for word in lmgtfy_triggers:
+            if word.lower() in text_received:
+                found = True
+                triggered_word = word
+                break
+        if found:
+            used_sentence = True
+            list_of_words = text_received.split()
+            for word in list_of_words:
+                if word.startswith("<"):  # people and channels
+                    list_of_words.remove(word)
+            next_words = list_of_words[list_of_words.index(triggered_word) + 1:]
+            url = "+"
+            url = url.join(next_words)
+            url = "http://lmgtfy.com/?q=" + url
+            channel = check_channel(text_received, channel)
+            send_message(url, channel)
+            print("found lmgtfy trigger, given url is: " + url)
 
 
 def check_random_keywords(user_name, text_received, channel):
@@ -80,6 +107,7 @@ def check_general_keywords(user_name, text_received, channel):
         foodbot_output = FoodBot.process_call(user_name, text_received, channel)
         send_message(foodbot_output, channel)
         used_sentence = True
+    lmgtfy(user_name, text_received, channel)
 
 
 def get_location(text):
@@ -135,8 +163,6 @@ def mention_question(user_name, text_received, channel):
             channel = check_channel(text_received, channel)
             send_message(message, channel)
             used_sentence = True
-    if not used_sentence:
-        check_random_keywords(user_name, text_received, channel)
 
 
 def parse(events):
@@ -149,7 +175,7 @@ def parse(events):
                 user_name = slackbot.api_call("users.info", user=user_id)["user"]["name"]
                 if ('@{}'.format(bot_id) in text_received) or (channel not in public_channel_ids):
                     mention_question(user_name, text_received, channel)
-                else:
+                if not used_sentence:
                     check_random_keywords(user_name, text_received, channel)
 
 
@@ -175,11 +201,16 @@ public_channel_ids = [element["id"] for element in slackbot.api_call("channels.l
 
 trans = Translator()
 
-while True:
+running = True
+
+while running:
     try:
         parse(slackbot.rtm_read())
         FoodBot.save_data()
+        time.sleep(1)
+    except KeyboardInterrupt as e:
+        print("stopped by keyboard interrupt")
+        running = False
     except Exception as e:
         print(e)
-    time.sleep(1)
 
