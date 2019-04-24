@@ -1,19 +1,18 @@
 import configparser
 import requests
-import pyowm
 import json
 from googletrans import Translator
 from slackclient import SlackClient
-from nltk import word_tokenize, pos_tag, ne_chunk, Tree
 from oxforddictionaries.words import OxfordDictionaries
 import time
 import FoodBot
+import WeatherBot
 
 weather_triggers = ['forecast', 'weather', 'weer', 'voorspelling']
 insult_triggers = ["insult", "got em", "scheld", "jan", "bot", "botte"]
-def_triggers = ["thefuck", "def", "definitie"]
 lmgtfy_triggers = ["lmgtfy", "opzoeken"]
-food_triggers = ["food"]
+def_triggers = ["thefuck", "def", "definitie", "verklaar", "define"]
+food_triggers = ["food", "eten"]
 
 used_sentence = False
 
@@ -110,56 +109,13 @@ def check_general_keywords(user_name, text_received, channel):
     lmgtfy(user_name, text_received, channel)
 
 
-def get_location(text):
-    """Get location in a sentence or question from the user"""
-    chunked = ne_chunk(pos_tag(word_tokenize(text)))
-    continuous_chunk = []
-    current_chunk = []
-
-    for subtree in chunked:
-        if type(subtree) == Tree and subtree.label() == 'GPE':
-            current_chunk.append(" ".join([token for token, pos in subtree.leaves()]))
-        elif current_chunk:
-            named_entity = " ".join(current_chunk)
-            if named_entity not in continuous_chunk:
-                continuous_chunk.append(named_entity)
-                current_chunk = []
-        else:
-            continue
-
-    if current_chunk:
-        return continuous_chunk[0]
-    else:
-        return None
-
-
-def get_weather_message(text_received):
-    """Get the current weather at a given location. Default location is Antwerp."""
-    owm = pyowm.OWM(API_KEY)
-    location = get_location(text_received)
-    if location is None:
-        location = 'Antwerp'  # Default location
-    observation = owm.weather_at_place(location)
-    w = observation.get_weather()
-    status = w.get_detailed_status()
-    temperature = w.get_temperature('celsius')
-    wind = w.get_wind()
-    sunrise = w.get_sunrise_time('iso')
-    sunset = w.get_sunset_time('iso')
-
-    msg = "Current status in {}: {} :thermometer: {}°C (min = {}°C, max = {}°C) :tornado_cloud: {} km/h\n" \
-          "Sunrise :sunrise: is at {}, sunset :city_sunset: is at {}. ".format(location, status, temperature['temp'],
-            temperature['temp_min'], temperature['temp_max'], wind['speed'], sunrise, sunset)
-    return msg
-
-
 def mention_question(user_name, text_received, channel):
     """bot got mentioned or pm'd, answer the question"""
     global used_sentence
     check_general_keywords(user_name, text_received, channel)
     if not used_sentence:
         if any(word in text_received for word in weather_triggers):
-            message = get_weather_message(text_received)
+            message = WeatherBot.get_weather_message(text_received, API_KEY)
             channel = check_channel(text_received, channel)
             send_message(message, channel)
             used_sentence = True
