@@ -1,12 +1,11 @@
 import configparser
-import requests
-import json
 from googletrans import Translator
 from slackclient import SlackClient
 from oxforddictionaries.words import OxfordDictionaries
 import time
 import FoodBot
 import WeatherBot
+import RandomBot
 
 weather_triggers = ['forecast', 'weather', 'weer', 'voorspelling']
 insult_triggers = ["insult", "got em", "scheld", "jan", "bot", "botte"]
@@ -14,7 +13,7 @@ lmgtfy_triggers = ["lmgtfy", "opzoeken"]
 def_triggers = ["thefuck", "def", "definitie", "verklaar", "define"]
 food_triggers = ["food", "eten"]
 
-used_sentence = False
+message = None
 
 
 def send_message(text_to_send, channel):
@@ -30,109 +29,48 @@ def check_channel(text_received, channel):
     return channel
 
 
-def lmgtfy(user_name, text_received, channel):
-    """let me google that for you with link shortener"""
-    global used_sentence
-    found = False
-    if not used_sentence:
-        for word in lmgtfy_triggers:
-            if word.lower() in text_received:
-                found = True
-                triggered_word = word
-                break
-        if found:
-            used_sentence = True
-            list_of_words = text_received.split()
-            for word in list_of_words:
-                if word.startswith("<"):  # people and channels
-                    list_of_words.remove(word)
-            next_words = list_of_words[list_of_words.index(triggered_word) + 1:]
-            url = "+"
-            url = url.join(next_words)
-            url = "http://lmgtfy.com/?q=" + url
-            channel = check_channel(text_received, channel)
-            send_message(url, channel)
-            print("found lmgtfy trigger, given url is: " + url)
-
-
 def check_random_keywords(user_name, text_received, channel):
     """To check for words used in normal conversation, adding instults and gifs/images"""
-    global used_sentence
-    if any(word in text_received for word in insult_triggers) and not used_sentence:
-        used_sentence = True
-        found = False
-        for user_id_mention in user_ids:
-            if '@{}'.format(user_id_mention) in text_received:
-                found = True
-                url = "https://insult.mattbas.org/api/insult?who=" \
-                      + slackbot.api_call("users.info", user=user_id_mention)["user"]["profile"]["first_name"]
-                r = requests.get(url)
-                break
-        if not found:
-            r = requests.get("https://insult.mattbas.org/api/insult")
-        translated = trans.translate(r.text, dest='nl', src='en')
-        channel = check_channel(text_received, channel)
-        send_message(translated.text, channel)
-    if not used_sentence:
-        found = False
-        for word in def_triggers:
-            if word in text_received:
-                triggered_word = word
-                found = True
-                break
-        if found:
-            used_sentence = True
-            list_of_words = text_received.split()
-            next_word = list_of_words[list_of_words.index(triggered_word) + 1]
-            translated = trans.translate(next_word, dest='en')
-            info = oxford.get_info_about_word(translated.text)
-            try:
-                json_info = json.loads(info.text)
-                answer = str(json_info['results'][0]['lexicalEntries'][0]['entries'][0]['senses'][0]['definitions'][0])
-                translated = trans.translate(answer, src='en', dest='nl')
-                channel = check_channel(text_received, channel)
-                send_message(translated.text, channel)
-            except ValueError as e:
-                r = requests.get("https://insult.mattbas.org/api/adjective")
-                channel = check_channel(text_received, channel)
-                send_message("You " + r.text + " person, that's no word!", channel)
+    global message
+    if not message and any(word in text_received for word in insult_triggers):
+        message = RandomBot.insult(text_received, slackbot, user_ids, trans)
+    if not message:
+        message = RandomBot.definition(text_received, def_triggers, trans, oxford)
 
 
 def check_general_keywords(user_name, text_received, channel):
     """Check for serious shit. Predefined commands etc."""
-    global used_sentence
-    if any(word in text_received.lower() for word in food_triggers):
-        channel = check_channel(text_received, channel)
-        foodbot_output = FoodBot.process_call(user_name, text_received, channel)
-        send_message(foodbot_output, channel)
-        used_sentence = True
-    lmgtfy(user_name, text_received, channel)
+    global message
+    if not message and any(word in text_received.lower() for word in food_triggers):
+        message = FoodBot.process_call(user_name, text_received, channel)
 
 
 def mention_question(user_name, text_received, channel):
     """bot got mentioned or pm'd, answer the question"""
-    global used_sentence
-    check_general_keywords(user_name, text_received, channel)
-    if not used_sentence:
-        if any(word in text_received for word in weather_triggers):
-            message = WeatherBot.get_weather_message(text_received, API_KEY)
-            channel = check_channel(text_received, channel)
-            send_message(message, channel)
-            used_sentence = True
+    global message
+    if not message:
+        check_general_keywords(user_name, text_received, channel)
+    if not message and any(word in text_received for word in weather_triggers):
+        message = WeatherBot.get_weather_message(text_received, API_KEY)
+    if not message:
+        message = RandomBot.lmgtfy(text_received, lmgtfy_triggers)
 
 
 def parse(events):
     for event in events:
         if event['type'] == 'message' and not "subtype" in event:
-            global used_sentence
-            used_sentence = False
+            global message
+            message = None
             user_id, text_received, channel = event['user'], event['text'], event['channel']
             if user_id != bot_id:
                 user_name = slackbot.api_call("users.info", user=user_id)["user"]["name"]
                 if ('@{}'.format(bot_id) in text_received) or (channel not in public_channel_ids):
                     mention_question(user_name, text_received, channel)
-                if not used_sentence:
+                if not message:
                     check_random_keywords(user_name, text_received, channel)
+                if message:
+                    channel = check_channel(text_received, channel)
+                    send_message(message, channel)
 
 
 # Read config file
