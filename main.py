@@ -6,19 +6,12 @@ import time
 import FoodBot
 import WeatherBot
 import RandomBot
-
-weather_triggers = ['forecast', 'weather', 'weer', 'voorspelling']
-insult_triggers = ["insult", "got em", "scheld", "jan", "bot", "botte"]
-lmgtfy_triggers = ["lmgtfy", "opzoeken"]
-def_triggers = ["thefuck", "def", "definitie", "verklaar", "define"]
-food_triggers = ["food", "eten"]
-repeat_triggers = ["echo", "herhaal", "repeat"]
-
-message = None
+import logging
 
 
 def send_message(text_to_send, channel):
     slackbot.api_call("chat.postMessage", as_user="true", channel=channel, text=text_to_send)
+    logger.debug('Message sent to {}'.format(channel))
 
 
 def check_channel(text_received, channel):
@@ -35,10 +28,13 @@ def check_random_keywords(user_name, text_received, channel):
     global message
     if not message and any(word in text_received.lower() for word in insult_triggers):
         message = RandomBot.insult(text_received, slackbot, user_ids, trans)
+        logger.debug('{} insulted someone in {}'.format(user_name, channel))
     if not message:
         message = RandomBot.definition(text_received, def_triggers, trans, oxford)
+        logger.debug('{} asked for a definition a word in {}'.format(user_name, channel))
     if not message:
-        message = RandomBot.repeat(text_received, repeat_triggers, public_channel_ids)
+        message = RandomBot.repeat(text_received, repeat_triggers)
+        logger.debug('{} repeated a word in {}'.format(user_name, channel))
 
 
 def check_general_keywords(user_name, text_received, channel):
@@ -50,6 +46,7 @@ def check_general_keywords(user_name, text_received, channel):
 
 def mention_question(user_name, text_received, channel):
     """bot got mentioned or pm'd, answer the question"""
+    logger.debug('BotteBot got mentioned in {}'.format(channel))
     global message
     if not message:
         check_general_keywords(user_name, text_received, channel)
@@ -71,43 +68,59 @@ def parse(events):
                     mention_question(user_name, text_received, channel)
                 if not message:
                     check_random_keywords(user_name, text_received, channel)
-                if message:
+                else:
                     channel = check_channel(text_received, channel)
                     send_message(message, channel)
 
+
+# Create global logger
+logger = logging.getLogger('magician-save-output')
+formatstring = "%(asctime)s - %(name)s:%(funcName)s:%(lineno)i - %(levelname)s - %(message)s"
+logging.basicConfig(format=formatstring, level=logging.DEBUG)
+logger.info('Starting BotteBot application...')
 
 # Read config file
 config = configparser.ConfigParser()
 config.read('init.ini')
 SLACK_BOT_TOKEN = str(config.get('slackbot', 'SLACK_BOT_TOKEN'))
 API_KEY = str(config.get('open_weather_map', 'API_KEY'))
-
 OXFORD_ID = str(config.get('oxford', 'ID'))
 OXFORD_KEY = str(config.get('oxford', 'KEY'))
 oxford = OxfordDictionaries(app_id=OXFORD_ID, app_key=OXFORD_KEY)
 
+# Define trigger words
+weather_triggers = ['forecast', 'weather', 'weer', 'voorspelling']
+insult_triggers = ["insult", "got em", "scheld", "jan", "bot", "botte"]
+lmgtfy_triggers = ["lmgtfy", "opzoeken"]
+def_triggers = ["thefuck", "def", "definitie", "verklaar", "define"]
+food_triggers = ["food", "eten"]
+repeat_triggers = ["echo", "herhaal", "repeat"]
+
+# Init message and translator
+message = None
+trans = Translator()
+
 # Connect to Slack
 slackbot = SlackClient(SLACK_BOT_TOKEN)
 slackbot.rtm_connect(with_team_state=False)
-print("Started Slackbot")
+logger.info('Connected to Slack!')
 
 # Get all user IDs and channel IDs
 bot_id = slackbot.api_call("auth.test")["user_id"]
 user_ids = [element["id"] for element in slackbot.api_call("users.list")["members"]]
 public_channel_ids = [element["id"] for element in slackbot.api_call("channels.list")["channels"]]
 
-trans = Translator()
 
+# Main loop
 running = True
-
 while running:
     try:
         parse(slackbot.rtm_read())
         FoodBot.save_data()
         time.sleep(1)
     except KeyboardInterrupt as e:
-        print("stopped by keyboard interrupt")
+        logger.warn("Stopped by keyboard interrupt")
         running = False
     except Exception as e:
-        print(e)
+        logger.exception(e)
 

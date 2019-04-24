@@ -5,3 +5,4 @@ googletrans
 oxforddictionaries
 nltk
 numpy
+logging

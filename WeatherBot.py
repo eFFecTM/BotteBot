@@ -23,7 +23,6 @@ def get_weather_message(text_received, api_key):
 
 
 def get_location(text):
-    """Get location in a sentence or question from the user"""
     chunked = ne_chunk(pos_tag(word_tokenize(text)))
     continuous_chunk = []
     current_chunk = []
@@ -39,7 +38,4 @@ def get_location(text):
         else:
             continue
 
-    if current_chunk:
-        return continuous_chunk[0]
-    else:
-        return None
+    return continuous_chunk[0]
