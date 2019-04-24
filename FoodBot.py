@@ -39,11 +39,11 @@ def order_food(user, values):
 
 def save_data():
     today = datetime.now().strftime("%Y%m%d")
-    file_polls = open("data/polls/" + today + "_polls", "w")
+    file_polls = open("data/polls/" + today + "_polls.txt", "w")
     file_polls.write("template")
     file_polls.close()
 
-    file_orders = open("data/orders/" + today + "_orders", "w")
+    file_orders = open("data/orders/" + today + "_orders.txt", "w")
     for (user, order) in current_orders:
         file_orders.write(user + ";" + order + "\n")
     file_polls.close()

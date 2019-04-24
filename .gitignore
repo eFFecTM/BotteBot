@@ -119,6 +119,3 @@ venv.bak/
 # Confidential data
 init.ini
 
-# data from foodbot
-/data/orders/*
-/data/polls/*
