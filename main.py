@@ -12,6 +12,7 @@ insult_triggers = ["insult", "got em", "scheld", "jan", "bot", "botte"]
 lmgtfy_triggers = ["lmgtfy", "opzoeken"]
 def_triggers = ["thefuck", "def", "definitie", "verklaar", "define"]
 food_triggers = ["food", "eten"]
+repeat_triggers = ["echo", "herhaal", "repeat"]
 
 message = None
 
@@ -32,10 +33,12 @@ def check_channel(text_received, channel):
 def check_random_keywords(user_name, text_received, channel):
     """To check for words used in normal conversation, adding instults and gifs/images"""
     global message
-    if not message and any(word in text_received for word in insult_triggers):
+    if not message and any(word in text_received.lower() for word in insult_triggers):
         message = RandomBot.insult(text_received, slackbot, user_ids, trans)
     if not message:
         message = RandomBot.definition(text_received, def_triggers, trans, oxford)
+    if not message:
+        message = RandomBot.repeat(text_received, repeat_triggers, public_channel_ids)
 
 
 def check_general_keywords(user_name, text_received, channel):
@@ -50,7 +53,7 @@ def mention_question(user_name, text_received, channel):
     global message
     if not message:
         check_general_keywords(user_name, text_received, channel)
-    if not message and any(word in text_received for word in weather_triggers):
+    if not message and any(word in text_received.lower() for word in weather_triggers):
         message = WeatherBot.get_weather_message(text_received, API_KEY)
     if not message:
         message = RandomBot.lmgtfy(text_received, lmgtfy_triggers)

@@ -42,7 +42,7 @@ def insult(text_received, slackbot, user_ids, translator):
 def definition(text_received, triggers, translator, oxford):
     triggered_word = None
     for word in triggers:
-        if word in text_received:
+        if word.lower() in text_received:
             triggered_word = word
             break
     if triggered_word:
@@ -62,4 +62,19 @@ def definition(text_received, triggers, translator, oxford):
         except ValueError as e:
             r = requests.get("https://insult.mattbas.org/api/adjective")
             return "You " + r.text + " person, that's no word!"
+    return None
+
+
+def repeat(text_received, triggers):
+    triggered_word = None
+    for word in triggers:
+        if word.lower() in text_received:
+            triggered_word = word
+            break
+    if triggered_word:
+        list_of_words = text_received.split()
+        for word in list_of_words:
+            if word.startswith("<#"):
+                text_received = text_received.replace(word, '')
+        return text_received.replace(triggered_word, '', 1)
     return None
