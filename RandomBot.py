@@ -76,5 +76,6 @@ def repeat(text_received, triggers):
         for word in list_of_words:
             if word.startswith("<#"):
                 text_received = text_received.replace(word, '')
+        text_received = text_received.replace('@channel', '<!channel>')
         return text_received.replace(triggered_word, '', 1)
     return None
