@@ -25,16 +25,26 @@ def check_channel(text_received, channel):
 
 def check_random_keywords(user_name, text_received, channel):
     """To check for words used in normal conversation, adding instults and gifs/images"""
-    global message
+    global message, counter_threshold, counter, delivery
     if not message and any(word in text_received.lower() for word in insult_triggers):
         message = RandomBot.insult(text_received, slackbot, user_ids, trans)
         logger.debug('{} insulted someone in {}'.format(user_name, channel))
     if not message:
         message = RandomBot.definition(text_received, def_triggers, trans, oxford)
-        logger.debug('{} asked for a definition a word in {}'.format(user_name, channel))
+        if message:
+            logger.debug('{} asked for a definition a word in {}'.format(user_name, channel))
     if not message:
         message = RandomBot.repeat(text_received, repeat_triggers)
-        logger.debug('{} repeated a word in {}'.format(user_name, channel))
+        if message:
+            logger.debug('{} repeated a word in {}'.format(user_name, channel))
+    if not message:
+        if counter >= counter_threshold:
+            [message, delivery] = RandomBot.joke()
+            counter_threshold = RandomBot.generate_threshold(1, 10)
+            counter = 0
+            logger.debug('Joke joked. Joking again in {} messages'.format(counter_threshold))
+        else:
+            counter += 1
 
 
 def check_general_keywords(user_name, text_received, channel):
@@ -59,11 +69,14 @@ def mention_question(user_name, text_received, channel):
 def parse(events):
     for event in events:
         if event['type'] == 'message' and not "subtype" in event:
-            global message
+            global message, delivery
             message = None
             user_id, text_received, channel = event['user'], event['text'], event['channel']
             if user_id != bot_id:
                 user_name = slackbot.api_call("users.info", user=user_id)["user"]["name"]
+                if delivery:
+                    message = delivery
+                    delivery = None
                 if ('@{}'.format(bot_id) in text_received) or (channel not in public_channel_ids):
                     mention_question(user_name, text_received, channel)
                 if not message:
@@ -98,6 +111,9 @@ repeat_triggers = ["echo", "herhaal", "repeat"]
 
 # Init message and translator
 message = None
+delivery = None
+counter = 0
+counter_threshold = RandomBot.generate_threshold(1, 10)
 trans = Translator()
 
 # Connect to Slack

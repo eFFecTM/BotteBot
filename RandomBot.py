@@ -1,5 +1,6 @@
 import requests
 import json
+import random
 
 
 def lmgtfy(text_received, triggers):
@@ -79,3 +80,21 @@ def repeat(text_received, triggers):
         text_received = text_received.replace('@channel', '<!channel>')
         return text_received.replace(triggered_word, '', 1)
     return None
+
+
+def generate_threshold(min, max):
+    temp = random.randint(min, max)
+    print(temp)
+    return temp
+
+
+def joke():
+    category = "Any"
+    blacklist = ""
+    r = requests.get("https://sv443.net/jokeapi/category/"+category+"?blacklistFlags="+blacklist)
+    json_info = r.json()
+    print(json_info)
+    if json_info['type'] == 'single':
+        return json_info['joke'], None
+    else:
+        return json_info['setup'], json_info['delivery']
