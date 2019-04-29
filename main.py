@@ -68,7 +68,7 @@ def parse(events):
                     mention_question(user_name, text_received, channel)
                 if not message:
                     check_random_keywords(user_name, text_received, channel)
-                else:
+                if message:
                     channel = check_channel(text_received, channel)
                     send_message(message, channel)
 
