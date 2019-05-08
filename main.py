@@ -1,3 +1,4 @@
+"""This is the main application for the Slackbot called BotteBot."""
 import configparser
 from googletrans import Translator
 from slackclient import SlackClient
@@ -7,10 +8,11 @@ import FoodBot
 import WeatherBot
 import RandomBot
 import logging
+import ImageBot
 
 
-def send_message(text_to_send, channel):
-    slackbot.api_call("chat.postMessage", as_user="true", channel=channel, text=text_to_send)
+def send_message(text_to_send, channel, attachments):
+    slackbot.api_call("chat.postMessage", as_user="true", channel=channel, text=text_to_send, attachments=attachments)
     logger.debug('Message sent to {}'.format(channel))
 
 
@@ -50,8 +52,11 @@ def check_random_keywords(user_name, text_received, channel):
 def check_general_keywords(user_name, text_received, channel):
     """Check for serious shit. Predefined commands etc."""
     global message
+    global attachments
     if not message and any(word in text_received.lower() for word in food_triggers):
         message = FoodBot.process_call(user_name, text_received, channel)
+    if not message and any((word in text_received.lower() for word in image_triggers)) and not attachments:
+        message, attachments = ImageBot.find_image(text_received, channel)
 
 
 def mention_question(user_name, text_received, channel):
@@ -69,8 +74,8 @@ def mention_question(user_name, text_received, channel):
 def parse(events):
     for event in events:
         if event['type'] == 'message' and not "subtype" in event:
-            global message, delivery
-            message = None
+            global message, attachments, delivery
+            message = attachments = None
             user_id, text_received, channel = event['user'], event['text'], event['channel']
             if user_id != bot_id:
                 user_name = slackbot.api_call("users.info", user=user_id)["user"]["name"]
@@ -83,11 +88,11 @@ def parse(events):
                     check_random_keywords(user_name, text_received, channel)
                 if message:
                     channel = check_channel(text_received, channel)
-                    send_message(message, channel)
+                    send_message(message, channel, attachments)
 
 
 # Create global logger
-logger = logging.getLogger('magician-save-output')
+logger = logging.getLogger('main')
 formatstring = "%(asctime)s - %(name)s:%(funcName)s:%(lineno)i - %(levelname)s - %(message)s"
 logging.basicConfig(format=formatstring, level=logging.DEBUG)
 logger.info('Starting BotteBot application...')
@@ -108,9 +113,11 @@ lmgtfy_triggers = ["lmgtfy", "opzoeken"]
 def_triggers = ["thefuck", "def", "definitie", "verklaar", "define"]
 food_triggers = ["food", "eten"]
 repeat_triggers = ["echo", "herhaal", "repeat"]
+image_triggers = ["image", "photo", "afbeelding", "foto"]
 
 # Init message and translator
 message = None
+attachments = None
 delivery = None
 counter = 0
 counter_threshold = RandomBot.generate_threshold(1, 10)
