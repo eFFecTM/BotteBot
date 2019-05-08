@@ -25,8 +25,8 @@ def find_image(text, channel):
             if word[0] not in ["image", "photo", "afbeelding", "foto"]:
                 search_words.append(word[0])
 
-    logger.debug('Searching Google Images for search: {}'.format(text))
-    search_string = ",".join(search_words)
+    search_string = " ".join(search_words)
+    logger.debug('Searching Google Images for search: {}'.format(search_string))
     image_url = get_image_url(search_string)
 
     # Add attachments to response message
