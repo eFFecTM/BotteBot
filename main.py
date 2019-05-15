@@ -111,6 +111,10 @@ OXFORD_ID = str(config.get('oxford', 'ID'))
 OXFORD_KEY = str(config.get('oxford', 'KEY'))
 oxford = OxfordDictionaries(app_id=OXFORD_ID, app_key=OXFORD_KEY)
 
+# Read order and poll of the current day if exists (in case of crashes / restarts)
+FoodBot.read_current_day_data()
+
+
 # Define trigger words
 weather_triggers = ['forecast', 'weather', 'weer', 'voorspelling']
 insult_triggers = ["insult", "got em", "scheld", "jan", "bot", "botte"]

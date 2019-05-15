@@ -1,7 +1,11 @@
+from pathlib import Path
+
 from _datetime import datetime
 
 current_food_place = "Pizza Hut"
 current_orders = []
+polls_path = "data/polls/"
+orders_path = "data/orders/"
 
 
 def process_call(user, input_text, channel):
@@ -33,17 +37,36 @@ def get_menu():
 
 
 def order_food(user, values):
-    current_orders.append((user, " ".join(values)))
-    return "Order placed: " + " ".join(values)
+    food = " ".join(values)
+    current_orders.append((user, food))
+    save_orders(user, food)
+    return "Order placed: " + food
 
 
-def save_data():
+def read_current_day_data():
+    if len(current_orders) == 0:
+        today = datetime.now().strftime("%Y%m%d")
+        order_path = Path(orders_path + today + "_orders.txt")
+        if order_path.is_file():
+            order_file = open(order_path, "r")
+            lines = order_file.readlines()
+            for line in lines:
+                elements = line.strip().split(";")
+                current_orders.append((elements[0], elements[1]))
+                print(elements)
+    # expand when polls are used
+
+
+def save_orders(user, food):
     today = datetime.now().strftime("%Y%m%d")
-    file_polls = open("data/polls/" + today + "_polls.txt", "w")
+    file_orders = open(orders_path + today + "_orders.txt", "a+")
+    file_orders.write(user + ";" + food + "\n")
+    file_orders.close()
+
+
+def save_polls():
+    today = datetime.now().strftime("%Y%m%d")
+    file_polls = open(polls_path + today + "_polls.txt", "a+")
     file_polls.write("template")
     file_polls.close()
 
-    file_orders = open("data/orders/" + today + "_orders.txt", "w")
-    for (user, order) in current_orders:
-        file_orders.write(user + ";" + order + "\n")
-    file_polls.close()
