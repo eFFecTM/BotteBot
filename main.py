@@ -51,7 +51,7 @@ def check_random_keywords(user_name, text_received, channel):
     """To check for words used in normal conversation, adding instults and gifs/images"""
     global message, counter_threshold, counter, delivery
     if not message and any(word in text_received.lower() for word in insult_triggers):
-        message = RandomBot.insult(text_received, slackbot, user_ids, trans)
+        message = RandomBot.insult(text_received, client, user_ids, trans)
         logger.debug('{} insulted someone in {}'.format(user_name, channel))
     if not message:
         message = RandomBot.definition(text_received, def_triggers, trans, oxford)

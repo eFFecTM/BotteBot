@@ -25,13 +25,13 @@ def lmgtfy(text_received, triggers):
     return None
 
 
-def insult(text_received, slackbot, user_ids, translator):
+def insult(text_received, client, user_ids, translator):
     found = False
     for user_id_mention in user_ids:
         if '@{}'.format(user_id_mention) in text_received:
             found = True
             url = "https://insult.mattbas.org/api/insult?who=" \
-                  + slackbot.api_call("users.info", user=user_id_mention)["user"]["profile"]["first_name"]
+                  + client.users.info(user=user_id_mention)["user"]["profile"]["first_name"]
             r = requests.get(url)
             break
     if not found:
