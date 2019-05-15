@@ -27,7 +27,7 @@ def on_message(**payload):
         if ('@{}'.format(bot_id) in text_received) or (channel not in public_channel_ids):
             mention_question(user_name, text_received, channel)
         if not message:
-            check_random_keywords(user_name, text_received, channel)
+            check_random_keywords(user_name, text_received, channel, webclient)
         if message:
             channel = check_channel(text_received, channel)
             send_message(message, channel, attachments)
@@ -47,7 +47,7 @@ def check_channel(text_received, channel):
     return channel
 
 
-def check_random_keywords(user_name, text_received, channel):
+def check_random_keywords(user_name, text_received, channel, client):
     """To check for words used in normal conversation, adding instults and gifs/images"""
     global message, counter_threshold, counter, delivery
     if not message and any(word in text_received.lower() for word in insult_triggers):

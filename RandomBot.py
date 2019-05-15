@@ -31,7 +31,7 @@ def insult(text_received, client, user_ids, translator):
         if '@{}'.format(user_id_mention) in text_received:
             found = True
             url = "https://insult.mattbas.org/api/insult?who=" \
-                  + client.users.info(user=user_id_mention)["user"]["profile"]["first_name"]
+                  + client.users_info(user=user_id_mention)["user"]["real_name"].split(" ")[0]
             r = requests.get(url)
             break
     if not found:
