@@ -13,12 +13,12 @@ formatstring = "%(asctime)s - %(name)s:%(funcName)s:%(lineno)i - %(levelname)s -
 logging.basicConfig(format=formatstring, level=logging.DEBUG)
 
 
-def find_image(text, channel, triggers):
+def find_image(text, channel, ignored):
     # Get search words in received text
     search_words = []
     words = text.split(" ")[1:]
     for word in words:
-        if word not in triggers:
+        if word not in ignored:
             search_words.append(word)
     search_string = " ".join(search_words)
     logger.debug('Searching Google Images for search: {}'.format(search_string))

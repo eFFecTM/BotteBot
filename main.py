@@ -81,7 +81,7 @@ def check_general_keywords(user_name, text_received, channel):
         message = FoodBot.process_call(user_name, text_received, channel)
     if not message and any((word in text_received.lower() for word in image_triggers)) and not attachments:
         logger.debug('{} asked the ImageBot a request in channel {}'.format(user_name, channel))
-        message, attachments = ImageBot.find_image(text_received, channel, image_triggers)
+        message, attachments = ImageBot.find_image(text_received, channel, ignored_words)
 
 
 def mention_question(user_name, text_received, channel):
@@ -118,7 +118,8 @@ lmgtfy_triggers = ["lmgtfy", "opzoeken"]
 def_triggers = ["thefuck", "def", "definitie", "verklaar", "define"]
 food_triggers = ["food", "eten"]
 repeat_triggers = ["echo", "herhaal", "repeat"]
-image_triggers = ["image", "photo", "afbeelding", "foto", "picture", "of", "van"]
+image_triggers = ["image", "photo", "afbeelding", "foto", "picture"]
+ignored_words = ["of", "van", "in", "the", "de", "het", "en", "and"]
 
 # Init message and translator
 message = None
