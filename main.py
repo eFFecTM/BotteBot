@@ -1,11 +1,9 @@
 """This is the main application for the Slackbot called BotteBot."""
 import configparser
 import logging
-
 import slack
 from googletrans import Translator
 from oxforddictionaries.words import OxfordDictionaries
-
 import FoodBot
 import ImageBot
 import RandomBot
@@ -14,23 +12,26 @@ import WeatherBot
 
 @slack.RTMClient.run_on(event='message')
 def on_message(**payload):
-    data = payload['data']
-    global message, attachments, delivery
-    message = attachments = None
-    user_id, text_received, channel = data['user'], data['text'], data['channel']
-    if user_id != bot_id:
-        webclient = payload['web_client']
-        user_name = webclient.users_info(user=user_id)["user"]["name"]
-        if delivery:
-            message = delivery
-            delivery = None
-        if ('@{}'.format(bot_id) in text_received) or (channel not in public_channel_ids):
-            mention_question(user_name, text_received, channel)
-        if not message:
-            check_random_keywords(user_name, text_received, channel, webclient)
-        if message:
-            channel = check_channel(text_received, channel)
-            send_message(message, channel, attachments)
+    try:
+        data = payload['data']
+        global message, attachments, delivery
+        message = attachments = None
+        user_id, text_received, channel = data['user'], data['text'], data['channel']
+        if user_id != bot_id:
+            webclient = payload['web_client']
+            user_name = webclient.users_info(user=user_id)["user"]["name"]
+            if delivery:
+                message = delivery
+                delivery = None
+            if ('@{}'.format(bot_id) in text_received) or (channel not in public_channel_ids):
+                mention_question(user_name, text_received, channel)
+            if not message:
+                check_random_keywords(user_name, text_received, channel, webclient)
+            if message:
+                channel = check_channel(text_received, channel)
+                send_message(message, channel, attachments)
+    except Exception as e:
+        logger.exception(e)
 
 
 def send_message(text_to_send, channel, attachments):
@@ -76,9 +77,11 @@ def check_general_keywords(user_name, text_received, channel):
     global message
     global attachments
     if not message and any(word in text_received.lower() for word in food_triggers):
+        logger.debug('{} asked the FoodBot a request in channel {}'.format(user_name, channel))
         message = FoodBot.process_call(user_name, text_received, channel)
     if not message and any((word in text_received.lower() for word in image_triggers)) and not attachments:
-        message, attachments = ImageBot.find_image(text_received, channel)
+        logger.debug('{} asked the ImageBot a request in channel {}'.format(user_name, channel))
+        message, attachments = ImageBot.find_image(text_received, channel, image_triggers)
 
 
 def mention_question(user_name, text_received, channel):
@@ -115,7 +118,7 @@ lmgtfy_triggers = ["lmgtfy", "opzoeken"]
 def_triggers = ["thefuck", "def", "definitie", "verklaar", "define"]
 food_triggers = ["food", "eten"]
 repeat_triggers = ["echo", "herhaal", "repeat"]
-image_triggers = ["image", "photo", "afbeelding", "foto"]
+image_triggers = ["image", "photo", "afbeelding", "foto", "picture", "of", "van"]
 
 # Init message and translator
 message = None

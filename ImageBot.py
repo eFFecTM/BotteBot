@@ -1,5 +1,4 @@
 """Create an image bot to post or process images. See https://pythonspot.com/category/nltk/"""
-import nltk
 import configparser
 import logging
 from google_images_download import google_images_download
@@ -14,22 +13,19 @@ formatstring = "%(asctime)s - %(name)s:%(funcName)s:%(lineno)i - %(levelname)s -
 logging.basicConfig(format=formatstring, level=logging.DEBUG)
 
 
-def find_image(text, channel):
-    # Get nouns and verbs in received text
-    words = nltk.pos_tag(nltk.word_tokenize(text))
-    words = words[4:]  # remove mention '@BotteBot'
+def find_image(text, channel, triggers):
+    # Get search words in received text
     search_words = []
+    words = text.split(" ")[1:]
     for word in words:
-        if any(category in word[1] for category in ['NNP', 'NNS', 'NNP', 'NNPS', 'PRP', 'VB', 'NN']):
-            if word[0] not in ["image", "photo", "afbeelding", "foto"]:
-                search_words.append(word[0])
-
+        if word not in triggers:
+            search_words.append(word)
     search_string = " ".join(search_words)
     logger.debug('Searching Google Images for search: {}'.format(search_string))
-    image_url = get_image_url(search_string)
+    image_title, image_url = get_image_url(search_string)
 
     # Add attachments to response message
-    attachments = [{"title": "image", "image_url": image_url}]
+    attachments = [{"title": image_title, "image_url": image_url}]
     message = "Here is an image of it!"
     return message, attachments
 
@@ -57,7 +53,7 @@ def get_image_url(search_string):
         x = response.download(arguments)
         url = next(iter(x.values()))[0]
         logger.debug('URL of first found image: {}'.format(url))
-        return url
+        return search_string, url
 
     except Exception as e:
         logger.exception(e)
