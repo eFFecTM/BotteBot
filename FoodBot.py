@@ -1,9 +1,12 @@
 from pathlib import Path
 
 from _datetime import datetime
+from bs4 import BeautifulSoup
+import requests
 
 current_food_place = "Pizza Hut"
 current_orders = []
+restaurants = []
 polls_path = "data/polls/"
 orders_path = "data/orders/"
 
@@ -32,8 +35,51 @@ def get_overview():
     return output_text
 
 
-def get_menu():
-    pass
+def get_menu(text_received):
+    global restaurants
+    found = []
+    message = ""
+    if len(restaurants) == 0:
+        get_restaurants('top 1')  # generate restaurants
+    for resto_name in restaurants[0]:
+        if resto_name.lower() in text_received.lower():
+            found = resto_name
+            message = "Restaurant: *{}*\n\n".format(resto_name)
+            break
+    if found:
+        response = requests.get(restaurants[1][restaurants[0].index(found)])
+
+        soup = BeautifulSoup(response.content, 'html.parser')
+        location = soup.text.find('MenucardProducts')
+        text = soup.text[location:]
+
+        if 'top' in text_received:
+            words = text_received.split()
+            next_word = words[words.index('top') + 1]
+            try:
+                top_number = int(next_word)
+                if top_number > 50:
+                    top_number = 50
+                elif top_number < 1:
+                    top_number = 1
+            except:
+                top_number = 10
+        else:
+            top_number = 10
+
+        for i in range(0, top_number):
+            location = text.find('name')
+            text = text[location + len('"name": "') - 1:]
+            location = text.find('"')
+            temp = text[:location]
+            location = text.find('price')
+            text = text[location + len('"price": ') - 1:]
+            location = text.find(",")
+            message = "{}{}: {} voor €{}\n".format(message, i+1, temp, text[:location])
+    else:
+        return None
+
+    return message
 
 
 def order_food(user, values):
@@ -58,6 +104,53 @@ def read_current_day_data():
 
 
 def save_orders(user, food):
+def get_restaurants(text_received):
+    global restaurants
+    response = requests.get('https://www.takeaway.com/be/eten-bestellen-antwerpen-2020')
+
+    soup = BeautifulSoup(response.content, 'html.parser')
+    find = soup.find_all('script')
+    text = find[9].text
+    location = text.find('name')
+    restaurants = [[], []]
+
+    while location != -1:
+        text = text[location + len('"name":"') - 1:]
+        location = text.find('"')
+        temp = text[:location]
+        temp = temp.replace("\'", '')
+        restaurants[0].append(temp)
+        location = text.find('url')
+        text = text[location + len('"url":"') - 1:]
+        location = text.find('"')
+        temp = text[:location]
+        temp = "https://www.takeaway.com" + temp
+        temp = temp.replace("\\", '')
+        restaurants[1].append(temp)
+        location = text.find('name')
+
+    return_message = ""
+
+    if 'top' in text_received:
+        words = text_received.split()
+        next_word = words[words.index('top') + 1]
+        try:
+            top_number = int(next_word)
+            if top_number > len(restaurants[0]):
+                top_number = len(restaurants[0])
+            elif top_number < 1:
+                top_number = 1
+        except:
+            top_number = len(restaurants[0])
+    else:
+        top_number = len(restaurants[0])
+    for i in range(0, top_number):
+        return_message = "{}{}: {}   - {}\n".format(return_message, i+1, restaurants[0][i],
+                                                    restaurants[1][i])
+    return return_message
+
+
+def save_data():
     today = datetime.now().strftime("%Y%m%d")
     file_orders = open(orders_path + today + "_orders.txt", "a+")
     file_orders.write(user + ";" + food + "\n")

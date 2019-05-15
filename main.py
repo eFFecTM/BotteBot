@@ -80,6 +80,10 @@ def check_general_keywords(user_name, text_received, channel):
     if not message and any(word in text_received.lower() for word in food_triggers):
         logger.debug('{} asked the FoodBot a request in channel {}'.format(user_name, channel))
         message = FoodBot.process_call(user_name, text_received, channel)
+    if not message and any(word in text_received.lower() for word in menu_triggers):
+        message = FoodBot.get_menu(text_received)
+    if not message and any(word in text_received.lower() for word in resto_triggers):
+        message = FoodBot.get_restaurants(text_received)
     if not message and any((word in text_received.lower() for word in image_triggers)) and not attachments:
         logger.debug('{} asked the ImageBot a request in channel {}'.format(user_name, channel))
         message, attachments = ImageBot.find_image(text_received, channel, ignored_words, image_triggers)
@@ -126,6 +130,8 @@ food_triggers = ["food", "eten"]
 repeat_triggers = ["echo", "herhaal", "repeat"]
 image_triggers = ["image", "photo", "afbeelding", "foto", "picture"]
 help_triggers = ["help", "aid", "hulp"]
+resto_triggers = ["restaurant", "resto"]
+menu_triggers = ["menu"]
 
 # Define ignored words
 ignored_words = ["of", "van", "in", "the", "de", "het", "en", "and"]
