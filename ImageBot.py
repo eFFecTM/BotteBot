@@ -13,7 +13,7 @@ formatstring = "%(asctime)s - %(name)s:%(funcName)s:%(lineno)i - %(levelname)s -
 logging.basicConfig(format=formatstring, level=logging.DEBUG)
 
 
-def find_image(text, channel, ignored, image_triggers):
+def find_image(text, ignored, image_triggers):
     # Get search words in received text
     search_words = []
     words = text.split(" ")[1:]

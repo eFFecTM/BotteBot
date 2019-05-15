@@ -8,6 +8,7 @@ import FoodBot
 import ImageBot
 import RandomBot
 import WeatherBot
+import HelpBot
 
 
 @slack.RTMClient.run_on(event='message')
@@ -82,7 +83,8 @@ def check_general_keywords(user_name, text_received, channel):
     if not message and any((word in text_received.lower() for word in image_triggers)) and not attachments:
         logger.debug('{} asked the ImageBot a request in channel {}'.format(user_name, channel))
         message, attachments = ImageBot.find_image(text_received, channel, ignored_words, image_triggers)
-
+    if not message and any((word in text_received.lower() for word in help_triggers)):
+        message = HelpBot.get_list_of_commands()
 
 def mention_question(user_name, text_received, channel):
     """bot got mentioned or pm'd, answer the question"""
@@ -123,6 +125,9 @@ def_triggers = ["thefuck", "def", "definitie", "verklaar", "define"]
 food_triggers = ["food", "eten"]
 repeat_triggers = ["echo", "herhaal", "repeat"]
 image_triggers = ["image", "photo", "afbeelding", "foto", "picture"]
+help_triggers = ["help", "aid", "hulp"]
+
+# Define ignored words
 ignored_words = ["of", "van", "in", "the", "de", "het", "en", "and"]
 
 # Init message and translator
