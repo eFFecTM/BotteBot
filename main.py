@@ -1,18 +1,40 @@
 """This is the main application for the Slackbot called BotteBot."""
 import configparser
-from googletrans import Translator
-from slackclient import SlackClient
-from oxforddictionaries.words import OxfordDictionaries
-import time
-import FoodBot
-import WeatherBot
-import RandomBot
 import logging
+
+import slack
+from googletrans import Translator
+from oxforddictionaries.words import OxfordDictionaries
+
+import FoodBot
 import ImageBot
+import RandomBot
+import WeatherBot
+
+
+@slack.RTMClient.run_on(event='message')
+def on_message(**payload):
+    data = payload['data']
+    global message, attachments, delivery
+    message = attachments = None
+    user_id, text_received, channel = data['user'], data['text'], data['channel']
+    if user_id != bot_id:
+        webclient = payload['web_client']
+        user_name = webclient.users_info(user=user_id)["user"]["name"]
+        if delivery:
+            message = delivery
+            delivery = None
+        if ('@{}'.format(bot_id) in text_received) or (channel not in public_channel_ids):
+            mention_question(user_name, text_received, channel)
+        if not message:
+            check_random_keywords(user_name, text_received, channel)
+        if message:
+            channel = check_channel(text_received, channel)
+            send_message(message, channel, attachments)
 
 
 def send_message(text_to_send, channel, attachments):
-    slackbot.api_call("chat.postMessage", as_user="true", channel=channel, text=text_to_send, attachments=attachments)
+    client.chat_postMessage(as_user="true", channel=channel, text=text_to_send, attachments=attachments)
     logger.debug('Message sent to {}'.format(channel))
 
 
@@ -71,26 +93,6 @@ def mention_question(user_name, text_received, channel):
         message = RandomBot.lmgtfy(text_received, lmgtfy_triggers)
 
 
-def parse(events):
-    for event in events:
-        if event['type'] == 'message' and not "subtype" in event:
-            global message, attachments, delivery
-            message = attachments = None
-            user_id, text_received, channel = event['user'], event['text'], event['channel']
-            if user_id != bot_id:
-                user_name = slackbot.api_call("users.info", user=user_id)["user"]["name"]
-                if delivery:
-                    message = delivery
-                    delivery = None
-                if ('@{}'.format(bot_id) in text_received) or (channel not in public_channel_ids):
-                    mention_question(user_name, text_received, channel)
-                if not message:
-                    check_random_keywords(user_name, text_received, channel)
-                if message:
-                    channel = check_channel(text_received, channel)
-                    send_message(message, channel, attachments)
-
-
 # Create global logger
 logger = logging.getLogger('main')
 formatstring = "%(asctime)s - %(name)s:%(funcName)s:%(lineno)i - %(levelname)s - %(message)s"
@@ -123,27 +125,13 @@ counter = 0
 counter_threshold = RandomBot.generate_threshold(1, 10)
 trans = Translator()
 
-# Connect to Slack
-slackbot = SlackClient(SLACK_BOT_TOKEN)
-slackbot.rtm_connect(with_team_state=False)
-logger.info('Connected to Slack!')
-
 # Get all user IDs and channel IDs
-bot_id = slackbot.api_call("auth.test")["user_id"]
-user_ids = [element["id"] for element in slackbot.api_call("users.list")["members"]]
-public_channel_ids = [element["id"] for element in slackbot.api_call("channels.list")["channels"]]
+client = slack.WebClient(token=SLACK_BOT_TOKEN)
+bot_id = client.auth_test()["user_id"]
+user_ids = [element["id"] for element in client.users_list()["members"]]
+public_channel_ids = [element["id"] for element in client.channels_list()["channels"]]
 
-
-# Main loop
-running = True
-while running:
-    try:
-        parse(slackbot.rtm_read())
-        FoodBot.save_data()
-        time.sleep(1)
-    except KeyboardInterrupt as e:
-        logger.warn("Stopped by keyboard interrupt")
-        running = False
-    except Exception as e:
-        logger.exception(e)
-
+# Connect to Slack
+slackbot = slack.RTMClient(token=SLACK_BOT_TOKEN)
+logger.info('Connected to Slack!')
+slackbot.start()

@@ -7,7 +7,6 @@ from google_images_download import google_images_download
 # Read config file
 config = configparser.ConfigParser()
 config.read('init.ini')
-key = str(config.get('google_image_search', 'KEY'))
 
 # Create global logger
 logger = logging.getLogger('imagebot')
