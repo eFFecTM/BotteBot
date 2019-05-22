@@ -11,6 +11,7 @@ restaurants = []
 polls_path = "data/polls/"
 orders_path = "data/orders/"
 schedule_path = "data"
+menu = [[], []]
 
 
 def process_call(user, input_text, channel):
@@ -52,7 +53,7 @@ snappy_responses = ["just like the dignity of your {} mother. Mama Mia!",
 
 
 def get_menu(text_received):
-    global restaurants, snappy_responses
+    global restaurants, snappy_responses, menu
     found = []
     message = ""
     if len(restaurants) == 0:
@@ -66,7 +67,9 @@ def get_menu(text_received):
         response = requests.get(restaurants[1][restaurants[0].index(found)])
 
         soup = BeautifulSoup(response.content, 'html.parser')
+        temp = soup.text
         location = soup.text.find('MenucardProducts')
+        # TODO find categories in html and find how many products in category by counting "product"
         text = soup.text[location:]
 
         if 'top' in text_received:
@@ -83,21 +86,29 @@ def get_menu(text_received):
         else:
             top_number = 10
 
+        location = text.find('name')
+        while location != -1:
+            text = text[location + len('"name": "') - 1:]
+            location = text.find('"')
+            if "{" in text[:location]:
+                break
+            menu[0].append(text[:location])
+            location = text.find('price')
+            text = text[location + len('"price": ') - 1:]
+            location = text.find(",")
+            menu[1].append(text[:location])
+            location = text.find('name')
+
         rand = random.randint(0, top_number*3)
         location_number = 0
+        if top_number < len(menu[0]):
+            top_number = len(menu[0])
         for i in range(0, top_number):
             location_number += 1
             if rand == i:
                 message = "{}{}: Uw mama voor €0\n".format(message, location_number)
                 location_number += 1
-            location = text.find('name')
-            text = text[location + len('"name": "') - 1:]
-            location = text.find('"')
-            temp = text[:location]
-            location = text.find('price')
-            text = text[location + len('"price": ') - 1:]
-            location = text.find(",")
-            message = "{}{}: {} voor €{}\n".format(message, location_number, temp, text[:location])
+            message = "{}{}: {} voor €{}\n".format(message, location_number, menu[0][i], menu[1][i])
     else:
         rand = random.randint(0, len(snappy_responses) - 1)
         r = requests.get("https://insult.mattbas.org/api/adjective")
