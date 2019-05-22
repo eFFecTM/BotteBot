@@ -9,21 +9,29 @@ current_orders = []
 restaurants = []
 polls_path = "data/polls/"
 orders_path = "data/orders/"
+schedule_path = "data"
 
 
 def process_call(user, input_text, channel):
-    input_array = input_text.split(" ")
-    if len(input_array) >= 2 and input_array[1].lower() == "overview":
-        output_text = get_overview()
-    elif len(input_array) >= 3 and input_array[1].lower() == "order":
-        input_array.pop(0)
-        input_array.pop(0)
-        output_text = order_food(user, input_array)
+    input = input_text.split(" ")
+    if len(input) >= 2 and input[1].lower() == "overview":
+        output = get_overview()
+    elif len(input) >= 3 and input[1].lower() == "order":
+        input.pop(0)
+        input.pop(0)
+        output = order_food(user, input)
+    elif len(input) >= 3 and input[1].lower() == "schedule" and input[2].lower() == "list":
+        input.pop(0)
+
     else:
-        output_text = "??????????????"
+        output = "??????????????"
 
-    return output_text
+    return output
 
+
+# /////////
+# COMMANDS
+# /////////
 
 def get_overview():
     output_text = ""
@@ -89,20 +97,6 @@ def order_food(user, values):
     return "Order placed: " + food
 
 
-def read_current_day_data():
-    if len(current_orders) == 0:
-        today = datetime.now().strftime("%Y%m%d")
-        order_path = Path(orders_path + today + "_orders.txt")
-        if order_path.is_file():
-            order_file = open(order_path, "r")
-            lines = order_file.readlines()
-            for line in lines:
-                elements = line.strip().split(";")
-                current_orders.append((elements[0], elements[1]))
-                print(elements)
-    # expand when polls are used
-
-
 def get_restaurants(text_received):
     global restaurants
     response = requests.get('https://www.takeaway.com/be/eten-bestellen-antwerpen-2020')
@@ -147,6 +141,25 @@ def get_restaurants(text_received):
         return_message = "{}{}: {}   - {}\n".format(return_message, i+1, restaurants[0][i],
                                                     restaurants[1][i])
     return return_message
+
+
+# ////////////////
+# FILE MANAGEMENT
+# ////////////////
+
+
+def read_current_day_data():
+    if len(current_orders) == 0:
+        today = datetime.now().strftime("%Y%m%d")
+        order_path = Path(orders_path + today + "_orders.txt")
+        if order_path.is_file():
+            order_file = open(order_path, "r")
+            lines = order_file.readlines()
+            for line in lines:
+                elements = line.strip().split(";")
+                current_orders.append((elements[0], elements[1]))
+                print(elements)
+    # expand when polls are used
 
 
 def save_orders(user, food):
