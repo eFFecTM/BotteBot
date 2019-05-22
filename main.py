@@ -112,6 +112,8 @@ def check_general_keywords(user_name, text_received, channel):
         message, attachments = ImageBot.find_image(text_received, image_triggers)
     if not message and any((word in text_received.lower() for word in help_triggers)):
         message = HelpBot.get_list_of_commands()
+    if not message and any((word in text_received.lower() for word in joke_triggers)):
+        message = "You really need to find help. And friends. Bye."
 
 
 def mention_question(user_name, text_received, channel):
@@ -154,6 +156,7 @@ food_triggers = ["food", "eten"]
 repeat_triggers = ["echo", "herhaal", "repeat"]
 image_triggers = ["image", "photo", "afbeelding", "foto", "picture", "animation", "animatie", "gif"]
 help_triggers = ["help", "aid", "hulp"]
+joke_triggers = ['joke', 'grap', 'grapje', 'grapke']
 resto_triggers = ["restaurant", "resto", "restaurants", "restos"]
 menu_triggers = ["menu", "menus"]
 
