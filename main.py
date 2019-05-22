@@ -47,8 +47,8 @@ def filter_ignore_words(text_received, ignored_words):
     for word in words_received:
         if word in ignored_words:
             words_received.remove(word)
-        if word == '@{}'.format(bot_id):
-            words_received.remove('@{}'.format(bot_id))
+        if '@{}'.format(bot_id) in word:
+            words_received.remove(word)
             mentioned = True
     text_received = ""
     for word in words_received:
@@ -102,8 +102,10 @@ def check_general_keywords(user_name, text_received, channel):
         logger.debug('{} asked the FoodBot a request in channel {}'.format(user_name, channel))
         message = FoodBot.process_call(user_name, text_received, channel)
     if not message and any(word in text_received.lower() for word in menu_triggers):
+        logger.debug('{} asked the Foodbot for menu in channel {}'.format(user_name, channel))
         message = FoodBot.get_menu(text_received)
     if not message and any(word in text_received.lower() for word in resto_triggers):
+        logger.debug('{} asked the Foodbot for restaurants in channel {}'.format(user_name, channel))
         message = FoodBot.get_restaurants(text_received)
     if not message and any((word in text_received.lower() for word in image_triggers)) and not attachments:
         logger.debug('{} asked the ImageBot a request in channel {}'.format(user_name, channel))
@@ -152,7 +154,7 @@ food_triggers = ["food", "eten"]
 repeat_triggers = ["echo", "herhaal", "repeat"]
 image_triggers = ["image", "photo", "afbeelding", "foto", "picture", "animation", "animatie", "gif"]
 help_triggers = ["help", "aid", "hulp"]
-resto_triggers = ["restaurant", "resto"]
+resto_triggers = ["restaurant", "resto", "restaurants"]
 menu_triggers = ["menu"]
 
 # Define ignored words

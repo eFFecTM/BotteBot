@@ -3,6 +3,7 @@ from pathlib import Path
 from _datetime import datetime
 from bs4 import BeautifulSoup
 import requests
+import random
 
 current_food_place = "Pizza Hut"
 current_orders = []
@@ -75,7 +76,13 @@ def get_menu(text_received):
         else:
             top_number = 10
 
+        rand = random.randint(0, top_number*3)
+        location_number = 0
         for i in range(0, top_number):
+            location_number += 1
+            if rand == i:
+                message = "{}{}: Uw mama voor €0\n".format(message, location_number)
+                location_number += 1
             location = text.find('name')
             text = text[location + len('"name": "') - 1:]
             location = text.find('"')
@@ -83,9 +90,10 @@ def get_menu(text_received):
             location = text.find('price')
             text = text[location + len('"price": ') - 1:]
             location = text.find(",")
-            message = "{}{}: {} voor €{}\n".format(message, i+1, temp, text[:location])
+            message = "{}{}: {} voor €{}\n".format(message, location_number, temp, text[:location])
     else:
-        return None
+        r = requests.get("https://insult.mattbas.org/api/adjective")
+        return "The restaurant is not found, just like the dignity of your {} mother. Mama Mia!".format(r.text)
 
     return message
 
