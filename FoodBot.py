@@ -44,8 +44,15 @@ def get_overview():
     return output_text
 
 
+snappy_responses = ["just like the dignity of your {} mother. Mama Mia!",
+                    "pick again you {} idiot!",
+                    "better luck next time {} person!",
+                    u"\U0001F595",
+                    "huh? Fine! I'll go build my own restaurant, with blackjack and hookers. In fact, forget about the restaurant and blackjack."]
+
+
 def get_menu(text_received):
-    global restaurants
+    global restaurants, snappy_responses
     found = []
     message = ""
     if len(restaurants) == 0:
@@ -92,8 +99,9 @@ def get_menu(text_received):
             location = text.find(",")
             message = "{}{}: {} voor €{}\n".format(message, location_number, temp, text[:location])
     else:
+        rand = random.randint(0, len(snappy_responses) - 1)
         r = requests.get("https://insult.mattbas.org/api/adjective")
-        return "The restaurant is not found, just like the dignity of your {} mother. Mama Mia!".format(r.text)
+        return "The restaurant is not found, {}".format(snappy_responses[rand].replace("{}", r.text))
 
     return message
 

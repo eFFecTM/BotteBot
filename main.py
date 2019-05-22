@@ -154,8 +154,8 @@ food_triggers = ["food", "eten"]
 repeat_triggers = ["echo", "herhaal", "repeat"]
 image_triggers = ["image", "photo", "afbeelding", "foto", "picture", "animation", "animatie", "gif"]
 help_triggers = ["help", "aid", "hulp"]
-resto_triggers = ["restaurant", "resto", "restaurants"]
-menu_triggers = ["menu"]
+resto_triggers = ["restaurant", "resto", "restaurants", "restos"]
+menu_triggers = ["menu", "menus"]
 
 # Define ignored words
 ignored_words = ["of", "van", "in", "the", "de", "het", "en", "and", "a", "een", "an"]
