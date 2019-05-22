@@ -21,6 +21,8 @@ def on_message(**payload):
         if user_id != bot_id:
             webclient = payload['web_client']
             user_name = webclient.users_info(user=user_id)["user"]["name"]
+            [channel, text_received] = check_channel(text_received, channel)
+            text_received = filter_ignore_words(text_received, ignored_words)
             if delivery:
                 message = delivery
                 delivery = None
@@ -29,7 +31,6 @@ def on_message(**payload):
             if not message:
                 check_random_keywords(user_name, text_received, channel, webclient)
             if message:
-                channel = check_channel(text_received, channel)
                 send_message(message, channel, attachments)
     except Exception as e:
         logger.exception(e)
@@ -40,13 +41,20 @@ def send_message(text_to_send, channel, attachments):
     logger.debug('Message sent to {}'.format(channel))
 
 
+def filter_ignore_words(text_received, ignored_words):
+    for ignored_word in ignored_words:
+        text_received.replace(ignored_word, "")
+    return text_received
+
+
 def check_channel(text_received, channel):
     """Check whether a channel got mentioned"""
     for channel_id in public_channel_ids:
         if '#{}'.format(channel_id) in text_received:
             channel = channel_id
+            text_received.replace("#{}".format(channel_id), "")
             break
-    return channel
+    return channel, text_received
 
 
 def check_random_keywords(user_name, text_received, channel, client):
@@ -134,7 +142,7 @@ resto_triggers = ["restaurant", "resto"]
 menu_triggers = ["menu"]
 
 # Define ignored words
-ignored_words = ["of", "van", "in", "the", "de", "het", "en", "and"]
+ignored_words = ["of", "van", "in", "the", "de", "het", "en", "and", "a", "een", "an"]
 
 # Init message and translator
 message = None
