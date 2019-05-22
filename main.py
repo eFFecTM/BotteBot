@@ -107,9 +107,10 @@ def check_general_keywords(user_name, text_received, channel):
         message = FoodBot.get_restaurants(text_received)
     if not message and any((word in text_received.lower() for word in image_triggers)) and not attachments:
         logger.debug('{} asked the ImageBot a request in channel {}'.format(user_name, channel))
-        message, attachments = ImageBot.find_image(text_received, ignored_words, image_triggers)
+        message, attachments = ImageBot.find_image(text_received, image_triggers)
     if not message and any((word in text_received.lower() for word in help_triggers)):
         message = HelpBot.get_list_of_commands()
+
 
 def mention_question(user_name, text_received, channel):
     """bot got mentioned or pm'd, answer the question"""
@@ -149,7 +150,7 @@ lmgtfy_triggers = ["lmgtfy", "opzoeken"]
 def_triggers = ["thefuck", "def", "definitie", "verklaar", "define"]
 food_triggers = ["food", "eten"]
 repeat_triggers = ["echo", "herhaal", "repeat"]
-image_triggers = ["image", "photo", "afbeelding", "foto", "picture"]
+image_triggers = ["image", "photo", "afbeelding", "foto", "picture", "animation", "animatie", "gif"]
 help_triggers = ["help", "aid", "hulp"]
 resto_triggers = ["restaurant", "resto"]
 menu_triggers = ["menu"]
