@@ -6,3 +6,4 @@ oxforddictionaries
 nltk
 numpy
 google_images_download
+bs4
