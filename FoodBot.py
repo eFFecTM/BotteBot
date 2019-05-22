@@ -103,7 +103,6 @@ def read_current_day_data():
     # expand when polls are used
 
 
-def save_orders(user, food):
 def get_restaurants(text_received):
     global restaurants
     response = requests.get('https://www.takeaway.com/be/eten-bestellen-antwerpen-2020')
@@ -150,7 +149,7 @@ def get_restaurants(text_received):
     return return_message
 
 
-def save_data():
+def save_orders(user, food):
     today = datetime.now().strftime("%Y%m%d")
     file_orders = open(orders_path + today + "_orders.txt", "a+")
     file_orders.write(user + ";" + food + "\n")
