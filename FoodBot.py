@@ -67,9 +67,7 @@ def get_menu(text_received):
         response = requests.get(restaurants[1][restaurants[0].index(found)])
 
         soup = BeautifulSoup(response.content, 'html.parser')
-        temp = soup.text
         location = soup.text.find('MenucardProducts')
-        # TODO find categories in html and find how many products in category by counting "product"
         text = soup.text[location:]
 
         if 'top' in text_received:
@@ -101,7 +99,7 @@ def get_menu(text_received):
 
         rand = random.randint(0, top_number*3)
         location_number = 0
-        if top_number < len(menu[0]):
+        if top_number > len(menu[0]):
             top_number = len(menu[0])
         for i in range(0, top_number):
             location_number += 1
@@ -161,9 +159,9 @@ def get_restaurants(text_received):
             elif top_number < 1:
                 top_number = 1
         except:
-            top_number = len(restaurants[0])
+            top_number = 10
     else:
-        top_number = len(restaurants[0])
+        top_number = 10
     for i in range(0, top_number):
         return_message = "{}{}: {}   - {}\n".format(return_message, i+1, restaurants[0][i],
                                                     restaurants[1][i])
