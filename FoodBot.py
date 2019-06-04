@@ -1,32 +1,44 @@
 from pathlib import Path
 
-from _datetime import datetime
+from datetime import datetime
 from bs4 import BeautifulSoup
 import requests
 import random
 
 current_food_place = "Pizza Hut"
-current_orders = []
+current_orders = {}
+current_schedule = {}
 restaurants = []
 polls_path = "data/polls/"
 orders_path = "data/orders/"
-schedule_path = "data"
+schedule_path = "data/"
 menu = [[], []]
 
 
 def process_call(user, input_text, channel):
-    input = input_text.split(" ")
+    input = input_text.strip().split(" ")
     if len(input) >= 2 and input[1].lower() == "overview":
-        output = get_overview()
+        output = get_order_overview()
     elif len(input) >= 3 and input[1].lower() == "order":
-        input.pop(0)
-        input.pop(0)
-        output = order_food(user, input)
+        output = order_food(user, input[2])
     elif len(input) >= 3 and input[1].lower() == "schedule" and input[2].lower() == "list":
-        input.pop(0)
-
+        output = get_schedule_overview()
+    elif len(input) >= 4 and input[1].lower() == "schedule" and input[2].lower() == "add":
+        day = datetime.strptime(input[3], "%d/%m/%y").date()
+        times = []
+        if len(input) > 4:
+            for time in input[4:]:
+                times.append(datetime.strptime(time, "%H:%M").time())
+        output = add_schedule(day, times)
+    elif len(input) >= 4 and input[1].lower() == "schedule" and input[2].lower() == "remove":
+        day = datetime.strptime(input[3], "%d/%m/%y").date()
+        times = []
+        if len(input) > 4:
+            for time in input[4:]:
+                times.append(datetime.strptime(time, "%H:%M").time())
+        output = remove_schedule(day, times)
     else:
-        output = "??????????????"
+        output = "I don't talk R0B0T"
 
     return output
 
@@ -35,14 +47,14 @@ def process_call(user, input_text, channel):
 # COMMANDS
 # /////////
 
-def get_overview():
-    output_text = ""
-    output_text += "From where do you want some food? " + current_food_place
-    output_text += "\n\n\n"
-    for (user, order) in current_orders:
-        output_text += user + " orders the following: " + order + "\n"
+def get_order_overview():
+    output = ""
+    output += "From where do you want some food? " + current_food_place
+    output += "\n\n\n"
+    for user, order in current_orders.items():
+        output += user + " orders the following: " + order + "\n"
 
-    return output_text
+    return output
 
 
 snappy_responses = ["just like the dignity of your {} mother. Mama Mia!",
@@ -117,7 +129,7 @@ def get_menu(text_received):
 
 def order_food(user, values):
     food = " ".join(values)
-    current_orders.append((user, food))
+    current_orders[user] = food
     save_orders(user, food)
     return "Order placed: " + food
 
@@ -168,6 +180,55 @@ def get_restaurants(text_received):
     return return_message
 
 
+def get_schedule_overview():
+    if len(current_schedule) == 0:
+        return "Schedule is empty"
+    output = ""
+    output += "ImagineLab Schedule"
+    output += "\n\n\n"
+    for day, times in current_schedule.items():
+        save_times = []
+        if times is not None:
+            for time in times:
+                save_times.append(time.strftime("%H:%M"))
+        output += "- " + day.strftime("%d/%m/%y") + ": " + " ".join(save_times) + "\n"
+    return output
+
+
+def add_schedule(day, times):
+    try:
+        if day < datetime.today().date():
+            return "Date is in the past"
+        if times is not None:
+            current_times = current_schedule.get(day)
+            if current_times is None:
+                current_times = []
+            for time in times:
+                if time not in current_times:
+                    current_times.append(time)
+            current_schedule[day] = current_times
+        else:
+            current_schedule[day] = None
+        save_schedule()
+        return "Added to schedule"
+    except ValueError:
+        return "Format is incorrect, use DD/MM/YY for day and HH:MM for time"
+
+
+def remove_schedule(day, times):
+    if hasattr(current_schedule, day):
+        if times is not None:
+            current_times = current_schedule[day]
+            if current_times is not None:
+                for time in times:
+                    current_times.pop(time)
+        else:
+            current_schedule.pop(day)
+        save_schedule()
+        return "Removed from schedule"
+    return "Date does not exist in schedule"
+
+
 # ////////////////
 # FILE MANAGEMENT
 # ////////////////
@@ -176,15 +237,29 @@ def get_restaurants(text_received):
 def read_current_day_data():
     if len(current_orders) == 0:
         today = datetime.now().strftime("%Y%m%d")
-        order_path = Path(orders_path + today + "_orders.txt")
-        if order_path.is_file():
-            order_file = open(order_path, "r")
+        path = Path(orders_path + today + "_orders.txt")
+        if path.is_file():
+            order_file = open(path, "r")
             lines = order_file.readlines()
             for line in lines:
                 elements = line.strip().split(";")
-                current_orders.append((elements[0], elements[1]))
-                print(elements)
+                current_orders[elements[0]] = elements[1]
+
     # expand when polls are used
+
+    if len(current_schedule) == 0:
+        path = Path(schedule_path + "schedule.txt")
+        if path.is_file():
+            schedule_file = open(path, "r")
+            lines = schedule_file.readlines()
+            for line in lines:
+                elements = line.strip().split(";")
+                day = datetime.strptime(elements[0], "%d/%m/%y").date()
+                times = []
+                if elements[1:] is not None:
+                    for time in elements[1:]:
+                        times.append(datetime.strptime(time, "%H:%M").time())
+                current_schedule[day] = times
 
 
 def save_orders(user, food):
@@ -199,4 +274,15 @@ def save_polls():
     file_polls = open(polls_path + today + "_polls.txt", "a+")
     file_polls.write("template")
     file_polls.close()
+
+
+def save_schedule():
+    file_schedule = open(schedule_path + "schedule.txt", "w")
+    for day, times in current_schedule.items():
+        save_times = []
+        if times is not None:
+            for time in times:
+                save_times.append(time.strftime("%H:%M"))
+        file_schedule.write(day.strftime("%d/%m/%y") + ";" + ";".join(save_times) + "\n")
+    file_schedule.close()
 
