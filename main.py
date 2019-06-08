@@ -100,7 +100,8 @@ def check_general_keywords(user_name, text_received, channel):
     global attachments
     if not message and any(word in text_received.lower() for word in food_triggers):
         logger.debug('{} asked the FoodBot a request in channel {}'.format(user_name, channel))
-        message = FoodBot.process_call(user_name, text_received, channel)
+        message = FoodBot.process_call(user_name, text_received, set_triggers, overview_triggers, order_triggers, schedule_triggers,
+                                       add_triggers, remove_triggers)
     if not message and any(word in text_received.lower() for word in menu_triggers):
         logger.debug('{} asked the Foodbot for menu in channel {}'.format(user_name, channel))
         message = FoodBot.get_menu(text_received)
@@ -159,6 +160,12 @@ help_triggers = ["help", "aid", "hulp"]
 joke_triggers = ['joke', 'grap', 'grapje', 'grapke']
 resto_triggers = ["restaurant", "resto", "restaurants", "restos"]
 menu_triggers = ["menu", "menus"]
+set_triggers = ["set", "zet", "put"]
+overview_triggers = ["overview", "list", "lijst", "overzicht"]
+order_triggers = ["order", "bestelling", "bestel"]
+schedule_triggers = ["schedule", "schema", "planning"]
+add_triggers = ["add", "toevoegen", "voor mij", "+"]
+remove_triggers = ["remove", "verwijder", "delete", "del", "-", "schrap", "wis"]
 
 # Define ignored words
 ignored_words = ["of", "van", "in", "the", "de", "het", "en", "and", "a", "een", "an"]

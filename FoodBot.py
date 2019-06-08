@@ -6,39 +6,77 @@ import requests
 import random
 
 current_food_place = "Pizza Hut"
-current_orders = {}
-current_schedule = {}
+current_user_orders = []
+pretty_orders = {}
+current_schedule = []
 restaurants = []
 polls_path = "data/polls/"
 orders_path = "data/orders/"
 schedule_path = "data/"
 menu = [[], []]
+today = datetime.now().strftime("%Y%m%d")
 
 
-def process_call(user, input_text, channel):
-    input = input_text.strip().split(" ")
-    if len(input) >= 2 and input[1].lower() == "overview":
-        output = get_order_overview()
-    elif len(input) >= 3 and input[1].lower() == "order":
-        output = order_food(user, input[2])
-    elif len(input) >= 3 and input[1].lower() == "schedule" and input[2].lower() == "list":
-        output = get_schedule_overview()
-    elif len(input) >= 4 and input[1].lower() == "schedule" and input[2].lower() == "add":
-        day = datetime.strptime(input[3], "%d/%m/%y").date()
-        times = []
-        if len(input) > 4:
-            for time in input[4:]:
-                times.append(datetime.strptime(time, "%H:%M").time())
-        output = add_schedule(day, times)
-    elif len(input) >= 4 and input[1].lower() == "schedule" and input[2].lower() == "remove":
-        day = datetime.strptime(input[3], "%d/%m/%y").date()
-        times = []
-        if len(input) > 4:
-            for time in input[4:]:
-                times.append(datetime.strptime(time, "%H:%M").time())
-        output = remove_schedule(day, times)
-    else:
-        output = "I don't talk R0B0T"
+
+def process_call(user, input_text, set_triggers, overview_triggers, order_triggers, schedule_triggers,
+                 add_triggers, remove_triggers):
+    output = None
+    input_text = input_text.lower()
+    if not output:
+        for set_trigger in set_triggers:
+            if set_trigger in input_text:
+                words = input_text.split()
+                output = set_restaurant(" ".join(words[words.index(set_trigger)+1:]))
+    if not output and any(overview_trigger in input_text for overview_trigger in overview_triggers):
+        output = get_order_overview(output)
+    if not output and any(order_trigger in input_text for order_trigger in order_triggers):
+        if not output:
+            for remove_trigger in remove_triggers:
+                if remove_trigger in input_text:
+                    words = input_text.split()
+                    output = remove_order_food(user, " ".join(words[words.index(remove_trigger)+1:]))
+                    break
+        if not output:
+            for order_trigger in order_triggers:
+                if order_trigger in input_text:
+                    words = input_text.split()
+                    output = order_food(user, " ".join(words[words.index(order_trigger)+1:]))
+                    break
+    if not output and any(schedule_trigger in input_text for schedule_trigger in schedule_triggers):
+        if not output:
+            for add_trigger in add_triggers:
+                if add_trigger in input_text:
+                    words = input_text.split()
+                    next_word = words[words.index(add_trigger)+1]
+                    day = None
+                    for fmt in ("%d/%m/%Y", "%d.%m.%Y", "%d:%m:%Y", "%d-%m-%Y", "%d/%m", "%d.%m", "%d:%m", "%d-%m"):
+                        try:
+                            day = datetime.strptime(next_word, fmt).date()
+                            break
+                        except ValueError:
+                            pass
+                    if day:
+                        output = add_schedule(day)
+                    else:
+                        output = "You're going to add no date? Well then fuck off."
+        if not output:
+            for remove_trigger in remove_triggers:
+                if remove_trigger in input_text:
+                    words = input_text.split()
+                    next_word = words[words.index(remove_trigger) + 1]
+                    day = None
+                    for fmt in ("%d/%m/%Y", "%d.%m.%Y", "%d:%m:%Y", "%d-%m-%Y", "%d/%m", "%d.%m", "%d:%m", "%d-%m"):
+                        try:
+                            day = datetime.strptime(next_word, fmt).date()
+                            break
+                        except ValueError:
+                            pass
+                    if day:
+                        output = remove_schedule(day)
+                    else:
+                        output = "There should be a date behind {}, you dipshit.".format(remove_trigger)
+        if not output:
+            output = get_schedule_overview()
 
     return output
 
@@ -47,14 +85,80 @@ def process_call(user, input_text, channel):
 # COMMANDS
 # /////////
 
-def get_order_overview():
-    output = ""
-    output += "From where do you want some food? " + current_food_place
+def get_order_overview(output):
+    if not output:
+        output = ""
+    output += "We're getting food from " + current_food_place
     output += "\n\n\n"
-    for user, order in current_orders.items():
+    for [user, order] in current_user_orders:
         output += user + " orders the following: " + order + "\n"
-
+    if len(current_user_orders) != 0:
+        output += "\nThis results in:\n"
+    for order, amount in pretty_orders.items():
+        output += "{} times {}\n".format(amount, order)
     return output
+
+
+def set_restaurant(restaurant):
+    global restaurants, current_food_place
+    if len(restaurants) == 0:
+        get_restaurants('top 1')  # generate restaurants
+    for resto_name in restaurants[0]:
+        if restaurant in resto_name.lower():
+            current_food_place = "{} \nwith url {}".format(restaurant, restaurants[1][restaurants[0].index(resto_name)])
+            return "restaurant set to {}".format(resto_name)
+    current_food_place = restaurant
+    return "restaurant set to {}".format(restaurant)
+
+
+def order_food(user, food):
+
+    if food in pretty_orders.keys():
+        pretty_orders[food] += 1
+    else:
+        pretty_orders[food] = 1
+    current_user_orders.append([user, food])
+    save_orders()
+    return "Order placed: {}".format(food)
+
+
+def remove_order_food(user, food):
+    if [user, food] in current_user_orders:
+        pretty_orders[food] -= 1
+        if pretty_orders[food] == 0:
+            pretty_orders.pop(food)
+        current_user_orders.remove([user, food])
+    else:
+        return "There's no food from {} matching {}, buy some glasses, will ya?".format(user, food)
+    save_orders()
+    return "Fine. No food for {}".format(user)
+
+
+def get_schedule_overview():
+    if len(current_schedule) == 0:
+        return "Schedule is empty, like your life."
+    output = ""
+    output += "ImagineLab Schedule"
+    output += "\n\n\n"
+    for day in current_schedule:
+        output += "- " + day.strftime("%d/%m/%Y") + "\n"
+    return output
+
+
+def add_schedule(day):
+    if day < datetime.today().date():
+        return "Let's not meet in the past. Actually, let's just not meet at all please!"
+    current_schedule.append(day)
+    save_schedule()
+    return "Added {} to schedule, hope not to see you there!".format(day.strftime("%d/%m/%Y"))
+
+
+def remove_schedule(day):
+    if day in current_schedule:
+        current_schedule.remove(day)
+        save_schedule()
+        return "Removed {} from schedule, the less we need to meet, the better!".format(day.strftime("%d/%m/%Y"))
+    return "Just like your friends, {} does not exist."
 
 
 snappy_responses = ["just like the dignity of your {} mother. Mama Mia!",
@@ -127,13 +231,6 @@ def get_menu(text_received):
     return message
 
 
-def order_food(user, values):
-    food = " ".join(values)
-    current_orders[user] = food
-    save_orders(user, food)
-    return "Order placed: " + food
-
-
 def get_restaurants(text_received):
     global restaurants
     response = requests.get('https://www.takeaway.com/be/eten-bestellen-antwerpen-2020')
@@ -180,70 +277,25 @@ def get_restaurants(text_received):
     return return_message
 
 
-def get_schedule_overview():
-    if len(current_schedule) == 0:
-        return "Schedule is empty"
-    output = ""
-    output += "ImagineLab Schedule"
-    output += "\n\n\n"
-    for day, times in current_schedule.items():
-        save_times = []
-        if times is not None:
-            for time in times:
-                save_times.append(time.strftime("%H:%M"))
-        output += "- " + day.strftime("%d/%m/%y") + ": " + " ".join(save_times) + "\n"
-    return output
-
-
-def add_schedule(day, times):
-    try:
-        if day < datetime.today().date():
-            return "Date is in the past"
-        if times is not None:
-            current_times = current_schedule.get(day)
-            if current_times is None:
-                current_times = []
-            for time in times:
-                if time not in current_times:
-                    current_times.append(time)
-            current_schedule[day] = current_times
-        else:
-            current_schedule[day] = None
-        save_schedule()
-        return "Added to schedule"
-    except ValueError:
-        return "Format is incorrect, use DD/MM/YY for day and HH:MM for time"
-
-
-def remove_schedule(day, times):
-    if hasattr(current_schedule, day):
-        if times is not None:
-            current_times = current_schedule[day]
-            if current_times is not None:
-                for time in times:
-                    current_times.pop(time)
-        else:
-            current_schedule.pop(day)
-        save_schedule()
-        return "Removed from schedule"
-    return "Date does not exist in schedule"
-
-
 # ////////////////
 # FILE MANAGEMENT
 # ////////////////
 
 
 def read_current_day_data():
-    if len(current_orders) == 0:
+    if len(current_user_orders) == 0:
         today = datetime.now().strftime("%Y%m%d")
         path = Path(orders_path + today + "_orders.txt")
         if path.is_file():
             order_file = open(path, "r")
             lines = order_file.readlines()
             for line in lines:
-                elements = line.strip().split(";")
-                current_orders[elements[0]] = elements[1]
+                element = line.strip().split(";")
+                if element[1] in pretty_orders.keys():
+                    pretty_orders[element[1]] += 1
+                else:
+                    pretty_orders[element[1]] = 1
+                current_user_orders.append(element)
 
     # expand when polls are used
 
@@ -253,19 +305,15 @@ def read_current_day_data():
             schedule_file = open(path, "r")
             lines = schedule_file.readlines()
             for line in lines:
-                elements = line.strip().split(";")
-                day = datetime.strptime(elements[0], "%d/%m/%y").date()
-                times = []
-                if elements[1:] is not None:
-                    for time in elements[1:]:
-                        times.append(datetime.strptime(time, "%H:%M").time())
-                current_schedule[day] = times
+                day = datetime.strptime(line[0:10], "%d/%m/%Y").date()
+                current_schedule.append(day)
 
 
-def save_orders(user, food):
+def save_orders():
     today = datetime.now().strftime("%Y%m%d")
-    file_orders = open(orders_path + today + "_orders.txt", "a+")
-    file_orders.write(user + ";" + food + "\n")
+    file_orders = open(orders_path + today + "_orders.txt", "w")
+    for [user, food] in current_user_orders:
+        file_orders.write("{};{}\n".format(user, food))
     file_orders.close()
 
 
@@ -278,11 +326,7 @@ def save_polls():
 
 def save_schedule():
     file_schedule = open(schedule_path + "schedule.txt", "w")
-    for day, times in current_schedule.items():
-        save_times = []
-        if times is not None:
-            for time in times:
-                save_times.append(time.strftime("%H:%M"))
-        file_schedule.write(day.strftime("%d/%m/%y") + ";" + ";".join(save_times) + "\n")
+    for day in current_schedule:
+        file_schedule.write(day.strftime("%d/%m/%Y") + "\n")
     file_schedule.close()
 
