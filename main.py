@@ -17,7 +17,10 @@ def on_message(**payload):
         data = payload['data']
         global message, attachments, delivery
         message = attachments = None
-        user_id, text_received, channel = data['user'], data['text'], data['channel']
+        if "user" in data:
+            user_id, text_received, channel = data['user'], data['text'], data['channel']
+        else:
+            user_id = bot_id
         if user_id != bot_id:
             webclient = payload['web_client']
             user_name = webclient.users_info(user=user_id)["user"]["name"]
