@@ -56,7 +56,12 @@ def definition(text_received, triggers, translator, oxford):
         info = oxford.get_info_about_word(translated.text)
         try:
             json_info = json.loads(info.text)
-            answer = str(json_info['results'][0]['lexicalEntries'][0]['entries'][0]['senses'][0]['definitions'][0])
+            if 'definitions' in json_info['results'][0]['lexicalEntries'][0]['entries'][0]['senses'][0]:
+                answer = str(json_info['results'][0]['lexicalEntries'][0]['entries'][0]['senses'][0]['definitions'][0])
+            elif 'crossReferenceMarkers' in json_info['results'][0]['lexicalEntries'][0]['entries'][0]['senses'][0]:
+                answer = str(json_info['results'][0]['lexicalEntries'][0]['entries'][0]['senses'][0]['crossReferenceMarkers'][0])
+            else:
+                raise ValueError
             subject = str(json_info['results'][0]['id'])
             translated = translator.translate(subject + " is " + answer, src='en', dest='nl')
             return translated.text

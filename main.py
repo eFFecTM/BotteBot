@@ -47,14 +47,15 @@ def send_message(text_to_send, channel, attachments):
 def filter_ignore_words(text_received, ignored_words):
     mentioned = False
     words_received = text_received.split()
+    relevant_words = []
     for word in words_received:
-        if word in ignored_words:
-            words_received.remove(word)
         if '@{}'.format(bot_id) in word:
             words_received.remove(word)
             mentioned = True
+        elif word not in ignored_words:
+            relevant_words.append(word)
     text_received = ""
-    for word in words_received:
+    for word in relevant_words:
         text_received += word + " "
     return text_received, mentioned
 
@@ -171,7 +172,7 @@ add_triggers = ["add", "toevoegen", "voor mij", "+"]
 remove_triggers = ["remove", "verwijder", "delete", "del", "-", "schrap", "wis"]
 
 # Define ignored words
-ignored_words = ["of", "van", "in", "the", "de", "het", "en", "and", "a", "een", "an"]
+ignored_words = ["of", "van", "in", "the", "de", "het", "en", "and", "a", "een", "an", "is"]
 
 # Init message and translator
 message = None
