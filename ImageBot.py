@@ -52,7 +52,8 @@ def get_image_url(search_string, animation=False):
                      "print_urls": False,
                      "no_download": True,
                      "size": "medium",
-                     "aspect_ratio": "panoramic"
+                     "aspect_ratio": "panoramic",
+                     "no_directory": True
                      }
     else:
         arguments = {"keywords": search_string,
@@ -61,7 +62,8 @@ def get_image_url(search_string, animation=False):
                      "print_urls": False,
                      "no_download": True,
                      "size": "medium",
-                     "aspect_ratio": "panoramic"
+                     "aspect_ratio": "panoramic",
+                     "no_directory": True
                      }
 
     try:
