@@ -5,5 +5,5 @@ googletrans
 oxforddictionaries
 nltk
 numpy
-google_images_download
+google_images_download==2.6.1
 bs4

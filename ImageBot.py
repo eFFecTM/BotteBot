@@ -17,12 +17,12 @@ def find_image(text, image_triggers):
     # Get search words in received text
     search_words = []
     animation = False
-    words = text.split(" ")[1:]
+    words = text.split(" ")
     for word in words:
-        if word not in image_triggers:
-            search_words.append(word)
         if word in ['animation', 'animatie', 'gif']:
             animation = True
+        if word not in image_triggers:
+            search_words.append(word)
     search_string = " ".join(search_words)
     logger.debug('Searching Google Images for search: {}'.format(search_string))
     image_title, image_url = get_image_url(search_string, animation=animation)
