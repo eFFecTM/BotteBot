@@ -102,10 +102,16 @@ def check_general_keywords(user_name, text_received, channel):
     """Check for serious shit. Predefined commands etc."""
     global message
     global attachments
+    if not message and any((word in text_received.lower() for word in help_triggers)):
+        if not message and any(word in text_received.lower() for word in food_triggers):
+            message = HelpBot.get_list_of_food_commands()
+        else:
+            message = HelpBot.get_list_of_commands()
+        logger.debug('{} asked the HelpBot for info in channel {}'.format(user_name, channel))
     if not message and any(word in text_received.lower() for word in food_triggers):
         logger.debug('{} asked the FoodBot a request in channel {}'.format(user_name, channel))
-        message = FoodBot.process_call(user_name, text_received, set_triggers, overview_triggers, order_triggers, schedule_triggers,
-                                       add_triggers, remove_triggers)
+        message = FoodBot.process_call(user_name, text_received, set_triggers, overview_triggers, order_triggers,
+                                       schedule_triggers, add_triggers, remove_triggers)
     if not message and any(word in text_received.lower() for word in menu_triggers):
         logger.debug('{} asked the Foodbot for menu in channel {}'.format(user_name, channel))
         message = FoodBot.get_menu(text_received)
@@ -115,8 +121,6 @@ def check_general_keywords(user_name, text_received, channel):
     if not message and any((word in text_received.lower() for word in image_triggers)) and not attachments:
         logger.debug('{} asked the ImageBot a request in channel {}'.format(user_name, channel))
         message, attachments = ImageBot.find_image(text_received, image_triggers)
-    if not message and any((word in text_received.lower() for word in help_triggers)):
-        message = HelpBot.get_list_of_commands()
     if not message and any((word in text_received.lower() for word in joke_triggers)):
         message = "You really need to find help. And friends. Bye."
 
@@ -151,7 +155,6 @@ oxford = OxfordDictionaries(app_id=OXFORD_ID, app_key=OXFORD_KEY)
 # Read order and poll of the current day if exists (in case of crashes / restarts)
 FoodBot.read_current_day_data()
 
-
 # Define trigger words
 weather_triggers = ['forecast', 'weather', 'weer', 'voorspelling']
 insult_triggers = ["insult", "got em", "scheld", "jan", "bot", "botte"]
@@ -161,7 +164,7 @@ food_triggers = ["food", "eten"]
 repeat_triggers = ["echo", "herhaal", "repeat"]
 image_triggers = ["image", "photo", "afbeelding", "foto", "picture", "animation", "animatie", "gif"]
 help_triggers = ["help", "aid", "hulp"]
-joke_triggers = ['joke', 'grap', 'grapje', 'grapke']
+joke_triggers = ['joke', 'grap', 'grapje', 'grapke', 'roastme']
 resto_triggers = ["restaurant", "resto", "restaurants", "restos"]
 menu_triggers = ["menu", "menus"]
 set_triggers = ["set", "zet", "put"]

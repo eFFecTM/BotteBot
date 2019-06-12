@@ -17,7 +17,6 @@ menu = [[], []]
 today = datetime.now().strftime("%Y%m%d")
 
 
-
 def process_call(user, input_text, set_triggers, overview_triggers, order_triggers, schedule_triggers,
                  add_triggers, remove_triggers):
     output = None
@@ -26,7 +25,7 @@ def process_call(user, input_text, set_triggers, overview_triggers, order_trigge
         for set_trigger in set_triggers:
             if set_trigger in input_text:
                 words = input_text.split()
-                output = set_restaurant(" ".join(words[words.index(set_trigger)+1:]))
+                output = set_restaurant(" ".join(words[words.index(set_trigger) + 1:]))
     if not output and any(overview_trigger in input_text for overview_trigger in overview_triggers):
         output = get_order_overview(output)
     if not output and any(order_trigger in input_text for order_trigger in order_triggers):
@@ -34,24 +33,28 @@ def process_call(user, input_text, set_triggers, overview_triggers, order_trigge
             for remove_trigger in remove_triggers:
                 if remove_trigger in input_text:
                     words = input_text.split()
-                    output = remove_order_food(user, " ".join(words[words.index(remove_trigger)+1:]))
+                    output = remove_order_food(user, " ".join(words[words.index(remove_trigger) + 1:]))
                     break
         if not output:
             for order_trigger in order_triggers:
                 if order_trigger in input_text:
                     words = input_text.split()
-                    output = order_food(user, " ".join(words[words.index(order_trigger)+1:]))
+                    output = order_food(user, " ".join(words[words.index(order_trigger) + 1:]))
                     break
     if not output and any(schedule_trigger in input_text for schedule_trigger in schedule_triggers):
         if not output:
             for add_trigger in add_triggers:
                 if add_trigger in input_text:
                     words = input_text.split()
-                    next_word = words[words.index(add_trigger)+1]
+                    next_word = words[words.index(add_trigger) + 1]
                     day = None
-                    for fmt in ("%d/%m/%Y", "%d.%m.%Y", "%d:%m:%Y", "%d-%m-%Y", "%d/%m", "%d.%m", "%d:%m", "%d-%m"):
+                    for fmt in (
+                            "%d/%m/%Y", "%d.%m.%Y", "%d:%m:%Y", "%d-%m-%Y", "%d/%m/%y", "%d.%m.%y", "%d:%m:%y",
+                            "%d-%m-%y", "%d/%m", "%d.%m", "%d:%m", "%d-%m"):
                         try:
                             day = datetime.strptime(next_word, fmt).date()
+                            if day.year == 1900:
+                                day = day.replace(year=datetime.now().year)
                             break
                         except ValueError:
                             pass
@@ -65,9 +68,13 @@ def process_call(user, input_text, set_triggers, overview_triggers, order_trigge
                     words = input_text.split()
                     next_word = words[words.index(remove_trigger) + 1]
                     day = None
-                    for fmt in ("%d/%m/%Y", "%d.%m.%Y", "%d:%m:%Y", "%d-%m-%Y", "%d/%m", "%d.%m", "%d:%m", "%d-%m"):
+                    for fmt in (
+                            "%d/%m/%Y", "%d.%m.%Y", "%d:%m:%Y", "%d-%m-%Y", "%d/%m/%y", "%d.%m.%y", "%d:%m:%y",
+                            "%d-%m-%y", "%d/%m", "%d.%m", "%d:%m", "%d-%m"):
                         try:
                             day = datetime.strptime(next_word, fmt).date()
+                            if day.year == 1900:
+                                day = day.replace(year=datetime.now().year)
                             break
                         except ValueError:
                             pass
@@ -112,7 +119,6 @@ def set_restaurant(restaurant):
 
 
 def order_food(user, food):
-
     if food in pretty_orders.keys():
         pretty_orders[food] += 1
     else:
@@ -213,7 +219,7 @@ def get_menu(text_received):
             menu[1].append(text[:location])
             location = text.find('name')
 
-        rand = random.randint(0, top_number*3)
+        rand = random.randint(0, top_number * 3)
         location_number = 0
         if top_number > len(menu[0]):
             top_number = len(menu[0])
@@ -272,7 +278,7 @@ def get_restaurants(text_received):
     else:
         top_number = 10
     for i in range(0, top_number):
-        return_message = "{}{}: {}   - {}\n".format(return_message, i+1, restaurants[0][i],
+        return_message = "{}{}: {}   - {}\n".format(return_message, i + 1, restaurants[0][i],
                                                     restaurants[1][i])
     return return_message
 
@@ -329,4 +335,3 @@ def save_schedule():
     for day in current_schedule:
         file_schedule.write(day.strftime("%d/%m/%Y") + "\n")
     file_schedule.close()
-

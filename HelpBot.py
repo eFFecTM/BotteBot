@@ -19,7 +19,7 @@ def get_list_of_commands():
     
                     \u2022 Get the current weather: `weather in <city>`
                     \u2022 Get the menu of a restaurant: `menu <restaurant> top <number>`
-                    \u2022 Order food at a restaurant: _*de jan is dees aant doen, hebde nog een jaar of 10?*_
+                    \u2022 Order food: `help food`
                     \u2022 Image search: `image of <text>` or `animation of <text>`
                     \u2022 Get help: `help`
                     
@@ -31,6 +31,22 @@ def get_list_of_commands():
                     \u2022 Get a list of restaurants that are able to deliver @ iMagineLab: `restaurant top <number>`
                     \u2022 Let the bot tell a random joke: _Sit back, relax and wait for the joke. If nothing happens, type_ `joke`
                    
+                """
+    return response
+
+
+def get_list_of_food_commands():
+    response = """ >Need help :question: Here is a list of available commands related to food. 
+    You can use synonyms of these words as trigger words.\n
+    Be sure to mention me, using `@BotteBot`:
+
+                    \u2022 View current restaurant and all current orders: `food list`
+                    \u2022 Place a food order: `food order <meal>`
+                    \u2022 Remove a food order: `food order remove <meal>`
+                    \u2022 View ImagineLab schedule: `food schedule`
+                    \u2022 Add date to ImagineLab schedule: `food schedule add <date>`
+                    \u2022 Remove date from ImagineLab schedule: `food schedule remove <date>`
+                    \u2022 Set a new current restaurant: `food set <restaurant>`
                 """
     return response
 
