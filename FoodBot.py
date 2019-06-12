@@ -61,7 +61,8 @@ def process_call(user, input_text, set_triggers, overview_triggers, order_trigge
                     if day:
                         output = add_schedule(day)
                     else:
-                        output = "You're going to add no date? Well then fuck off."
+                        adjective = requests.get("https://insult.mattbas.org/api/adjective").text
+                        output = "You're going to add no date? No one's going to date you're {} ass anyway.".format(adjective)
         if not output:
             for remove_trigger in remove_triggers:
                 if remove_trigger in input_text:
@@ -81,7 +82,10 @@ def process_call(user, input_text, set_triggers, overview_triggers, order_trigge
                     if day:
                         output = remove_schedule(day)
                     else:
-                        output = "There should be a date behind {}, you dipshit.".format(remove_trigger)
+                        r = requests.get("https://insult.mattbas.org/api/insult").text.split()
+                        adjective = r[3]
+                        noun = r[-1]
+                        output = "There should be a date behind {}, you {} {}.".format(remove_trigger, adjective, noun)
         if not output:
             output = get_schedule_overview()
 
@@ -110,12 +114,15 @@ def set_restaurant(restaurant):
     global restaurants, current_food_place
     if len(restaurants) == 0:
         get_restaurants('top 1')  # generate restaurants
+    r = requests.get("https://insult.mattbas.org/api/insult").text.split()
+    adjective = r[3]
+    noun = r[-1]
     for resto_name in restaurants[0]:
         if restaurant in resto_name.lower():
-            current_food_place = "{} \nwith url {}".format(restaurant, restaurants[1][restaurants[0].index(resto_name)])
-            return "restaurant set to {}".format(resto_name)
+            current_food_place = "{} \nwith url {}".format(resto_name, restaurants[1][restaurants[0].index(resto_name)])
+            return "restaurant set to {}. I heard they serve {} {}".format(resto_name, adjective, noun)
     current_food_place = restaurant
-    return "restaurant set to {}".format(restaurant)
+    return "restaurant set to {}. I heard they serve {} {}".format(restaurant, adjective, noun)
 
 
 def order_food(user, food):
@@ -125,7 +132,8 @@ def order_food(user, food):
         pretty_orders[food] = 1
     current_user_orders.append([user, food])
     save_orders()
-    return "Order placed: {}".format(food)
+    adjective = requests.get("https://insult.mattbas.org/api/adjective").text
+    return "Order placed: {} for {} {}".format(food, adjective, user)
 
 
 def remove_order_food(user, food):
@@ -135,7 +143,8 @@ def remove_order_food(user, food):
             pretty_orders.pop(food)
         current_user_orders.remove([user, food])
     else:
-        return "There's no food from {} matching {}, buy some glasses, will ya?".format(user, food)
+        noun = requests.get("https://insult.mattbas.org/api/insult").text.split()[-1]
+        return "There's no food from {} matching {}, buy some glasses, you blind {}".format(user, food, noun)
     save_orders()
     return "Fine. No food for {}".format(user)
 
@@ -156,15 +165,20 @@ def add_schedule(day):
         return "Let's not meet in the past. Actually, let's just not meet at all please!"
     current_schedule.append(day)
     save_schedule()
-    return "Added {} to schedule, hope not to see you there!".format(day.strftime("%d/%m/%Y"))
+    adjective = requests.get("https://insult.mattbas.org/api/adjective").text
+    return "Added {} to schedule, hope not to see you're {} ass there!".format(day.strftime("%d/%m/%Y"), adjective)
 
 
 def remove_schedule(day):
     if day in current_schedule:
         current_schedule.remove(day)
         save_schedule()
-        return "Removed {} from schedule, the less we need to meet, the better!".format(day.strftime("%d/%m/%Y"))
-    return "Just like your friends, {} does not exist."
+        r = requests.get("https://insult.mattbas.org/api/insult").text.split()
+        adjective = r[3]
+        noun = r[-1]
+        return "Removed {} from schedule, the less I need to meet you {} {}, the better!".format(day.strftime("%d/%m/%Y"), adjective, noun)
+    adjective = requests.get("https://insult.mattbas.org/api/adjective").text
+    return "Just like your {} friends, {} does not exist.".format(adjective, day.strftime("%d/%m/%Y"))
 
 
 snappy_responses = ["just like the dignity of your {} mother. Mama Mia!",
@@ -226,7 +240,8 @@ def get_menu(text_received):
         for i in range(0, top_number):
             location_number += 1
             if rand == i:
-                message = "{}{}: Uw mama voor €0\n".format(message, location_number)
+                adjective = requests.get("https://insult.mattbas.org/api/adjective").text
+                message = "{}{}: Your {} mother for €0\n".format(message, adjective, location_number)
                 location_number += 1
             message = "{}{}: {} voor €{}\n".format(message, location_number, menu[0][i], menu[1][i])
     else:

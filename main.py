@@ -50,7 +50,6 @@ def filter_ignore_words(text_received, ignored_words):
     relevant_words = []
     for word in words_received:
         if '@{}'.format(bot_id) in word:
-            words_received.remove(word)
             mentioned = True
         elif word not in ignored_words:
             relevant_words.append(word)
