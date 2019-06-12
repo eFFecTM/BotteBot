@@ -5,7 +5,8 @@ from nltk import word_tokenize, pos_tag, ne_chunk, Tree
 def get_weather_message(text_received, api_key):
     """Get the current weather at a given location. Default location is Antwerp."""
     owm = pyowm.OWM(api_key)
-    location = get_location(text_received)
+    location = None
+    # location = get_location(text_received)  # Location API is not working anymore
     if location is None:
         location = 'Antwerp'  # Default location
     observation = owm.weather_at_place(location)
