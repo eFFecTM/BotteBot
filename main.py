@@ -1,6 +1,10 @@
 """This is the main application for the Slackbot called BotteBot."""
 import configparser
 import logging
+import threading
+import time
+
+import schedule
 import slack
 from googletrans import Translator
 from oxforddictionaries.words import OxfordDictionaries
@@ -151,8 +155,36 @@ OXFORD_ID = str(config.get('oxford', 'ID'))
 OXFORD_KEY = str(config.get('oxford', 'KEY'))
 oxford = OxfordDictionaries(app_id=OXFORD_ID, app_key=OXFORD_KEY)
 
-# Read order and poll of the current day if exists (in case of crashes / restarts)
-FoodBot.read_current_day_data()
+
+# schedule events for the next ImagineLab day
+stop = False
+
+
+class Scheduler(threading.Thread):
+    def __init__(self):
+        threading.Thread.__init__(self)
+
+    def run(self):
+        while True:
+            schedule.run_pending()
+            time.sleep(1)
+            if stop:
+                break
+
+
+def print_where_food_notification():
+    send_message("<!channel> Where are we going to order today?", "test_channel", None)
+
+
+def print_what_food_notification():
+    send_message("<!channel> What do you all want to order?", "test_channel", None)
+
+
+schedule.every().wednesday.at("10:00").do(print_where_food_notification)
+schedule.every().wednesday.at("14:00").do(print_what_food_notification)
+thread = Scheduler()
+thread.start()
+
 
 # Define trigger words
 weather_triggers = ['forecast', 'weather', 'weer', 'voorspelling']
@@ -194,3 +226,4 @@ public_channel_ids = [element["id"] for element in client.channels_list()["chann
 slackbot = slack.RTMClient(token=SLACK_BOT_TOKEN)
 logger.info('Connected to Slack!')
 slackbot.start()
+stop = True

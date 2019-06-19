@@ -1,9 +1,8 @@
-from pathlib import Path
-
-from datetime import datetime
-from bs4 import BeautifulSoup
-import requests
 import random
+from datetime import datetime
+
+import requests
+from bs4 import BeautifulSoup
 
 current_food_place = "Pizza Hut"
 current_user_orders = []
@@ -301,33 +300,6 @@ def get_restaurants(text_received):
 # ////////////////
 # FILE MANAGEMENT
 # ////////////////
-
-
-def read_current_day_data():
-    if len(current_user_orders) == 0:
-        today = datetime.now().strftime("%Y%m%d")
-        path = Path(orders_path + today + "_orders.txt")
-        if path.is_file():
-            order_file = open(path, "r")
-            lines = order_file.readlines()
-            for line in lines:
-                element = line.strip().split(";")
-                if element[1] in pretty_orders.keys():
-                    pretty_orders[element[1]] += 1
-                else:
-                    pretty_orders[element[1]] = 1
-                current_user_orders.append(element)
-
-    # expand when polls are used
-
-    if len(current_schedule) == 0:
-        path = Path(schedule_path + "schedule.txt")
-        if path.is_file():
-            schedule_file = open(path, "r")
-            lines = schedule_file.readlines()
-            for line in lines:
-                day = datetime.strptime(line[0:10], "%d/%m/%Y").date()
-                current_schedule.append(day)
 
 
 def save_orders():
