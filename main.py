@@ -1,5 +1,6 @@
 """This is the main application for the Slackbot called BotteBot."""
 import configparser
+import json
 import logging
 import threading
 import time
@@ -147,13 +148,13 @@ formatstring = "%(asctime)s - %(name)s:%(funcName)s:%(lineno)i - %(levelname)s -
 logging.basicConfig(format=formatstring, level=logging.DEBUG)
 logger.info('Starting BotteBot application...')
 
-# Read config file
-config = configparser.ConfigParser()
-config.read('init.ini')
-SLACK_BOT_TOKEN = str(config.get('slackbot', 'SLACK_BOT_TOKEN'))
-API_KEY = str(config.get('open_weather_map', 'API_KEY'))
-OXFORD_ID = str(config.get('oxford', 'ID'))
-OXFORD_KEY = str(config.get('oxford', 'KEY'))
+# Read init file
+init = configparser.ConfigParser()
+init.read('init.ini')
+SLACK_BOT_TOKEN = str(init.get('slackbot', 'SLACK_BOT_TOKEN'))
+API_KEY = str(init.get('open_weather_map', 'API_KEY'))
+OXFORD_ID = str(init.get('oxford', 'ID'))
+OXFORD_KEY = str(init.get('oxford', 'KEY'))
 oxford = OxfordDictionaries(app_id=OXFORD_ID, app_key=OXFORD_KEY)
 
 
@@ -174,42 +175,48 @@ class Scheduler(threading.Thread):
 
 
 def print_where_food_notification():
-    send_message("<!channel> Where are we going to order today?", "test_channel", None)
+    send_message("<!channel> Where are we going to order today?", notification_channel, None)
 
 
 def print_what_food_notification():
-    send_message("<!channel> What do you all want to order?", "test_channel", None)
+    send_message("<!channel> What do you all want to order?", notification_channel, None)
 
 
-schedule.every().wednesday.at("10:00").do(print_where_food_notification)
-schedule.every().wednesday.at("14:00").do(print_what_food_notification)
+# Define trigger words
+config = configparser.ConfigParser()
+config.read('config.ini')
+
+notification_channel = str(config.get("scheduler", "NOTIFICATION_CHANNEL"))
+where_time = str(config.get("scheduler", "WHERE_TIME"))
+what_time = str(config.get("scheduler", "WHAT_TIME"))
+schedule.every().wednesday.at(where_time).do(print_where_food_notification)
+schedule.every().wednesday.at(what_time).do(print_what_food_notification)
 schedule.every().wednesday.at("13:59").do(FoodBot.update_restaurant_database)
 thread = Scheduler()
 thread.start()
 
 
 
-# Define trigger words
-weather_triggers = ['forecast', 'weather', 'weer', 'voorspelling']
-insult_triggers = ["insult", "got em", "scheld", "jan", "bot", "botte"]
-lmgtfy_triggers = ["lmgtfy", "opzoeken"]
-def_triggers = ["thefuck", "def", "definitie", "verklaar", "define"]
-food_triggers = ["food", "eten"]
-repeat_triggers = ["echo", "herhaal", "repeat"]
-image_triggers = ["image", "photo", "afbeelding", "foto", "picture", "animation", "animatie", "gif"]
-help_triggers = ["help", "aid", "hulp"]
-joke_triggers = ['joke', 'grap', 'grapje', 'grapke', 'roastme']
-resto_triggers = ["restaurant", "resto", "restaurants", "restos"]
-menu_triggers = ["menu", "menus"]
-set_triggers = ["set", "zet", "put"]
-overview_triggers = ["overview", "list", "lijst", "overzicht"]
-order_triggers = ["order", "bestelling", "bestel"]
-schedule_triggers = ["schedule", "schema", "planning"]
-add_triggers = ["add", "toevoegen", "voor mij", "+"]
-remove_triggers = ["remove", "verwijder", "delete", "del", "-", "schrap", "wis"]
+weather_triggers = json.loads(config.get("triggers", "WEATHER"))
+insult_triggers = json.loads(config.get("triggers", "INSULT"))
+lmgtfy_triggers = json.loads(config.get("triggers", "LMGTFY"))
+def_triggers = json.loads(config.get("triggers", "DEF"))
+food_triggers = json.loads(config.get("triggers", "FOOD"))
+repeat_triggers = json.loads(config.get("triggers", "INSULT"))
+image_triggers = json.loads(config.get("triggers", "IMAGE"))
+help_triggers = json.loads(config.get("triggers", "HELP"))
+joke_triggers = json.loads(config.get("triggers", "JOKE"))
+resto_triggers = json.loads(config.get("triggers", "RESTO"))
+menu_triggers = json.loads(config.get("triggers", "MENU"))
+set_triggers = json.loads(config.get("triggers", "SET"))
+overview_triggers = json.loads(config.get("triggers", "OVERVIEW"))
+order_triggers = json.loads(config.get("triggers", "ORDER"))
+schedule_triggers = json.loads(config.get("triggers", "SCHEDULE"))
+add_triggers = json.loads(config.get("triggers", "ADD"))
+remove_triggers = json.loads(config.get("triggers", "REMOVE"))
 
 # Define ignored words
-ignored_words = ["of", "van", "in", "the", "de", "het", "en", "and", "a", "een", "an", "is"]
+ignored_words = json.loads(config.get("triggers", "IGNORED_WORDS"))
 
 # Init message and translator
 message = None
