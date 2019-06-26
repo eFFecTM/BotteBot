@@ -1,11 +1,10 @@
-from pathlib import Path
 import random
 from datetime import datetime
-from bs4 import BeautifulSoup
+
 import requests
-import random
-from data.sqlquery import SQL_query
 from bs4 import BeautifulSoup
+
+from data.sqlquery import SQL_query
 
 s = SQL_query('data/imaginelab.db')
 current_food_place = "Pizza Hut"
@@ -13,9 +12,6 @@ current_user_orders = []
 pretty_orders = {}
 current_schedule = []
 restaurants = []
-polls_path = "data/polls/"
-orders_path = "data/orders/"
-schedule_path = "data/"
 menu = [[], []]
 today = datetime.now().strftime("%Y%m%d")
 
@@ -134,7 +130,6 @@ def order_food(user, food):
     else:
         pretty_orders[food] = 1
     current_user_orders.append([user, food])
-    save_orders()
     adjective = requests.get("https://insult.mattbas.org/api/adjective").text
     return "Order placed: {} for {} {}".format(food, adjective, user)
 
@@ -148,7 +143,6 @@ def remove_order_food(user, food):
     else:
         noun = requests.get("https://insult.mattbas.org/api/insult").text.split()[-1]
         return "There's no food from {} matching {}, buy some glasses, you blind {}".format(user, food, noun)
-    save_orders()
     return "Fine. No food for {}".format(user)
 
 
@@ -167,7 +161,6 @@ def add_schedule(day):
     if day < datetime.today().date():
         return "Let's not meet in the past. Actually, let's just not meet at all please!"
     current_schedule.append(day)
-    save_schedule()
     adjective = requests.get("https://insult.mattbas.org/api/adjective").text
     return "Added {} to schedule, hope not to see you're {} ass there!".format(day.strftime("%d/%m/%Y"), adjective)
 
@@ -175,7 +168,6 @@ def add_schedule(day):
 def remove_schedule(day):
     if day in current_schedule:
         current_schedule.remove(day)
-        save_schedule()
         r = requests.get("https://insult.mattbas.org/api/insult").text.split()
         adjective = r[3]
         noun = r[-1]
@@ -311,17 +303,3 @@ def update_restaurant_database():
     for restaurant in restaurants[0]:
         s.sql_edit_insert('INSERT INTO restaurant_database (restaurant, url) VALUES (?, ?) ', (restaurant, restaurants[1][restaurants[0].index(restaurant)]))
 
-
-def save_orders():
-    # save to orders database
-    pass
-
-
-def save_polls():
-    # save to polls database
-    pass
-
-
-def save_schedule():
-    # save to schedule database
-    pass
