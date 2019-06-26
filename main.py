@@ -121,7 +121,7 @@ def check_general_keywords(user_name, text_received, channel):
         message = FoodBot.get_menu(text_received)
     if not message and any(word in text_received.lower() for word in resto_triggers):
         logger.debug('{} asked the Foodbot for restaurants in channel {}'.format(user_name, channel))
-        message = FoodBot.get_restaurants(text_received)
+        message = FoodBot.update_restaurant_database(text_received)
     if not message and any((word in text_received.lower() for word in image_triggers)) and not attachments:
         logger.debug('{} asked the ImageBot a request in channel {}'.format(user_name, channel))
         message, attachments = ImageBot.find_image(text_received, image_triggers)
@@ -183,8 +183,10 @@ def print_what_food_notification():
 
 schedule.every().wednesday.at("10:00").do(print_where_food_notification)
 schedule.every().wednesday.at("14:00").do(print_what_food_notification)
+schedule.every().wednesday.at("13:59").do(FoodBot.update_restaurant_database)
 thread = Scheduler()
 thread.start()
+
 
 
 # Define trigger words
@@ -226,7 +228,6 @@ public_channel_ids = [element["id"] for element in client.channels_list()["chann
 # Connect to SQLite3 database
 s = SQL_query('data/imaginelab.db')
 logger.info('Connected to SQLite database!')
-FoodBot.update_restaurant_database()
 
 # Connect to Slack
 slackbot = slack.RTMClient(token=SLACK_BOT_TOKEN)

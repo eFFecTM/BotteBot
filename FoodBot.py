@@ -255,8 +255,9 @@ def get_menu(text_received):
     return message
 
 
-def get_restaurants(text_received):
+def get_restaurants(text_received=None):
     global restaurants
+
     response = requests.get('https://www.takeaway.com/be/eten-bestellen-antwerpen-2020')
 
     soup = BeautifulSoup(response.content, 'html.parser')
@@ -282,7 +283,7 @@ def get_restaurants(text_received):
 
     return_message = ""
 
-    if 'top' in text_received:
+    if text_received and 'top' in text_received:
         words = text_received.split()
         next_word = words[words.index('top') + 1]
         try:
@@ -305,11 +306,14 @@ def get_restaurants(text_received):
 # DATABASE MANAGEMENT
 # ///////////////////
 
-def update_restaurant_database():
+def update_restaurant_database(text_received=None):
     global restaurants
-    get_restaurants('top 1')
+    msg = get_restaurants(text_received)
     for restaurant in restaurants[0]:
-        s.sql_edit_insert('INSERT INTO restaurant_database (restaurant, url) VALUES (?, ?) ', (restaurant, restaurants[1][restaurants[0].index(restaurant)]))
+        s.sql_edit_insert('INSERT OR IGNORE INTO restaurant_database (restaurant, url) VALUES (?,?)', (restaurant, restaurants[1][restaurants[0].index(restaurant)]))
+        s.sql_edit_insert('UPDATE restaurant_database SET url=?  WHERE restaurant=? ', (restaurants[1][restaurants[0].index(restaurant)], restaurant))
+    print('Updated database')
+    return msg
 
 
 def save_orders():
