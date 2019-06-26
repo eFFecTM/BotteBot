@@ -9,6 +9,7 @@ import ImageBot
 import RandomBot
 import WeatherBot
 import HelpBot
+from data.sqlquery import SQL_query
 
 
 @slack.RTMClient.run_on(event='message')
@@ -151,9 +152,6 @@ OXFORD_ID = str(config.get('oxford', 'ID'))
 OXFORD_KEY = str(config.get('oxford', 'KEY'))
 oxford = OxfordDictionaries(app_id=OXFORD_ID, app_key=OXFORD_KEY)
 
-# Read order and poll of the current day if exists (in case of crashes / restarts)
-FoodBot.read_current_day_data()
-
 # Define trigger words
 weather_triggers = ['forecast', 'weather', 'weer', 'voorspelling']
 insult_triggers = ["insult", "got em", "scheld", "jan", "bot", "botte"]
@@ -189,6 +187,11 @@ client = slack.WebClient(token=SLACK_BOT_TOKEN)
 bot_id = client.auth_test()["user_id"]
 user_ids = [element["id"] for element in client.users_list()["members"]]
 public_channel_ids = [element["id"] for element in client.channels_list()["channels"]]
+
+# Connect to SQLite3 database
+s = SQL_query('data/imaginelab.db')
+logger.info('Connected to SQLite database!')
+FoodBot.update_restaurant_database()
 
 # Connect to Slack
 slackbot = slack.RTMClient(token=SLACK_BOT_TOKEN)

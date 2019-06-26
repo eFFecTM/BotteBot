@@ -1,10 +1,11 @@
 from pathlib import Path
-
 from datetime import datetime
 from bs4 import BeautifulSoup
 import requests
 import random
+from data.sqlquery import SQL_query
 
+s = SQL_query('data/imaginelab.db')
 current_food_place = "Pizza Hut"
 current_user_orders = []
 pretty_orders = {}
@@ -298,55 +299,27 @@ def get_restaurants(text_received):
     return return_message
 
 
-# ////////////////
-# FILE MANAGEMENT
-# ////////////////
+# ////////////////////
+# DATABASE MANAGEMENT
+# ///////////////////
 
-
-def read_current_day_data():
-    if len(current_user_orders) == 0:
-        today = datetime.now().strftime("%Y%m%d")
-        path = Path(orders_path + today + "_orders.txt")
-        if path.is_file():
-            order_file = open(path, "r")
-            lines = order_file.readlines()
-            for line in lines:
-                element = line.strip().split(";")
-                if element[1] in pretty_orders.keys():
-                    pretty_orders[element[1]] += 1
-                else:
-                    pretty_orders[element[1]] = 1
-                current_user_orders.append(element)
-
-    # expand when polls are used
-
-    if len(current_schedule) == 0:
-        path = Path(schedule_path + "schedule.txt")
-        if path.is_file():
-            schedule_file = open(path, "r")
-            lines = schedule_file.readlines()
-            for line in lines:
-                day = datetime.strptime(line[0:10], "%d/%m/%Y").date()
-                current_schedule.append(day)
+def update_restaurant_database():
+    global restaurants
+    get_restaurants('top 1')
+    for restaurant in restaurants[0]:
+        s.sql_edit_insert('INSERT INTO restaurant_database (restaurant, url) VALUES (?, ?) ', (restaurant, restaurants[1][restaurants[0].index(restaurant)]))
 
 
 def save_orders():
-    today = datetime.now().strftime("%Y%m%d")
-    file_orders = open(orders_path + today + "_orders.txt", "w")
-    for [user, food] in current_user_orders:
-        file_orders.write("{};{}\n".format(user, food))
-    file_orders.close()
+    # save to orders database
+    pass
 
 
 def save_polls():
-    today = datetime.now().strftime("%Y%m%d")
-    file_polls = open(polls_path + today + "_polls.txt", "a+")
-    file_polls.write("template")
-    file_polls.close()
+    # save to polls database
+    pass
 
 
 def save_schedule():
-    file_schedule = open(schedule_path + "schedule.txt", "w")
-    for day in current_schedule:
-        file_schedule.write(day.strftime("%d/%m/%Y") + "\n")
-    file_schedule.close()
+    # save to schedule database
+    pass
