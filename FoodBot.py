@@ -1,9 +1,11 @@
 from pathlib import Path
+import random
 from datetime import datetime
 from bs4 import BeautifulSoup
 import requests
 import random
 from data.sqlquery import SQL_query
+from bs4 import BeautifulSoup
 
 s = SQL_query('data/imaginelab.db')
 current_food_place = "Pizza Hut"
