@@ -112,16 +112,15 @@ def get_order_overview(output):
 def set_restaurant(restaurant):
     global restaurants, current_food_place
     if len(restaurants) == 0:
-        get_restaurants('top 1')  # generate restaurants
+        update_restaurant_database('top 1')  # generate restaurants
     r = requests.get("https://insult.mattbas.org/api/insult").text.split()
     adjective = r[3]
     noun = r[-1]
-    for resto_name in restaurants[0]:
-        if restaurant in resto_name.lower():
-            current_food_place = "{} \nwith url {}".format(resto_name, restaurants[1][restaurants[0].index(resto_name)])
-            return "restaurant set to {}. I heard they serve {} {}".format(resto_name, adjective, noun)
-    current_food_place = restaurant
-    return "restaurant set to {}. I heard they serve {} {}".format(restaurant, adjective, noun)
+    for resto in restaurants:
+        if restaurant in resto[0].lower():
+            current_food_place = "{} \nwith url {}".format(resto[0], resto[1])
+            return "restaurant set to {}. I heard they serve {} {}".format(resto[0], adjective, noun)
+    return "Restaurant not in our database. Add it NOW with the command '...' ,you {} {}!".format(restaurant, adjective, noun)
 
 
 def order_food(user, food):
@@ -188,14 +187,14 @@ def get_menu(text_received):
     found = []
     message = ""
     if len(restaurants) == 0:
-        get_restaurants('top 1')  # generate restaurants
-    for resto_name in restaurants[0]:
-        if resto_name.lower() in text_received.lower():
-            found = resto_name
-            message = "Restaurant: *{}*\n\n".format(resto_name)
+        update_restaurant_database('top 1')  # generate restaurants
+    for resto in restaurants:
+        if resto[0].lower() in text_received.lower():
+            found = resto
+            message = "Restaurant: *{}*\n\n".format(resto[0])
             break
     if found:
-        response = requests.get(restaurants[1][restaurants[0].index(found)])
+        response = requests.get(found[1])
 
         soup = BeautifulSoup(response.content, 'html.parser')
         location = soup.text.find('MenucardProducts')
@@ -236,9 +235,9 @@ def get_menu(text_received):
             location_number += 1
             if rand == i:
                 adjective = requests.get("https://insult.mattbas.org/api/adjective").text
-                message = "{}{}: Your {} mother for €0\n".format(message, adjective, location_number)
+                message = "{}{}: Your {} mother for €0\n".format(message, location_number, adjective)
                 location_number += 1
-            message = "{}{}: {} voor €{}\n".format(message, location_number, menu[0][i], menu[1][i])
+            message = "{}{}: {} for €{}\n".format(message, location_number, menu[0][i], menu[1][i])
     else:
         rand = random.randint(0, len(snappy_responses) - 1)
         r = requests.get("https://insult.mattbas.org/api/adjective")
@@ -247,7 +246,7 @@ def get_menu(text_received):
     return message
 
 
-def get_restaurants(text_received=None):
+def get_restaurants_from_takeaway(text_received=None):
     global restaurants
 
     response = requests.get('https://www.takeaway.com/be/eten-bestellen-antwerpen-2020')
@@ -256,42 +255,18 @@ def get_restaurants(text_received=None):
     find = soup.find_all('script')
     text = find[9].text
     location = text.find('name')
-    restaurants = [[], []]
+    restaurants = []
 
     while location != -1:
         text = text[location + len('"name":"') - 1:]
         location = text.find('"')
-        temp = text[:location]
-        temp = temp.replace("\'", '')
-        restaurants[0].append(temp)
+        temp_name = text[:location].replace("\'", '')
         location = text.find('url')
         text = text[location + len('"url":"') - 1:]
         location = text.find('"')
-        temp = text[:location]
-        temp = "https://www.takeaway.com" + temp
-        temp = temp.replace("\\", '')
-        restaurants[1].append(temp)
+        temp_url = ("https://www.takeaway.com" + text[:location]).replace("\\", '')
+        restaurants.append([temp_name, temp_url])
         location = text.find('name')
-
-    return_message = ""
-
-    if text_received and 'top' in text_received:
-        words = text_received.split()
-        next_word = words[words.index('top') + 1]
-        try:
-            top_number = int(next_word)
-            if top_number > len(restaurants[0]):
-                top_number = len(restaurants[0])
-            elif top_number < 1:
-                top_number = 1
-        except:
-            top_number = 10
-    else:
-        top_number = 10
-    for i in range(0, top_number):
-        return_message = "{}{}: {}   - {}\n".format(return_message, i + 1, restaurants[0][i],
-                                                    restaurants[1][i])
-    return return_message
 
 
 # ////////////////////
@@ -300,10 +275,30 @@ def get_restaurants(text_received=None):
 
 def update_restaurant_database(text_received=None):
     global restaurants
-    msg = get_restaurants(text_received)
-    for restaurant in restaurants[0]:
-        s.sql_edit_insert('INSERT OR IGNORE INTO restaurant_database (restaurant, url) VALUES (?,?)', (restaurant, restaurants[1][restaurants[0].index(restaurant)]))
-        s.sql_edit_insert('UPDATE restaurant_database SET url=?  WHERE restaurant=? ', (restaurants[1][restaurants[0].index(restaurant)], restaurant))
+    get_restaurants_from_takeaway()
+    for resto in restaurants:
+        s.sql_edit_insert('INSERT OR IGNORE INTO restaurant_database (restaurant, url) VALUES (?,?)', (resto[0], resto[1]))
+        # s.sql_edit_insert('UPDATE restaurant_database SET url=?  WHERE restaurant=? ', (restaurants[1][restaurants[0].index(restaurant)], restaurant))
     print('Updated database')
-    return msg
+    restaurants = s.sql_db_to_list('SELECT restaurant, url FROM restaurant_database')
+
+    # Get top number
+    if text_received and 'top' in text_received:
+        words = text_received.split()
+        next_word = words[words.index('top') + 1]
+        try:
+            top_number = int(next_word)
+            if top_number > len(restaurants):
+                top_number = len(restaurants)
+            elif top_number < 1:
+                top_number = 1
+        except:
+            top_number = 10
+    else:
+        top_number = 10
+
+    return_message = ""
+    for i in range(0, top_number):
+        return_message = "{}{}: {}   - {}\n".format(return_message, i + 1, restaurants[i][0], restaurants[i][1])
+    return return_message
 
