@@ -128,6 +128,9 @@ def check_general_keywords(user_name, text_received, channel):
         message, attachments = ImageBot.find_image(text_received, image_triggers)
     if not message and any((word in text_received.lower() for word in joke_triggers)):
         message = "You really need to find help. And friends. Bye."
+    if not message and any((word in text_received.lower() for word in no_imaginelab_triggers)):
+        logger.debug('{} asked the Bottebot to toggle ImagineLab for this week in channel {}'.format(user_name, channel))
+        message = toggle_imaginelab()
 
 
 def mention_question(user_name, text_received, channel):
@@ -157,8 +160,7 @@ OXFORD_ID = str(init.get('oxford', 'ID'))
 OXFORD_KEY = str(init.get('oxford', 'KEY'))
 oxford = OxfordDictionaries(app_id=OXFORD_ID, app_key=OXFORD_KEY)
 
-
-# schedule events for the next ImagineLab day
+# Stopping scheduler when bottebot is shutting down
 stop = False
 
 
@@ -174,12 +176,32 @@ class Scheduler(threading.Thread):
                 break
 
 
+# Is there an imaginelab this week?
+is_imaginelab = True
+
+
 def print_where_food_notification():
-    send_message("<!channel> Where are we going to order today?", notification_channel, None)
+    if is_imaginelab:
+        send_message("<!channel> Where are we going to order today?", notification_channel, None)
 
 
 def print_what_food_notification():
-    send_message("<!channel> What do you all want to order?", notification_channel, None)
+    global is_imaginelab
+    if is_imaginelab:
+        send_message("<!channel> What do you all want to order?", notification_channel, None)
+    is_imaginelab = True
+
+
+def toggle_imaginelab():
+    global is_imaginelab
+    if is_imaginelab:
+        send_message("<!channel> iMagineLab is cancelled for this week!", notification_channel, None)
+        is_imaginelab = False
+        return "iMagineLab is cancelled for this week."
+    else:
+        send_message("<!channel> iMagineLab has been rescheduled for this week!", notification_channel, None)
+        is_imaginelab = True
+        return "iMagineLab has been rescheduled for this week."
 
 
 # Define trigger words
@@ -194,7 +216,6 @@ schedule.every().wednesday.at(what_time).do(print_what_food_notification)
 schedule.every().wednesday.at("13:59").do(FoodBot.update_restaurant_database)
 thread = Scheduler()
 thread.start()
-
 
 
 weather_triggers = json.loads(config.get("triggers", "WEATHER"))
@@ -214,6 +235,7 @@ order_triggers = json.loads(config.get("triggers", "ORDER"))
 schedule_triggers = json.loads(config.get("triggers", "SCHEDULE"))
 add_triggers = json.loads(config.get("triggers", "ADD"))
 remove_triggers = json.loads(config.get("triggers", "REMOVE"))
+no_imaginelab_triggers = json.loads(config.get("triggers", "NO_IMAGINELAB"))
 
 # Define ignored words
 ignored_words = json.loads(config.get("triggers", "IGNORED_WORDS"))
