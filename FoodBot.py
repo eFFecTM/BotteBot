@@ -17,7 +17,7 @@ today = datetime.now().strftime("%Y%m%d")
 
 
 def process_call(user, input_text, set_triggers, overview_triggers, order_triggers, schedule_triggers,
-                 add_triggers, remove_triggers):
+                 add_triggers, remove_triggers, restaurant_triggers):
     output = None
     input_text = input_text.lower()
     if not output:
@@ -40,6 +40,11 @@ def process_call(user, input_text, set_triggers, overview_triggers, order_trigge
                     words = input_text.split()
                     output = order_food(user, " ".join(words[words.index(order_trigger) + 1:]))
                     break
+    if not output and any(restaurant_trigger in input_text for restaurant_trigger in restaurant_triggers):
+        if not output:
+            for add_trigger in add_triggers:
+                if add_trigger in input_text:
+                    output = add_restaurant(input_text, add_trigger)
     if not output and any(schedule_trigger in input_text for schedule_trigger in schedule_triggers):
         if not output:
             for add_trigger in add_triggers:
@@ -94,6 +99,19 @@ def process_call(user, input_text, set_triggers, overview_triggers, order_trigge
 # /////////
 # COMMANDS
 # /////////
+
+def add_restaurant(input_text, trigger):
+    """add restaurant: Food Restaurant Add <restaurant-name> <url>"""
+    words = input_text.split()
+    resto_name = words[words.index(trigger)+1:-1]
+    resto_url = words[-1]
+    if ("." in resto_url) and len(resto_name) != 0:
+        s.sql_edit_insert('INSERT OR IGNORE INTO restaurant_database (restaurant, url) VALUES (?,?)',
+                          (" ".join(resto_name).replace(",", ""), resto_url))
+        return "{} added to restaurants.".format(" ".join(resto_name).replace(",", ""))
+    else:
+        return "The right format is <restaurant name> <url> but I didn't expect you could use it anyway. {} ~ {}".format(resto_name, resto_url)
+
 
 def get_order_overview(output):
     if not output:
