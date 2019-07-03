@@ -35,7 +35,7 @@ def on_message(**payload):
             if delivery:
                 message = delivery
                 delivery = None
-            if mention or (channel not in public_channel_ids):
+            if not message and (mention or (channel not in public_channel_ids)):
                 mention_question(user_name, text_received, channel)
             if not message:
                 check_random_keywords(user_name, text_received, channel, webclient)
