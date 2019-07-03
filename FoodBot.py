@@ -1,10 +1,17 @@
 import random
+import logging
+import re
 from datetime import datetime
-
 import requests
 from bs4 import BeautifulSoup
-
 from data.sqlquery import SQL_query
+
+
+# Create global logger
+logger = logging.getLogger('FoodBot')
+formatstring = "%(asctime)s - %(name)s:%(funcName)s:%(lineno)i - %(levelname)s - %(message)s"
+logging.basicConfig(format=formatstring, level=logging.DEBUG)
+logger.debug('FoodBot started.')
 
 s = SQL_query('data/imaginelab.db')
 current_food_place = "Pizza Hut"
@@ -15,9 +22,15 @@ restaurants = []
 menu = [[], []]
 today = datetime.now().strftime("%Y%m%d")
 
+snappy_responses = ["just like the dignity of your {} mother. Mama Mia!",
+                    "pick again you {} idiot!",
+                    "better luck next time {} person!",
+                    u"\U0001F595",
+                    "huh? Fine! I'll go build my own restaurant, with blackjack and hookers. In fact, forget about the restaurant and blackjack."]
+
 
 def process_call(user, input_text, set_triggers, overview_triggers, order_triggers, schedule_triggers,
-                 add_triggers, remove_triggers, restaurant_triggers):
+                 add_triggers, remove_triggers, restaurant_triggers, rating_triggers, food_trigger):
     output = None
     input_text = input_text.lower()
     if not output:
@@ -25,6 +38,7 @@ def process_call(user, input_text, set_triggers, overview_triggers, order_trigge
             if set_trigger in input_text:
                 words = input_text.split()
                 output = set_restaurant(" ".join(words[words.index(set_trigger) + 1:]))
+                break
     if not output and any(overview_trigger in input_text for overview_trigger in overview_triggers):
         output = get_order_overview(output)
     if not output and any(order_trigger in input_text for order_trigger in order_triggers):
@@ -40,11 +54,18 @@ def process_call(user, input_text, set_triggers, overview_triggers, order_trigge
                     words = input_text.split()
                     output = order_food(user, " ".join(words[words.index(order_trigger) + 1:]))
                     break
+    if not output and any(rating_trigger in input_text for rating_trigger in rating_triggers):
+        if not output:
+            for rating_trigger in rating_triggers:
+                if rating_trigger in input_text:
+                    output = add_restaurant_rating(input_text, rating_trigger, food_trigger)
+                    break
     if not output and any(restaurant_trigger in input_text for restaurant_trigger in restaurant_triggers):
         if not output:
             for add_trigger in add_triggers:
                 if add_trigger in input_text:
                     output = add_restaurant(input_text, add_trigger)
+                    break
     if not output and any(schedule_trigger in input_text for schedule_trigger in schedule_triggers):
         if not output:
             for add_trigger in add_triggers:
@@ -193,13 +214,6 @@ def remove_schedule(day):
     return "Just like your {} friends, {} does not exist.".format(adjective, day.strftime("%d/%m/%Y"))
 
 
-snappy_responses = ["just like the dignity of your {} mother. Mama Mia!",
-                    "pick again you {} idiot!",
-                    "better luck next time {} person!",
-                    u"\U0001F595",
-                    "huh? Fine! I'll go build my own restaurant, with blackjack and hookers. In fact, forget about the restaurant and blackjack."]
-
-
 def get_menu(text_received):
     global restaurants, snappy_responses, menu
     found = []
@@ -297,7 +311,7 @@ def update_restaurant_database(text_received=None):
     for resto in restaurants:
         s.sql_edit_insert('INSERT OR IGNORE INTO restaurant_database (restaurant, url) VALUES (?,?)', (resto[0], resto[1]))
         # s.sql_edit_insert('UPDATE restaurant_database SET url=?  WHERE restaurant=? ', (restaurants[1][restaurants[0].index(restaurant)], restaurant))
-    print('Updated database')
+    logger.debug('Updated restaurant database')
     restaurants = s.sql_db_to_list('SELECT restaurant, url FROM restaurant_database')
 
     # Get top number
@@ -319,4 +333,17 @@ def update_restaurant_database(text_received=None):
     for i in range(0, top_number):
         return_message = "{}{}: {}   - {}\n".format(return_message, i + 1, restaurants[i][0], restaurants[i][1])
     return return_message
+
+
+def add_restaurant_rating(text_received, rating_trigger, food_trigger):
+    """ Command: food rating <restaurant> <rating>"""
+    words = text_received.split()
+    words.remove(rating_trigger)
+    words.remove(food_trigger)
+
+    rating = int(re.search(r'\d+', text_received).group())
+    words.remove(str(rating))
+    restaurant_name = "".join(words).replace(",", "")
+    logger.debug("Restaurant {} rated with a score of {}".format(restaurant_name, rating))
+
 

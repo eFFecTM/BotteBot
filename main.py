@@ -80,7 +80,7 @@ def check_channel(text_received, channel):
 
 
 def check_random_keywords(user_name, text_received, channel, client):
-    """To check for words used in normal conversation, adding instults and gifs/images"""
+    """To check for words used in normal conversation, adding insults and gifs/images"""
     global message, counter_threshold, counter, delivery
     if not message and any(word in text_received.lower() for word in insult_triggers):
         message = RandomBot.insult(text_received, client, user_ids, trans)
@@ -113,10 +113,12 @@ def check_general_keywords(user_name, text_received, channel):
         else:
             message = HelpBot.get_list_of_commands()
         logger.debug('{} asked the HelpBot for info in channel {}'.format(user_name, channel))
-    if not message and any(word in text_received.lower() for word in food_triggers):
-        logger.debug('{} asked the FoodBot a request in channel {}'.format(user_name, channel))
-        message = FoodBot.process_call(user_name, text_received, set_triggers, overview_triggers, order_triggers,
-                                       schedule_triggers, add_triggers, remove_triggers, resto_triggers)
+    if not message:
+        for food_trigger in food_triggers:
+            if food_trigger in text_received.lower():
+                logger.debug('{} asked the FoodBot a request in channel {}'.format(user_name, channel))
+                message = FoodBot.process_call(user_name, text_received, set_triggers, overview_triggers, order_triggers,
+                                       schedule_triggers, add_triggers, remove_triggers, resto_triggers, rating_triggers, food_trigger)
     if not message and any(word in text_received.lower() for word in menu_triggers):
         logger.debug('{} asked the Foodbot for menu in channel {}'.format(user_name, channel))
         message = FoodBot.get_menu(text_received)
@@ -213,7 +215,7 @@ where_time = str(config.get("scheduler", "WHERE_TIME"))
 what_time = str(config.get("scheduler", "WHAT_TIME"))
 schedule.every().wednesday.at(where_time).do(print_where_food_notification)
 schedule.every().wednesday.at(what_time).do(print_what_food_notification)
-schedule.every().wednesday.at("13:59").do(FoodBot.update_restaurant_database)
+schedule.every().wednesday.at("09:00").do(FoodBot.update_restaurant_database)
 thread = Scheduler()
 thread.start()
 
@@ -235,6 +237,7 @@ order_triggers = json.loads(config.get("triggers", "ORDER"))
 schedule_triggers = json.loads(config.get("triggers", "SCHEDULE"))
 add_triggers = json.loads(config.get("triggers", "ADD"))
 remove_triggers = json.loads(config.get("triggers", "REMOVE"))
+rating_triggers = json.loads(config.get("triggers", 'RATING'))
 no_imaginelab_triggers = json.loads(config.get("triggers", "NO_IMAGINELAB"))
 
 # Define ignored words
