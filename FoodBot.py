@@ -202,7 +202,7 @@ def get_menu(text_received):
             message = "Restaurant: *{}*\n\n".format(resto[0])
             break
     if found:
-        response = requests.get(found[1])
+        response = requests.get(found[2])
 
         soup = BeautifulSoup(response.content, 'html.parser')
         location = soup.text.find('MenucardProducts')
@@ -281,10 +281,9 @@ def update_restaurant_database(text_received=None):
     global restaurants
     get_restaurants_from_takeaway()
     for resto in restaurants:
-        s.sql_edit_insert('INSERT OR IGNORE INTO restaurant_database (restaurant, url) VALUES (?,?)', (resto[0], resto[1]))
+        s.sql_edit_insert('INSERT OR IGNORE INTO restaurant_database (restaurant, url) VALUES (?,?)', (resto[0], resto[2]))
         # s.sql_edit_insert('UPDATE restaurant_database SET url=?  WHERE restaurant=? ', (restaurants[1][restaurants[0].index(restaurant)], restaurant))
     logger.debug('Updated restaurant database')
-    restaurants = s.sql_db_to_list('SELECT restaurant, url FROM restaurant_database')
 
     # Get top number
     if text_received and 'top' in text_received:
@@ -307,12 +306,33 @@ def update_restaurant_database(text_received=None):
     return return_message
 
 
-def get_restaurants():
-    restaurants = s.sql_db_to_list('SELECT * FROM restaurant_database')
+def get_restaurants(text_received):
+    global restaurants
+    restaurants = s.sql_db_to_list('SELECT * FROM restaurant_database ORDER BY rating DESC, id')
+    a = s.sql_db_to_list('SELECT * FROM restaurant_database ORDER BY rating DESC, id')
 
+    if text_received and 'top' in text_received:
+        words = text_received.split()
+        next_word = words[words.index('top') + 1]
+        try:
+            top_number = int(next_word)
+            if top_number > len(restaurants):
+                top_number = len(restaurants)
+            elif top_number < 1:
+                top_number = 1
+        except:
+            top_number = 10
+    else:
+        top_number = 10
+
+    return_message = ""
+    for i in range(0, top_number):
+        return_message = "{}{}: {}   - {}\n".format(return_message, i + 1, restaurants[i][0], restaurants[i][2])
+    return return_message
 
 
 def set_restaurant(restaurant):
+    """set restaurant: food set <restaurantname>"""
     global restaurants, current_food_place
     if len(restaurants) == 0:
         update_restaurant_database('top 1')  # generate restaurants
@@ -321,9 +341,9 @@ def set_restaurant(restaurant):
     noun = r[-1]
     for resto in restaurants:
         if restaurant in resto[0].lower():
-            current_food_place = "{} \nwith url {}".format(resto[0], resto[1])
+            current_food_place = "{} \nwith url {}".format(resto[0], resto[2])
             return "restaurant set to {}. I heard they serve {} {}".format(resto[0], adjective, noun)
-    return "Restaurant not in our database. Add it NOW with the command '...' ,you {} {}!".format(restaurant, adjective, noun)
+    return "Restaurant not in our database. Add it NOW with the command 'food restaurant add _restaurantname_ _url_' ,you {} {}!".format(restaurant, adjective, noun)
 
 
 def add_restaurant(input_text, trigger):

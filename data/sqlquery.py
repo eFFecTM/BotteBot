@@ -31,10 +31,13 @@ class SQL_query:
         return rows
 
     """Convert SQL data rows into a list of data"""
-    def sql_db_to_list(self, query):
+    def sql_db_to_list(self, query, var=None):
         self.conn.row_factory = self.list_factory
         cur = self.conn.cursor()
-        cur.execute(query)
+        if var:
+            cur.execute(query, var)
+        else:
+            cur.execute(query)
         results = cur.fetchall()
         return results
 
