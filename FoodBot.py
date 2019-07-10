@@ -121,17 +121,7 @@ def process_call(user, input_text, set_triggers, overview_triggers, order_trigge
 # COMMANDS
 # /////////
 
-def add_restaurant(input_text, trigger):
-    """add restaurant: Food Restaurant Add <restaurant-name> <url>"""
-    words = input_text.split()
-    resto_name = words[words.index(trigger)+1:-1]
-    resto_url = words[-1]
-    if ("." in resto_url) and len(resto_name) != 0:
-        s.sql_edit_insert('INSERT OR IGNORE INTO restaurant_database (restaurant, url) VALUES (?,?)',
-                          (" ".join(resto_name).replace(",", ""), resto_url))
-        return "{} added to restaurants.".format(" ".join(resto_name).replace(",", ""))
-    else:
-        return "The right format is <restaurant name> <url> but I didn't expect you could use it anyway. {} ~ {}".format(resto_name, resto_url)
+
 
 
 def get_order_overview(output):
@@ -146,20 +136,6 @@ def get_order_overview(output):
     for order, amount in pretty_orders.items():
         output += "{} times {}\n".format(amount, order)
     return output
-
-
-def set_restaurant(restaurant):
-    global restaurants, current_food_place
-    if len(restaurants) == 0:
-        update_restaurant_database('top 1')  # generate restaurants
-    r = requests.get("https://insult.mattbas.org/api/insult").text.split()
-    adjective = r[3]
-    noun = r[-1]
-    for resto in restaurants:
-        if restaurant in resto[0].lower():
-            current_food_place = "{} \nwith url {}".format(resto[0], resto[1])
-            return "restaurant set to {}. I heard they serve {} {}".format(resto[0], adjective, noun)
-    return "Restaurant not in our database. Add it NOW with the command '...' ,you {} {}!".format(restaurant, adjective, noun)
 
 
 def order_food(user, food):
@@ -278,7 +254,7 @@ def get_menu(text_received):
     return message
 
 
-def get_restaurants_from_takeaway(text_received=None):
+def get_restaurants_from_takeaway():
     global restaurants
 
     response = requests.get('https://www.takeaway.com/be/eten-bestellen-antwerpen-2020')
@@ -300,10 +276,6 @@ def get_restaurants_from_takeaway(text_received=None):
         restaurants.append([temp_name, temp_url])
         location = text.find('name')
 
-
-# ////////////////////
-# DATABASE MANAGEMENT
-# ///////////////////
 
 def update_restaurant_database(text_received=None):
     global restaurants
@@ -333,6 +305,38 @@ def update_restaurant_database(text_received=None):
     for i in range(0, top_number):
         return_message = "{}{}: {}   - {}\n".format(return_message, i + 1, restaurants[i][0], restaurants[i][1])
     return return_message
+
+
+def get_restaurants():
+    restaurants = s.sql_db_to_list('SELECT * FROM restaurant_database')
+
+
+
+def set_restaurant(restaurant):
+    global restaurants, current_food_place
+    if len(restaurants) == 0:
+        update_restaurant_database('top 1')  # generate restaurants
+    r = requests.get("https://insult.mattbas.org/api/insult").text.split()
+    adjective = r[3]
+    noun = r[-1]
+    for resto in restaurants:
+        if restaurant in resto[0].lower():
+            current_food_place = "{} \nwith url {}".format(resto[0], resto[1])
+            return "restaurant set to {}. I heard they serve {} {}".format(resto[0], adjective, noun)
+    return "Restaurant not in our database. Add it NOW with the command '...' ,you {} {}!".format(restaurant, adjective, noun)
+
+
+def add_restaurant(input_text, trigger):
+    """add restaurant: Food Restaurant Add <restaurant-name> <url>"""
+    words = input_text.split()
+    resto_name = words[words.index(trigger)+1:-1]
+    resto_url = words[-1]
+    if ("." in resto_url) and len(resto_name) != 0:
+        s.sql_edit_insert('INSERT OR IGNORE INTO restaurant_database (restaurant, url) VALUES (?,?)',
+                          (" ".join(resto_name).replace(",", ""), resto_url))
+        return "{} added to restaurants.".format(" ".join(resto_name).replace(",", ""))
+    else:
+        return "The right format is <restaurant name> <url> but I didn't expect you could use it anyway. {} ~ {}".format(resto_name, resto_url)
 
 
 def add_restaurant_rating(text_received, rating_trigger, food_trigger):

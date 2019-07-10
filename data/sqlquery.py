@@ -30,7 +30,7 @@ class SQL_query:
         rows = cur.fetchall()
         return rows
 
-    """Convert SQL data rows into a dict of JSON data"""
+    """Convert SQL data rows into a list of data"""
     def sql_db_to_list(self, query):
         self.conn.row_factory = self.list_factory
         cur = self.conn.cursor()

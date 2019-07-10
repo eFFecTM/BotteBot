@@ -147,25 +147,6 @@ def mention_question(user_name, text_received, channel):
         message = RandomBot.lmgtfy(text_received, lmgtfy_triggers)
 
 
-# Create global logger
-logger = logging.getLogger('main')
-formatstring = "%(asctime)s - %(name)s:%(funcName)s:%(lineno)i - %(levelname)s - %(message)s"
-logging.basicConfig(format=formatstring, level=logging.DEBUG)
-logger.info('Starting BotteBot application...')
-
-# Read init file
-init = configparser.ConfigParser()
-init.read('init.ini')
-SLACK_BOT_TOKEN = str(init.get('slackbot', 'SLACK_BOT_TOKEN'))
-API_KEY = str(init.get('open_weather_map', 'API_KEY'))
-OXFORD_ID = str(init.get('oxford', 'ID'))
-OXFORD_KEY = str(init.get('oxford', 'KEY'))
-oxford = OxfordDictionaries(app_id=OXFORD_ID, app_key=OXFORD_KEY)
-
-# Stopping scheduler when bottebot is shutting down
-stop = False
-
-
 class Scheduler(threading.Thread):
     def __init__(self):
         threading.Thread.__init__(self)
@@ -176,10 +157,6 @@ class Scheduler(threading.Thread):
             time.sleep(1)
             if stop:
                 break
-
-
-# Is there an imaginelab this week?
-is_imaginelab = True
 
 
 def print_where_food_notification():
@@ -205,6 +182,27 @@ def toggle_imaginelab():
         is_imaginelab = True
         return "iMagineLab has been rescheduled for this week."
 
+
+# Create global logger
+logger = logging.getLogger('main')
+formatstring = "%(asctime)s - %(name)s:%(funcName)s:%(lineno)i - %(levelname)s - %(message)s"
+logging.basicConfig(format=formatstring, level=logging.DEBUG)
+logger.info('Starting BotteBot application...')
+
+# Read init file
+init = configparser.ConfigParser()
+init.read('init.ini')
+SLACK_BOT_TOKEN = str(init.get('slackbot', 'SLACK_BOT_TOKEN'))
+API_KEY = str(init.get('open_weather_map', 'API_KEY'))
+OXFORD_ID = str(init.get('oxford', 'ID'))
+OXFORD_KEY = str(init.get('oxford', 'KEY'))
+oxford = OxfordDictionaries(app_id=OXFORD_ID, app_key=OXFORD_KEY)
+
+# Stopping scheduler when bottebot is shutting down
+stop = False
+
+# Is there an imaginelab this week?
+is_imaginelab = True
 
 # Define trigger words
 config = configparser.ConfigParser()
