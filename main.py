@@ -4,7 +4,6 @@ import json
 import logging
 import threading
 import time
-
 import schedule
 import slack
 from googletrans import Translator
@@ -258,6 +257,7 @@ public_channel_ids = [element["id"] for element in client.channels_list()["chann
 # Connect to SQLite3 database
 s = SQL_query('data/imaginelab.db')
 logger.info('Connected to SQLite database!')
+FoodBot.update_restaurant_database()
 
 # Connect to Slack
 slackbot = slack.RTMClient(token=SLACK_BOT_TOKEN)

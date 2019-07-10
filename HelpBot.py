@@ -46,7 +46,8 @@ def get_list_of_food_commands():
                     \u2022 View ImagineLab schedule: `food schedule`
                     \u2022 Add date to ImagineLab schedule: `food schedule add <date>`
                     \u2022 Remove date from ImagineLab schedule: `food schedule remove <date>`
-                    \u2022 Set a new current restaurant: `food set <restaurant>`
+                    \u2022 Get restaurants top x, sorted by rating: `food restaurant top <number>`
+                    \u2022 Set or change the restaurant where we are ordering food: `food set <restaurant>`
                 """
     return response
 

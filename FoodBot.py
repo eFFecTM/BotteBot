@@ -117,14 +117,8 @@ def process_call(user, input_text, set_triggers, overview_triggers, order_trigge
     return output
 
 
-# /////////
-# COMMANDS
-# /////////
-
-
-
-
 def get_order_overview(output):
+    """Command: 'food overview'"""
     if not output:
         output = ""
     output += "We're getting food from " + current_food_place
@@ -139,6 +133,7 @@ def get_order_overview(output):
 
 
 def order_food(user, food):
+    """Command: 'food order <food>'"""
     if food in pretty_orders.keys():
         pretty_orders[food] += 1
     else:
@@ -149,6 +144,7 @@ def order_food(user, food):
 
 
 def remove_order_food(user, food):
+    """Command: 'food order remove <food>'"""
     if [user, food] in current_user_orders:
         pretty_orders[food] -= 1
         if pretty_orders[food] == 0:
@@ -161,6 +157,7 @@ def remove_order_food(user, food):
 
 
 def get_schedule_overview():
+    """Command: 'food schedule'"""
     if len(current_schedule) == 0:
         return "Schedule is empty, like your life."
     output = ""
@@ -172,6 +169,7 @@ def get_schedule_overview():
 
 
 def add_schedule(day):
+    """Command: 'food schedule add <date>'"""
     if day < datetime.today().date():
         return "Let's not meet in the past. Actually, let's just not meet at all please!"
     current_schedule.append(day)
@@ -180,6 +178,7 @@ def add_schedule(day):
 
 
 def remove_schedule(day):
+    """Command: 'food schedule remove <date>'"""
     if day in current_schedule:
         current_schedule.remove(day)
         r = requests.get("https://insult.mattbas.org/api/insult").text.split()
@@ -191,11 +190,12 @@ def remove_schedule(day):
 
 
 def get_menu(text_received):
+    """Command: 'menu <restaurant name> top <number>'"""
     global restaurants, snappy_responses, menu
     found = []
     message = ""
     if len(restaurants) == 0:
-        update_restaurant_database('top 1')  # generate restaurants
+        get_restaurants('top 1')  # generate restaurants
     for resto in restaurants:
         if resto[0].lower() in text_received.lower():
             found = resto
@@ -273,7 +273,7 @@ def get_restaurants_from_takeaway():
         text = text[location + len('"url":"') - 1:]
         location = text.find('"')
         temp_url = ("https://www.takeaway.com" + text[:location]).replace("\\", '')
-        restaurants.append([temp_name, temp_url])
+        restaurants.append([temp_name, 6, temp_url])
         location = text.find('name')
 
 
@@ -281,7 +281,7 @@ def update_restaurant_database(text_received=None):
     global restaurants
     get_restaurants_from_takeaway()
     for resto in restaurants:
-        s.sql_edit_insert('INSERT OR IGNORE INTO restaurant_database (restaurant, url) VALUES (?,?)', (resto[0], resto[2]))
+        s.sql_edit_insert('INSERT OR IGNORE INTO restaurant_database (restaurant, rating, url) VALUES (?,?,?)', (resto[0], 6, resto[2]))
         # s.sql_edit_insert('UPDATE restaurant_database SET url=?  WHERE restaurant=? ', (restaurants[1][restaurants[0].index(restaurant)], restaurant))
     logger.debug('Updated restaurant database')
 
@@ -347,13 +347,13 @@ def set_restaurant(restaurant):
 
 
 def add_restaurant(input_text, trigger):
-    """add restaurant: Food Restaurant Add <restaurant-name> <url>"""
+    """Command: 'food restaurant add <restaurant-name> <url>' """
     words = input_text.split()
     resto_name = words[words.index(trigger)+1:-1]
     resto_url = words[-1]
     if ("." in resto_url) and len(resto_name) != 0:
-        s.sql_edit_insert('INSERT OR IGNORE INTO restaurant_database (restaurant, url) VALUES (?,?)',
-                          (" ".join(resto_name).replace(",", ""), resto_url))
+        s.sql_edit_insert('INSERT OR IGNORE INTO restaurant_database (restaurant, url, rating) VALUES (?,?,?)',
+                          (" ".join(resto_name).replace(",", ""), resto_url, 6))
         return "{} added to restaurants.".format(" ".join(resto_name).replace(",", ""))
     else:
         return "The right format is <restaurant name> <url> but I didn't expect you could use it anyway. {} ~ {}".format(resto_name, resto_url)
@@ -367,7 +367,13 @@ def add_restaurant_rating(text_received, rating_trigger, food_trigger):
 
     rating = int(re.search(r'\d+', text_received).group())
     words.remove(str(rating))
-    restaurant_name = "".join(words).replace(",", "")
+    restaurant_name = " ".join(words).replace(",", "")
+
+    # Get old rating
+    old_rating = s.sql_db_to_list('SELECT rating FROM restaurant_database where ? LIKE restaurant LIMIT 1', (restaurant_name,))
+
+    # Update rating with mean of old and new rating
+    mean = (old_rating[0][0]+rating)/2
+    s.sql_query2('UPDATE OR IGNORE restaurant_database SET rating=? WHERE restaurant=?', (mean, restaurant_name))
+
     logger.debug("Restaurant {} rated with a score of {}".format(restaurant_name, rating))
-
-
