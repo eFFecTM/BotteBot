@@ -12,26 +12,22 @@ class SQL_query:
         cur = self.conn.cursor()
         cur.execute(query)
         rows = cur.fetchall()
-        self.conn.close()
         return rows
 
     def sql_edit_insert(self, query, var):
         cur = self.conn.cursor()
         cur.execute(query, var)
         self.conn.commit()
-        self.conn.close()
 
     def sql_delete(self, query, var):
         cur = self.conn.cursor()
         cur.execute(query, var)
         self.conn.commit()
-        self.conn.close()
 
     def sql_query2(self, query, var):
         cur = self.conn.cursor()
         cur.execute(query, var)
         rows = cur.fetchall()
-        self.conn.close()
         return rows
 
     """Convert SQL data rows into a list of data"""
@@ -43,7 +39,6 @@ class SQL_query:
         else:
             cur.execute(query)
         results = cur.fetchall()
-        self.conn.close()
         return results
 
     def list_factory(self, cur, row):

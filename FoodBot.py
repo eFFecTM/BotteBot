@@ -374,6 +374,6 @@ def add_restaurant_rating(text_received, rating_trigger, food_trigger):
 
     # Update rating with mean of old and new rating
     mean = (old_rating[0][0]+rating)/2
-    s.sql_query2('UPDATE OR IGNORE restaurant_database SET rating=? WHERE restaurant=?', (mean, restaurant_name))
+    s.sql_edit_insert('UPDATE OR IGNORE restaurant_database SET rating=? WHERE restaurant=?', (mean, restaurant_name))
 
     logger.debug("Restaurant {} rated with a score of {}".format(restaurant_name, rating))
