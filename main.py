@@ -257,6 +257,7 @@ public_channel_ids = [element["id"] for element in client.channels_list()["chann
 # Connect to SQLite3 database
 s = SQL_query('data/imaginelab.db')
 logger.info('Connected to SQLite database!')
+# s.sql_delete('DELETE FROM restaurant_database')
 FoodBot.update_restaurant_database()
 
 # Connect to Slack

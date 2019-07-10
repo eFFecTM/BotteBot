@@ -285,31 +285,11 @@ def update_restaurant_database(text_received=None):
         # s.sql_edit_insert('UPDATE restaurant_database SET url=?  WHERE restaurant=? ', (restaurants[1][restaurants[0].index(restaurant)], restaurant))
     logger.debug('Updated restaurant database')
 
-    # Get top number
-    if text_received and 'top' in text_received:
-        words = text_received.split()
-        next_word = words[words.index('top') + 1]
-        try:
-            top_number = int(next_word)
-            if top_number > len(restaurants):
-                top_number = len(restaurants)
-            elif top_number < 1:
-                top_number = 1
-        except:
-            top_number = 10
-    else:
-        top_number = 10
-
-    return_message = ""
-    for i in range(0, top_number):
-        return_message = "{}{}: {}   - {}\n".format(return_message, i + 1, restaurants[i][0], restaurants[i][1])
-    return return_message
-
 
 def get_restaurants(text_received):
     global restaurants
-    restaurants = s.sql_db_to_list('SELECT * FROM restaurant_database ORDER BY rating DESC, id')
-    a = s.sql_db_to_list('SELECT * FROM restaurant_database ORDER BY rating DESC, id')
+    restaurants = s.sql_db_to_list('SELECT restaurant, rating, url FROM restaurant_database ORDER BY rating DESC, id')
+    a = restaurants
 
     if text_received and 'top' in text_received:
         words = text_received.split()
@@ -327,7 +307,7 @@ def get_restaurants(text_received):
 
     return_message = ""
     for i in range(0, top_number):
-        return_message = "{}{}: {}   - {}\n".format(return_message, i + 1, restaurants[i][0], restaurants[i][2])
+        return_message = "{}{}: {} - {}/10 - {}\n".format(return_message, i + 1, restaurants[i][0], restaurants[i][1], restaurants[i][2])
     return return_message
 
 
@@ -373,7 +353,12 @@ def add_restaurant_rating(text_received, rating_trigger, food_trigger):
     old_rating = s.sql_db_to_list('SELECT rating FROM restaurant_database where ? LIKE restaurant LIMIT 1', (restaurant_name,))
 
     # Update rating with mean of old and new rating
-    mean = (old_rating[0][0]+rating)/2
-    s.sql_edit_insert('UPDATE OR IGNORE restaurant_database SET rating=? WHERE restaurant=?', (mean, restaurant_name))
+    if len(old_rating) != 0:
+        mean = int((old_rating[0][0]+rating)/2)
+        s.sql_edit_insert('UPDATE restaurant_database SET rating=? WHERE ? LIKE restaurant', (mean, restaurant_name))
+        msg = "Restaurant {}: mean rating changed to {}".format(restaurant_name, mean)
+    else:
+        msg = "you soab"
 
     logger.debug("Restaurant {} rated with a score of {}".format(restaurant_name, rating))
+    return msg

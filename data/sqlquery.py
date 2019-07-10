@@ -19,9 +19,12 @@ class SQL_query:
         cur.execute(query, var)
         self.conn.commit()
 
-    def sql_delete(self, query, var):
+    def sql_delete(self, query, var=None):
         cur = self.conn.cursor()
-        cur.execute(query, var)
+        if var:
+            cur.execute(query, var)
+        else:
+            cur.execute(query)
         self.conn.commit()
 
     def sql_query2(self, query, var):
