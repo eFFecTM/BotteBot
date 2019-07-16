@@ -144,6 +144,8 @@ def mention_question(user_name, text_received, channel):
         message = WeatherBot.get_weather_message(text_received, API_KEY)
     if not message:
         message = RandomBot.lmgtfy(text_received, lmgtfy_triggers)
+    if not message:
+        message = HelpBot.report_bug(text_received, bugreport_triggers, user_name)
 
 
 class Scheduler(threading.Thread):
@@ -236,6 +238,7 @@ add_triggers = json.loads(config.get("triggers", "ADD"))
 remove_triggers = json.loads(config.get("triggers", "REMOVE"))
 rating_triggers = json.loads(config.get("triggers", 'RATING'))
 no_imaginelab_triggers = json.loads(config.get("triggers", "NO_IMAGINELAB"))
+bugreport_triggers = json.loads(config.get("triggers", "BUG_REPORT"))
 
 # Define ignored words
 ignored_words = json.loads(config.get("triggers", "IGNORED_WORDS"))
