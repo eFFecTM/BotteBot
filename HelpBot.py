@@ -66,7 +66,7 @@ def report_bug(text_received, triggers, user):
             words = text_received.lower().split()
             after_trigger = " ".join(words[words.index(trigger)+1:])
             logger.debug("reported bug {} by user {}".format(after_trigger, user))
-            s.sql_edit_insert('INSERT OR IGNORE INTO (date, report, user_name) VALUES (NOW(), ?, ?)', (after_trigger, user))
+            s.sql_edit_insert('INSERT OR IGNORE INTO bug_report (date, report, user_name) VALUES (CURRENT_TIMESTAMP, ?, ?)', (after_trigger, user))
             return "reported '{}', should I start pointing out your flaws too, {}?".format(after_trigger, user)
     return None
 
