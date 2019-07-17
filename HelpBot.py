@@ -24,12 +24,12 @@ def get_list_of_commands():
                     \u2022 Get the menu of a restaurant: `menu <restaurant> top <number>`
                     \u2022 Order food: `help food`
                     \u2022 Image search: `image of <text>` or `animation of <text>`
-                    \u2022 Report a bug: 'bug <text>'
+                    \u2022 Report a bug: `bug <text>`
                     \u2022 Get help: `help`
                     
     For these features, there is no need to mention me, unless you really want spam in the channel:\n
                     \u2022 Insulting people: `insult <name> in <channel>`
-                    \u2022 Let Me Google This For You (LMGTFY): `lmgtfy <text>`
+                    \u2022 Let Me Google That For You (LMGTFY): `lmgtfy <text>`
                     \u2022 Define words: `define <word>`
                     \u2022 Repeat text in a channel: `repeat <text> in <channel>`
                     \u2022 Get a list of restaurants that are able to deliver @ iMagineLab: `restaurant top <number>`
@@ -50,6 +50,8 @@ def get_list_of_food_commands():
                     \u2022 View ImagineLab schedule: `food schedule`
                     \u2022 Add date to ImagineLab schedule: `food schedule add <date>`
                     \u2022 Remove date from ImagineLab schedule: `food schedule remove <date>`
+                    \u2022 Manually add a restaurant that is not on Takeaway: `food restaurant add <restaurant-name> <url>`
+                    \u2022 Add rating to a restaurant (number from 0 to 10): `food rating <restaurant> <rating>`
                     \u2022 Get restaurants top x, sorted by rating: `food restaurant top <number>`
                     \u2022 Set or change the restaurant where we are ordering food: `food set <restaurant>`
                 """
@@ -61,6 +63,7 @@ def get_help_with_features():
 
 
 def report_bug(text_received, triggers, user):
+    """Command: 'bug <report>'. This saves the report to the bug report database, together with the username."""
     for trigger in triggers:
         if trigger in text_received:
             words = text_received.lower().split()
