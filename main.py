@@ -107,10 +107,7 @@ def check_general_keywords(user_name, text_received, channel):
     global message
     global attachments
     if not message and any((word in text_received.lower() for word in help_triggers)):
-        if not message and any(word in text_received.lower() for word in food_triggers):
-            message = HelpBot.get_list_of_food_commands()
-        else:
-            message = HelpBot.get_list_of_commands()
+        message = HelpBot.get_list_of_commands()
         logger.debug('{} asked the HelpBot for info in channel {}'.format(user_name, channel))
     if not message:
         for food_trigger in food_triggers:
