@@ -13,12 +13,11 @@ formatstring = "%(asctime)s - %(name)s:%(funcName)s:%(lineno)i - %(levelname)s -
 logging.basicConfig(format=formatstring, level=logging.DEBUG)
 
 
-def find_image(text, image_triggers):
+def find_image(words_received, image_triggers):
     # Get search words in received text
     search_words = []
     animation = False
-    words = text.split(" ")
-    for word in words:
+    for word in words_received:
         if word in ['animation', 'animatie', 'gif']:
             animation = True
         if word not in image_triggers:

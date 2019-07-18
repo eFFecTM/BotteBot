@@ -29,15 +29,16 @@ def on_message(**payload):
         if user_id != bot_id:
             webclient = payload['web_client']
             user_name = webclient.users_info(user=user_id)["user"]["name"]
-            [channel, text_received] = check_channel(text_received, channel)
-            [text_received, mention] = filter_ignore_words(text_received, ignored_words)
+            words_received = text_received.lower().split()
+            [channel, words_received] = check_channel(words_received, channel)
+            [words_received, mention] = filter_ignore_words(words_received, ignored_words)
             if delivery:
                 message = delivery
                 delivery = None
             if not message and (mention or (channel not in public_channel_ids)):
-                mention_question(user_name, text_received, channel)
+                mention_question(user_name, words_received, channel)
             if not message:
-                check_random_keywords(user_name, text_received, channel, webclient)
+                check_random_keywords(user_name, words_received, channel, webclient)
             if message:
                 send_message(message, channel, attachments)
     except Exception as e:
@@ -49,47 +50,41 @@ def send_message(text_to_send, channel, attachments):
     logger.debug('Message sent to {}'.format(channel))
 
 
-def filter_ignore_words(text_received, ignored_words):
+def filter_ignore_words(words_received, ignored_words):
     mentioned = False
-    words_received = text_received.split()
     relevant_words = []
     for word in words_received:
         if '@{}'.format(bot_id) in word:
             mentioned = True
         elif word not in ignored_words:
             relevant_words.append(word)
-    text_received = ""
-    for word in relevant_words:
-        text_received += word + " "
-    return text_received, mentioned
+    return relevant_words, mentioned
 
 
-def check_channel(text_received, channel):
+def check_channel(text_words, channel):
     """Check whether a channel got mentioned"""
     for channel_id in public_channel_ids:
-        if '#{}'.format(channel_id) in text_received:
-            words = text_received.split()
-            text_received = ""
-            for word in words:
-                if "#{}".format(channel_id) not in word:
-                    text_received += word + " "
-            channel = channel_id
-            break
-    return channel, text_received
+        for word in text_words:
+            if '#{}'.format(channel_id.lower()) in word:
+                logger.critical(channel_id)
+                text_words.remove(word)
+                channel = channel_id
+                break
+    return channel, text_words
 
 
-def check_random_keywords(user_name, text_received, channel, client):
+def check_random_keywords(user_name, words_received, channel, client):
     """To check for words used in normal conversation, adding insults and gifs/images"""
     global message, counter_threshold, counter, delivery
-    if not message and any(word in text_received.lower() for word in insult_triggers):
-        message = RandomBot.insult(text_received, client, user_ids, trans)
+    if not message and any(word in words_received for word in insult_triggers):
+        message = RandomBot.insult(words_received, client, user_ids, trans)
         logger.debug('{} insulted someone in {}'.format(user_name, channel))
     if not message:
-        message = RandomBot.definition(text_received, def_triggers, trans, oxford)
+        message = RandomBot.definition(words_received, def_triggers, trans, oxford)
         if message:
             logger.debug('{} asked for a definition a word in {}'.format(user_name, channel))
     if not message:
-        message = RandomBot.repeat(text_received, repeat_triggers)
+        message = RandomBot.repeat(words_received, repeat_triggers)
         if message:
             logger.debug('{} repeated a word in {}'.format(user_name, channel))
     if not message:
@@ -102,47 +97,47 @@ def check_random_keywords(user_name, text_received, channel, client):
             counter += 1
 
 
-def check_general_keywords(user_name, text_received, channel):
+def check_general_keywords(user_name, words_received, channel):
     """Check for serious shit. Predefined commands etc."""
     global message
     global attachments
-    if not message and any((word in text_received.lower() for word in help_triggers)):
+    if not message and any(word in words_received for word in help_triggers):
         message = HelpBot.get_list_of_commands()
         logger.debug('{} asked the HelpBot for info in channel {}'.format(user_name, channel))
     if not message:
         for food_trigger in food_triggers:
-            if food_trigger in text_received.lower():
+            if food_trigger in words_received:
                 logger.debug('{} asked the FoodBot a request in channel {}'.format(user_name, channel))
-                message = FoodBot.process_call(user_name, text_received, set_triggers, overview_triggers, order_triggers,
+                message = FoodBot.process_call(user_name, words_received, set_triggers, overview_triggers, order_triggers,
                                        schedule_triggers, add_triggers, remove_triggers, resto_triggers, rating_triggers, food_trigger)
-    if not message and any(word in text_received.lower() for word in menu_triggers):
+    if not message and any(word in words_received for word in menu_triggers):
         logger.debug('{} asked the Foodbot for menu in channel {}'.format(user_name, channel))
-        message = FoodBot.get_menu(text_received)
-    if not message and any(word in text_received.lower() for word in resto_triggers):
+        message = FoodBot.get_menu(words_received)
+    if not message and any(word in words_received for word in resto_triggers):
         logger.debug('{} asked the Foodbot for restaurants in channel {}'.format(user_name, channel))
-        message = FoodBot.get_restaurants(text_received)
-    if not message and any((word in text_received.lower() for word in image_triggers)) and not attachments:
+        message = FoodBot.get_restaurants(words_received)
+    if not message and any((word in words_received for word in image_triggers)) and not attachments:
         logger.debug('{} asked the ImageBot a request in channel {}'.format(user_name, channel))
-        message, attachments = ImageBot.find_image(text_received, image_triggers)
-    if not message and any((word in text_received.lower() for word in joke_triggers)):
+        message, attachments = ImageBot.find_image(words_received, image_triggers)
+    if not message and any((word in words_received for word in joke_triggers)):
         message = "You really need to find help. And friends. Bye."
-    if not message and any((word in text_received.lower() for word in no_imaginelab_triggers)):
+    if not message and any((word in words_received for word in no_imaginelab_triggers)):
         logger.debug('{} asked the Bottebot to toggle ImagineLab for this week in channel {}'.format(user_name, channel))
         message = toggle_imaginelab()
 
 
-def mention_question(user_name, text_received, channel):
+def mention_question(user_name, words_received, channel):
     """bot got mentioned or pm'd, answer the question"""
     logger.debug('BotteBot got mentioned in {}'.format(channel))
     global message
     if not message:
-        check_general_keywords(user_name, text_received, channel)
-    if not message and any(word in text_received.lower() for word in weather_triggers):
-        message = WeatherBot.get_weather_message(text_received, API_KEY)
+        check_general_keywords(user_name, words_received, channel)
+    if not message and any(word in words_received for word in weather_triggers):
+        message = WeatherBot.get_weather_message(words_received, API_KEY)
     if not message:
-        message = RandomBot.lmgtfy(text_received, lmgtfy_triggers)
+        message = RandomBot.lmgtfy(words_received, lmgtfy_triggers)
     if not message:
-        message = HelpBot.report_bug(text_received, bugreport_triggers, user_name)
+        message = HelpBot.report_bug(words_received, bugreport_triggers, user_name)
 
 
 class Scheduler(threading.Thread):

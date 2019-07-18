@@ -54,12 +54,11 @@ def get_help_with_features():
     pass
 
 
-def report_bug(text_received, triggers, user):
+def report_bug(words_received, triggers, user):
     """Command: 'bug <report>'. This saves the report to the bug report database, together with the username."""
     for trigger in triggers:
-        if trigger in text_received:
-            words = text_received.lower().split()
-            after_trigger = " ".join(words[words.index(trigger)+1:])
+        if trigger in words_received:
+            after_trigger = " ".join(words_received[words_received.index(trigger)+1:])
             logger.debug("reported bug {} by user {}".format(after_trigger, user))
             s.sql_edit_insert('INSERT OR IGNORE INTO bug_report (date, report, user_name) VALUES (CURRENT_TIMESTAMP, ?, ?)', (after_trigger, user))
             return "reported '{}', should I start pointing out your flaws too, {}?".format(after_trigger, user)

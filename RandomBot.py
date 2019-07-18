@@ -3,20 +3,19 @@ import json
 import random
 
 
-def lmgtfy(text_received, triggers):
+def lmgtfy(words_received, triggers):
     """let me google that for you with link shortener"""
     found = False
     for word in triggers:
-        if word.lower() in text_received:
+        if word.lower() in words_received:
             found = True
             triggered_word = word
             break
     if found:
-        list_of_words = text_received.split()
-        for word in list_of_words:
+        for word in words_received:
             if word.startswith("<"):  # people and channels
-                list_of_words.remove(word)
-        next_words = list_of_words[list_of_words.index(triggered_word) + 1:]
+                words_received.remove(word)
+        next_words = words_received[words_received.index(triggered_word) + 1:]
         url = "+"
         url = url.join(next_words)
         url = "http://lmgtfy.com/?q=" + url
@@ -25,10 +24,10 @@ def lmgtfy(text_received, triggers):
     return None
 
 
-def insult(text_received, client, user_ids, translator):
+def insult(words_received, client, user_ids, translator):
     found = False
     for user_id_mention in user_ids:
-        if '@{}'.format(user_id_mention) in text_received:
+        if '@{}'.format(user_id_mention) in words_received:
             found = True
             url = "https://insult.mattbas.org/api/insult?who=" \
                   + client.users_info(user=user_id_mention)["user"]["real_name"].split(" ")[0]
@@ -40,18 +39,17 @@ def insult(text_received, client, user_ids, translator):
     return translated.text
 
 
-def definition(text_received, triggers, translator, oxford):
+def definition(words_received, triggers, translator, oxford):
     triggered_word = None
     for word in triggers:
-        if word.lower() in text_received:
+        if word.lower() in words_received:
             triggered_word = word
             break
     if triggered_word:
-        list_of_words = text_received.split()
-        for word in list_of_words:
+        for word in words_received:
             if word.startswith("<"):  # people and channels
-                list_of_words.remove(word)
-        next_word = list_of_words[list_of_words.index(triggered_word) + 1]
+                words_received.remove(word)
+        next_word = words_received[words_received.index(triggered_word) + 1]
         translated = translator.translate(next_word, dest='en')
         info = oxford.get_info_about_word(translated.text)
         try:
@@ -71,17 +69,17 @@ def definition(text_received, triggers, translator, oxford):
     return None
 
 
-def repeat(text_received, triggers):
+def repeat(words_received, triggers):
     triggered_word = None
     for word in triggers:
-        if word.lower() in text_received:
+        if word.lower() in words_received:
             triggered_word = word
             break
     if triggered_word:
-        list_of_words = text_received.split()
-        for word in list_of_words:
+        for word in words_received:
             if word.startswith("<#"):
-                text_received = text_received.replace(word, '')
+                words_received.remove(word)
+        text_received = " ".join(words_received)
         text_received = text_received.replace('@channel', '<!channel>')
         return text_received.replace(triggered_word, '', 1)
     return None

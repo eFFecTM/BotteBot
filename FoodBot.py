@@ -29,49 +29,44 @@ snappy_responses = ["just like the dignity of your {} mother. Mama Mia!",
                     "huh? Fine! I'll go build my own restaurant, with blackjack and hookers. In fact, forget about the restaurant and blackjack."]
 
 
-def process_call(user, input_text, set_triggers, overview_triggers, order_triggers, schedule_triggers,
+def process_call(user, words_received, set_triggers, overview_triggers, order_triggers, schedule_triggers,
                  add_triggers, remove_triggers, restaurant_triggers, rating_triggers, food_trigger):
     output = None
-    input_text = input_text.lower()
     if not output:
         for set_trigger in set_triggers:
-            if set_trigger in input_text:
-                words = input_text.split()
-                output = set_restaurant(" ".join(words[words.index(set_trigger) + 1:]))
+            if set_trigger in words_received:
+                output = set_restaurant(" ".join(words_received[words_received.index(set_trigger) + 1:]))
                 break
-    if not output and any(overview_trigger in input_text for overview_trigger in overview_triggers):
+    if not output and any(overview_trigger in words_received for overview_trigger in overview_triggers):
         output = get_order_overview(output)
-    if not output and any(order_trigger in input_text for order_trigger in order_triggers):
+    if not output and any(order_trigger in words_received for order_trigger in order_triggers):
         if not output:
             for remove_trigger in remove_triggers:
-                if remove_trigger in input_text:
-                    words = input_text.split()
-                    output = remove_order_food(user, " ".join(words[words.index(remove_trigger) + 1:]))
+                if remove_trigger in words_received:
+                    output = remove_order_food(user, " ".join(words_received[words_received.index(remove_trigger) + 1:]))
                     break
         if not output:
             for order_trigger in order_triggers:
-                if order_trigger in input_text:
-                    words = input_text.split()
-                    output = order_food(user, " ".join(words[words.index(order_trigger) + 1:]))
+                if order_trigger in words_received:
+                    output = order_food(user, " ".join(words_received[words_received.index(order_trigger) + 1:]))
                     break
-    if not output and any(rating_trigger in input_text for rating_trigger in rating_triggers):
+    if not output and any(rating_trigger in words_received for rating_trigger in rating_triggers):
         if not output:
             for rating_trigger in rating_triggers:
-                if rating_trigger in input_text:
-                    output = add_restaurant_rating(input_text, rating_trigger, food_trigger)
+                if rating_trigger in words_received:
+                    output = add_restaurant_rating(words_received, rating_trigger, food_trigger)
                     break
-    if not output and any(restaurant_trigger in input_text for restaurant_trigger in restaurant_triggers):
+    if not output and any(restaurant_trigger in words_received for restaurant_trigger in restaurant_triggers):
         if not output:
             for add_trigger in add_triggers:
-                if add_trigger in input_text:
-                    output = add_restaurant(input_text, add_trigger)
+                if add_trigger in words_received:
+                    output = add_restaurant(words_received, add_trigger)
                     break
-    if not output and any(schedule_trigger in input_text for schedule_trigger in schedule_triggers):
+    if not output and any(schedule_trigger in words_received for schedule_trigger in schedule_triggers):
         if not output:
             for add_trigger in add_triggers:
-                if add_trigger in input_text:
-                    words = input_text.split()
-                    next_word = words[words.index(add_trigger) + 1]
+                if add_trigger in words_received:
+                    next_word = words_received[words_received.index(add_trigger) + 1]
                     day = None
                     for fmt in (
                             "%d/%m/%Y", "%d.%m.%Y", "%d:%m:%Y", "%d-%m-%Y", "%d/%m/%y", "%d.%m.%y", "%d:%m:%y",
@@ -90,9 +85,8 @@ def process_call(user, input_text, set_triggers, overview_triggers, order_trigge
                         output = "You're going to add no date? No one's going to date you're {} ass anyway.".format(adjective)
         if not output:
             for remove_trigger in remove_triggers:
-                if remove_trigger in input_text:
-                    words = input_text.split()
-                    next_word = words[words.index(remove_trigger) + 1]
+                if remove_trigger in words_received:
+                    next_word = words_received[words_received.index(remove_trigger) + 1]
                     day = None
                     for fmt in (
                             "%d/%m/%Y", "%d.%m.%Y", "%d:%m:%Y", "%d-%m-%Y", "%d/%m/%y", "%d.%m.%y", "%d:%m:%y",
@@ -189,7 +183,7 @@ def remove_schedule(day):
     return "Just like your {} friends, {} does not exist.".format(adjective, day.strftime("%d/%m/%Y"))
 
 
-def get_menu(text_received):
+def get_menu(words_received):
     """Command: 'menu <restaurant name> top <number>'"""
     global restaurants, snappy_responses, menu
     found = []
@@ -197,7 +191,7 @@ def get_menu(text_received):
     if len(restaurants) == 0:
         get_restaurants('top 1')  # generate restaurants
     for resto in restaurants:
-        if resto[0].lower() in text_received.lower():
+        if resto[0].lower() in words_received:
             found = resto
             message = "Restaurant: *{}*\n\n".format(resto[0])
             break
@@ -208,9 +202,8 @@ def get_menu(text_received):
         location = soup.text.find('MenucardProducts')
         text = soup.text[location:]
 
-        if 'top' in text_received:
-            words = text_received.split()
-            next_word = words[words.index('top') + 1]
+        if 'top' in words_received:
+            next_word = words_received[words_received.index('top') + 1]
             try:
                 top_number = int(next_word)
                 if top_number > 50:
@@ -277,7 +270,7 @@ def get_restaurants_from_takeaway():
         location = text.find('name')
 
 
-def update_restaurant_database(text_received=None):
+def update_restaurant_database(words_received=None):
     global restaurants
     get_restaurants_from_takeaway()
     for resto in restaurants:
@@ -286,14 +279,13 @@ def update_restaurant_database(text_received=None):
     logger.debug('Updated restaurant database')
 
 
-def get_restaurants(text_received):
+def get_restaurants(words_received):
     global restaurants
     restaurants = s.sql_db_to_list('SELECT restaurant, rating, url FROM restaurant_database ORDER BY rating DESC, id')
     a = restaurants
 
-    if text_received and 'top' in text_received:
-        words = text_received.split()
-        next_word = words[words.index('top') + 1]
+    if words_received and 'top' in words_received:
+        next_word = words_received[words_received.index('top') + 1]
         try:
             top_number = int(next_word)
             if top_number > len(restaurants):
@@ -326,11 +318,10 @@ def set_restaurant(restaurant):
     return "Restaurant not in our database. Add it NOW with the command 'food restaurant add _restaurantname_ _url_' ,you {} {}!".format(restaurant, adjective, noun)
 
 
-def add_restaurant(input_text, trigger):
+def add_restaurant(words_received, trigger):
     """Command: 'food restaurant add <restaurant-name> <url>' """
-    words = input_text.split()
-    resto_name = words[words.index(trigger)+1:-1]
-    resto_url = words[-1]
+    resto_name = words_received[words_received.index(trigger)+1:-1]
+    resto_url = words_received[-1]
     if ("." in resto_url) and len(resto_name) != 0:
         s.sql_edit_insert('INSERT OR IGNORE INTO restaurant_database (restaurant, url, rating) VALUES (?,?,?)',
                           (" ".join(resto_name).replace(",", ""), resto_url, 6))
@@ -339,15 +330,14 @@ def add_restaurant(input_text, trigger):
         return "The right format is <restaurant name> <url> but I didn't expect you could use it anyway. {} ~ {}".format(resto_name, resto_url)
 
 
-def add_restaurant_rating(text_received, rating_trigger, food_trigger):
+def add_restaurant_rating(words_received, rating_trigger, food_trigger):
     """ Command: food rating <restaurant> <rating>"""
-    words = text_received.split()
-    words.remove(rating_trigger)
-    words.remove(food_trigger)
+    words_received.remove(rating_trigger)
+    words_received.remove(food_trigger)
 
-    rating = int(re.search(r'\d+', text_received).group())
-    words.remove(str(rating))
-    restaurant_name = " ".join(words).replace(",", "")
+    rating = int(re.search(r'\d+', " ".join(words_received)).group())
+    words_received.remove(str(rating))
+    restaurant_name = " ".join(words_received).replace(",", "")
 
     # Get old rating
     old_rating = s.sql_db_to_list('SELECT rating FROM restaurant_database where ? LIKE restaurant LIMIT 1', (restaurant_name,))
@@ -358,7 +348,7 @@ def add_restaurant_rating(text_received, rating_trigger, food_trigger):
         s.sql_edit_insert('UPDATE restaurant_database SET rating=? WHERE ? LIKE restaurant', (mean, restaurant_name))
         msg = "Restaurant {}: mean rating changed to {}".format(restaurant_name, mean)
     else:
-        msg = "you soab"
+        msg = "you soab, that's a restaurant I do not know."
 
     logger.debug("Restaurant {} rated with a score of {}".format(restaurant_name, rating))
     return msg
