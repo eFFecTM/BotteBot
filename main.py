@@ -14,6 +14,7 @@ import RandomBot
 import WeatherBot
 import HelpBot
 from data.sqlquery import SQL_query
+from datetime import datetime, timedelta
 
 
 @slack.RTMClient.run_on(event='message')
@@ -75,7 +76,7 @@ def check_channel(text_words, channel):
 
 def check_random_keywords(user_name, words_received, channel, client):
     """To check for words used in normal conversation, adding insults and gifs/images"""
-    global message, counter_threshold, counter, delivery
+    global message, counter_threshold, counter, delivery, previous_joke
     if not message and any(word in words_received for word in insult_triggers):
         message = RandomBot.insult(words_received, client, user_ids, trans)
         logger.debug('{} insulted someone in {}'.format(user_name, channel))
@@ -89,8 +90,10 @@ def check_random_keywords(user_name, words_received, channel, client):
             logger.debug('{} repeated a word in {}'.format(user_name, channel))
     if not message:
         if counter >= counter_threshold:
-            [message, delivery] = RandomBot.joke()
-            counter_threshold = RandomBot.generate_threshold(1, 10)
+            if (previous_joke + timedelta(hours=2)) < datetime.now():
+                [message, delivery] = RandomBot.joke()
+                previous_joke = datetime.now()
+            counter_threshold = RandomBot.generate_threshold(8, 20)
             counter = 0
             logger.debug('Joke joked. Joking again in {} messages'.format(counter_threshold))
         else:
@@ -248,6 +251,9 @@ client = slack.WebClient(token=SLACK_BOT_TOKEN)
 bot_id = client.auth_test()["user_id"]
 user_ids = [element["id"] for element in client.users_list()["members"]]
 public_channel_ids = [element["id"] for element in client.channels_list()["channels"]]
+
+#joke limiter
+previous_joke = datetime.now() - timedelta(hours=2)
 
 # Connect to SQLite3 database
 s = SQL_query('data/imaginelab.db')

@@ -3,3 +3,4 @@ downloads/
 venv/
 .idea/
 init.ini
+data/imaginelab.db

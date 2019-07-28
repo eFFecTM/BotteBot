@@ -90,13 +90,12 @@ def generate_threshold(min, max):
     print(temp)
     return temp
 
-
+"""jokes from the joke api at https://sv443.net/jokeapi"""
 def joke():
-    category = "Any"
+    category = ["Miscellaneous", "Programming"]
     blacklist = ""
-    r = requests.get("https://sv443.net/jokeapi/category/"+category+"?blacklistFlags="+blacklist)
+    r = requests.get("https://sv443.net/jokeapi/category/"+category[random.randint(0, 1)]+"?blacklistFlags="+blacklist)
     json_info = r.json()
-    print(json_info)
     if json_info['type'] == 'single':
         return json_info['joke'], None
     else:
