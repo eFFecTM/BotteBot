@@ -27,7 +27,7 @@ def lmgtfy(words_received, triggers):
 def insult(words_received, client, user_ids, translator):
     found = False
     for user_id_mention in user_ids:
-        if '@{}'.format(user_id_mention) in words_received:
+        if '<@{}>'.format(user_id_mention.lower()) in words_received:
             found = True
             url = "https://insult.mattbas.org/api/insult?who=" \
                   + client.users_info(user=user_id_mention)["user"]["real_name"].split(" ")[0]

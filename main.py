@@ -124,7 +124,8 @@ def check_general_keywords(user_name, words_received):
         logger.debug('{} asked the ImageBot a request in channel {}'.format(user_name, channel))
         message, attachments = ImageBot.find_image(words_received, image_triggers)
     if not message and any((word in words_received for word in joke_triggers)):
-        [message, delivery, channel] = RandomBot.joke(channel)
+        if user_name != "jan_dl":
+            [message, delivery, channel] = RandomBot.joke(channel)
     if not message and any((word in words_received for word in no_imaginelab_triggers)):
         logger.debug('{} asked the Bottebot to toggle ImagineLab for this week in channel {}'.format(user_name, channel))
         message = toggle_imaginelab()
