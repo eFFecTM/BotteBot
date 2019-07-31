@@ -19,10 +19,9 @@ from datetime import datetime, timedelta
 
 @slack.RTMClient.run_on(event='message')
 def on_message(**payload):
-    global channel
     try:
         data = payload['data']
-        global message, attachments, delivery
+        global message, attachments, delivery, channel
         message = attachments = None
         if "user" in data:
             user_id, text_received, channel_read = data['user'], data['text'], data['channel']
@@ -103,10 +102,9 @@ def check_random_keywords(user_name, words_received, client):
             counter += 1
 
 
-def check_general_keywords(user_name, words_received, channel):
+def check_general_keywords(user_name, words_received):
     """Check for serious shit. Predefined commands etc."""
-    global message
-    global attachments
+    global message, attachments, delivery, channel
     if not message and any(word in words_received for word in help_triggers):
         message = HelpBot.get_list_of_commands()
         logger.debug('{} asked the HelpBot for info in channel {}'.format(user_name, channel))
@@ -126,7 +124,7 @@ def check_general_keywords(user_name, words_received, channel):
         logger.debug('{} asked the ImageBot a request in channel {}'.format(user_name, channel))
         message, attachments = ImageBot.find_image(words_received, image_triggers)
     if not message and any((word in words_received for word in joke_triggers)):
-        message = "You really need to find help. And friends. Bye."
+        [message, delivery, channel] = RandomBot.joke(channel)
     if not message and any((word in words_received for word in no_imaginelab_triggers)):
         logger.debug('{} asked the Bottebot to toggle ImagineLab for this week in channel {}'.format(user_name, channel))
         message = toggle_imaginelab()
@@ -137,7 +135,7 @@ def mention_question(user_name, words_received, channel):
     logger.debug('BotteBot got mentioned in {}'.format(channel))
     global message
     if not message:
-        check_general_keywords(user_name, words_received, channel)
+        check_general_keywords(user_name, words_received)
     if not message and any(word in words_received for word in weather_triggers):
         message = WeatherBot.get_weather_message(words_received, API_KEY)
     if not message:
