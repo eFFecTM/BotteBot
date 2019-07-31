@@ -91,12 +91,21 @@ def generate_threshold(min, max):
     return temp
 
 """jokes from the joke api at https://sv443.net/jokeapi"""
-def joke():
-    category = ["Miscellaneous", "Programming"]
+def joke(channel):
+    # category = ["Miscellaneous", "Programming"]
+    category = "Any"
     blacklist = ""
-    r = requests.get("https://sv443.net/jokeapi/category/"+category[random.randint(0, 1)]+"?blacklistFlags="+blacklist)
+    # r = requests.get("https://sv443.net/jokeapi/category/"+category[random.randint(0, 1)]+"?blacklistFlags="+blacklist)
+    r = requests.get(
+        "https://sv443.net/jokeapi/category/" + category + "?blacklistFlags=" + blacklist)
     json_info = r.json()
     if json_info['type'] == 'single':
-        return json_info['joke'], None
+        if json_info['category'] == 'Dark':
+            return json_info['joke'], None, "black"
+        else:
+            return json_info['joke'], None, channel
     else:
-        return json_info['setup'], json_info['delivery']
+        if json_info['category'] == 'Dark':
+            return json_info['setup'], json_info['delivery'], "black"
+        else:
+            return json_info['setup'], json_info['delivery'], channel

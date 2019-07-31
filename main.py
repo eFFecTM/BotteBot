@@ -19,27 +19,29 @@ from datetime import datetime, timedelta
 
 @slack.RTMClient.run_on(event='message')
 def on_message(**payload):
+    global channel
     try:
         data = payload['data']
         global message, attachments, delivery
         message = attachments = None
         if "user" in data:
-            user_id, text_received, channel = data['user'], data['text'], data['channel']
+            user_id, text_received, channel_read = data['user'], data['text'], data['channel']
         else:
             user_id = bot_id
         if user_id != bot_id:
             webclient = payload['web_client']
             user_name = webclient.users_info(user=user_id)["user"]["name"]
             words_received = text_received.lower().split()
-            [channel, words_received] = check_channel(words_received, channel)
-            [words_received, mention] = filter_ignore_words(words_received, ignored_words)
             if delivery:
                 message = delivery
                 delivery = None
+            else:
+                [channel, words_received] = check_channel(words_received, channel_read)
+                [words_received, mention] = filter_ignore_words(words_received, ignored_words)
             if not message and (mention or (channel not in public_channel_ids)):
                 mention_question(user_name, words_received, channel)
             if not message:
-                check_random_keywords(user_name, words_received, channel, webclient)
+                check_random_keywords(user_name, words_received, webclient)
             if message:
                 send_message(message, channel, attachments)
     except Exception as e:
@@ -74,7 +76,8 @@ def check_channel(text_words, channel):
     return channel, text_words
 
 
-def check_random_keywords(user_name, words_received, channel, client):
+def check_random_keywords(user_name, words_received, client):
+    global channel
     """To check for words used in normal conversation, adding insults and gifs/images"""
     global message, counter_threshold, counter, delivery, previous_joke
     if not message and any(word in words_received for word in insult_triggers):
@@ -91,7 +94,7 @@ def check_random_keywords(user_name, words_received, channel, client):
     if not message:
         if counter >= counter_threshold:
             if (previous_joke + timedelta(hours=2)) < datetime.now():
-                [message, delivery] = RandomBot.joke()
+                [message, delivery, channel] = RandomBot.joke(channel)
                 previous_joke = datetime.now()
             counter_threshold = RandomBot.generate_threshold(8, 20)
             counter = 0
@@ -243,7 +246,8 @@ message = None
 attachments = None
 delivery = None
 counter = 0
-counter_threshold = RandomBot.generate_threshold(1, 10)
+channel = None
+counter_threshold = RandomBot.generate_threshold(8, 20)
 trans = Translator()
 
 # Get all user IDs and channel IDs
