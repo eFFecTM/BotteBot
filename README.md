@@ -11,7 +11,6 @@ This repository is used to create a Slack bot which can perform various things:
 ## Get started
 * Install python and pip3
 * Install the requirements.txt
-* Set the _nltk_data_ folder in the correct path of your machine
 * Get the necessary API keys and put them in the _config.ini_ file
 
 ## Authors
