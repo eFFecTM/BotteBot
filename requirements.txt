@@ -3,7 +3,6 @@ slackclient==2.1.0
 pyowm==2.10.0
 googletrans==2.4.0
 oxforddictionaries==0.1.101
-nltk==3.4.4
 numpy==1.17.0rc2
 google_images_download==2.6.1
 bs4==0.0.1
