@@ -204,6 +204,10 @@ def remove_order_food(user, food):
     return "Fine. No food for {}".format(user)
 
 
+def remove_orders():
+    s.sql_delete('DELETE FROM food_orders')
+
+
 def get_schedule_overview():
     """Command: 'food schedule'"""
     if len(current_schedule) == 0:

@@ -214,6 +214,7 @@ what_time = str(config.get("scheduler", "WHAT_TIME"))
 schedule.every().wednesday.at(where_time).do(print_where_food_notification)
 schedule.every().wednesday.at(what_time).do(print_what_food_notification)
 schedule.every().wednesday.at("09:00").do(FoodBot.update_restaurant_database)
+schedule.every().wednesday.at("23:59").do(FoodBot.remove_orders)
 thread = Scheduler()
 thread.start()
 
