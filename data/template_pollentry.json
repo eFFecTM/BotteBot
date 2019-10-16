@@ -1,0 +1,14 @@
+{
+    "type": "section",
+    "text": {
+        "type": "mrkdwn",
+        "text": "template1"
+    },
+    "accessory": {
+        "type": "button",
+        "text": {
+            "type": "plain_text",
+            "text": "template2"
+        }
+    }
+}

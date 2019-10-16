@@ -21,7 +21,7 @@ from datetime import datetime, timedelta
 def on_message(**payload):
     try:
         data = payload['data']
-        global message, attachments, delivery, channel
+        global message, attachments, delivery, channel, blocks
         message = attachments = None
         if "user" in data:
             user_id, text_received, channel_read = data['user'], data['text'], data['channel']
@@ -42,13 +42,13 @@ def on_message(**payload):
             if not message:
                 check_random_keywords(user_name, words_received, webclient)
             if message:
-                send_message(message, channel, attachments)
+                send_message(message, channel, attachments, blocks)
     except Exception as e:
         logger.exception(e)
 
 
-def send_message(text_to_send, channel, attachments):
-    client.chat_postMessage(as_user="true", channel=channel, text=text_to_send, attachments=attachments)
+def send_message(text_to_send, channel, attachments, blocks):
+    client.chat_postMessage(as_user="true", channel=channel, text=text_to_send, attachments=attachments, blocks=json.dumps(blocks["blocks"]))
     logger.debug('Message sent to {}'.format(channel))
 
 
@@ -56,7 +56,7 @@ def filter_ignore_words(words_received, ignored_words):
     mentioned = False
     relevant_words = []
     for word in words_received:
-        if '@{}'.format(bot_id) in word:
+        if '@{}'.format(bot_id.lower()) in word:
             mentioned = True
         elif word not in ignored_words:
             relevant_words.append(word)
@@ -104,7 +104,7 @@ def check_random_keywords(user_name, words_received, client):
 
 def check_general_keywords(user_name, words_received):
     """Check for serious shit. Predefined commands etc."""
-    global message, attachments, delivery, channel
+    global message, attachments, delivery, channel, blocks
     if not message and any(word in words_received for word in help_triggers):
         message = HelpBot.get_list_of_commands()
         logger.debug('{} asked the HelpBot for info in channel {}'.format(user_name, channel))
@@ -112,7 +112,7 @@ def check_general_keywords(user_name, words_received):
         for food_trigger in food_triggers:
             if food_trigger in words_received:
                 logger.debug('{} asked the FoodBot a request in channel {}'.format(user_name, channel))
-                message = FoodBot.process_call(user_name, words_received, set_triggers, overview_triggers, order_triggers,
+                message, blocks = FoodBot.process_call(user_name, words_received, set_triggers, overview_triggers, order_triggers,
                                        schedule_triggers, add_triggers, remove_triggers, resto_triggers, rating_triggers, food_trigger)
     if not message and any(word in words_received for word in menu_triggers):
         logger.debug('{} asked the Foodbot for menu in channel {}'.format(user_name, channel))
@@ -246,6 +246,7 @@ attachments = None
 delivery = None
 counter = 0
 channel = None
+blocks = None
 counter_threshold = RandomBot.generate_threshold(8, 20)
 trans = Translator()
 

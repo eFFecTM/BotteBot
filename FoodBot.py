@@ -1,3 +1,5 @@
+import copy
+import json
 import random
 import logging
 import re
@@ -28,6 +30,16 @@ snappy_responses = ["just like the dignity of your {} mother. Mama Mia!",
                     u"\U0001F595",
                     "huh? Fine! I'll go build my own restaurant, with blackjack and hookers. In fact, forget about the restaurant and blackjack."]
 
+with open("data/template_message.json") as a, open("data/template_text.json") as b,\
+        open("data/template_divider.json") as c, open("data/template_pollentry.json") as d,\
+        open("data/template_votes.json") as e, open("data/template_addoption.json") as f:
+    template_message = json.load(a)
+    template_text = json.load(b)
+    template_divider = json.load(c)
+    template_pollentry = json.load(d)
+    template_votes = json.load(e)
+    template_addoption = json.load(f)
+
 
 def process_call(user, words_received, set_triggers, overview_triggers, order_triggers, schedule_triggers,
                  add_triggers, remove_triggers, restaurant_triggers, rating_triggers, food_trigger):
@@ -38,7 +50,7 @@ def process_call(user, words_received, set_triggers, overview_triggers, order_tr
                 output = set_restaurant(" ".join(words_received[words_received.index(set_trigger) + 1:]))
                 break
     if not output and any(overview_trigger in words_received for overview_trigger in overview_triggers):
-        output = get_order_overview(output)
+        output, blocks = get_order_overview(output)
     if not output and any(order_trigger in words_received for order_trigger in order_triggers):
         if not output:
             for remove_trigger in remove_triggers:
@@ -108,11 +120,45 @@ def process_call(user, words_received, set_triggers, overview_triggers, order_tr
         if not output:
             output = get_schedule_overview()
 
-    return output
+    return output, blocks
+
+
+def add_text(blocks, value):
+    element = copy.deepcopy(template_text)
+    element["text"]["text"] = value
+    blocks["blocks"].append(element)
+
+
+def add_option(blocks, value):
+    element = copy.deepcopy(template_addoption)
+    element["elements"][0]["value"] = value
+    blocks["blocks"].append(element)
 
 
 def get_order_overview(output):
     """Command: 'food overview'"""
+    # text1 = copy.deepcopy(template_text)
+    # divider1 = copy.deepcopy(template_divider)
+    # pollentry1 = copy.deepcopy(template_pollentry)
+    # votes1 = copy.deepcopy(template_votes)
+    # pollentry2 = copy.deepcopy(template_pollentry)
+    # votes2 = copy.deepcopy(template_votes)
+    # divider2 = copy.deepcopy(template_divider)
+    # addoption1 = copy.deepcopy(template_addoption)
+
+    blocks = {"blocks": []}
+    add_text(blocks, "hallo1")
+    add_text(blocks, "hallo2")
+    add_option(blocks, "option1")
+
+    # blocks["blocks"].append(text1)
+    # blocks["blocks"].append(divider1)
+    # blocks["blocks"].append(pollentry1)
+    # blocks["blocks"].append(votes1)
+    # blocks["blocks"].append(pollentry2)
+    # blocks["blocks"].append(votes2)
+    # blocks["blocks"].append(divider2)
+    # blocks["blocks"].append(addoption1)
     if not output:
         output = ""
     output += "We're getting food from " + current_food_place
@@ -123,7 +169,7 @@ def get_order_overview(output):
         output += "\nThis results in:\n"
     for order, amount in pretty_orders.items():
         output += "{} times {}\n".format(amount, order)
-    return output
+    return output, blocks
 
 
 def order_food(user, food):
