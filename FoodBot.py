@@ -183,7 +183,9 @@ def order_food(user, food):
         pretty_orders[food] += 1
     else:
         pretty_orders[food] = 1
-    current_user_orders.append([user, food])
+    s.sql_edit_insert('INSERT INTO food_orders (name, item, restaurant, "date") VALUES (?, ?, ?, ?)',
+                      (user, food, current_food_place, datetime.now()))
+    current_user_orders.append([user, food])  # can be deleted
     adjective = requests.get("https://insult.mattbas.org/api/adjective").text
     return "Order placed: {} for {} {}".format(food, adjective, user)
 
@@ -194,7 +196,8 @@ def remove_order_food(user, food):
         pretty_orders[food] -= 1
         if pretty_orders[food] == 0:
             pretty_orders.pop(food)
-        current_user_orders.remove([user, food])
+        s.sql_delete('DELETE FROM food_orders WHERE name=? AND item=?', (user, food))
+        current_user_orders.remove([user, food])  # can be deleted
     else:
         noun = requests.get("https://insult.mattbas.org/api/insult").text.split()[-1]
         return "There's no food from {} matching {}, buy some glasses, you blind {}".format(user, food, noun)
