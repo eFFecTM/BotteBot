@@ -43,7 +43,7 @@ with open("data/template_message.json") as a, open("data/template_text.json") as
 
 def process_call(user, words_received, set_triggers, overview_triggers, order_triggers, schedule_triggers,
                  add_triggers, remove_triggers, restaurant_triggers, rating_triggers, food_trigger):
-    output = None
+    output = blocks = None
     if not output:
         for set_trigger in set_triggers:
             if set_trigger in words_received:
@@ -129,8 +129,13 @@ def add_text(blocks, value):
     blocks["blocks"].append(element)
 
 
+def add_pollentry(blocks, value):
+    element = copy.deepcopy(template_pollentry)
+    element["elements"][0]["value"] = value
+    blocks["blocks"].append(element)
+
 def add_option(blocks, value):
-    element = copy.deepcopy(template_addoption)
+    element = copy.deepcopy(template_pollentry)
     element["elements"][0]["value"] = value
     blocks["blocks"].append(element)
 

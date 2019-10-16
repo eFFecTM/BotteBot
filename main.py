@@ -48,6 +48,8 @@ def on_message(**payload):
 
 
 def send_message(text_to_send, channel, attachments, blocks):
+    if blocks is None:
+        blocks = {"blocks": []}
     client.chat_postMessage(as_user="true", channel=channel, text=text_to_send, attachments=attachments, blocks=json.dumps(blocks["blocks"]))
     logger.debug('Message sent to {}'.format(channel))
 
