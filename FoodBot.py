@@ -60,7 +60,7 @@ def process_call(user, words_received, set_triggers, overview_triggers, order_tr
         if not output:
             for order_trigger in order_triggers:
                 if order_trigger in words_received:
-                    output = order_food(user, " ".join(words_received[words_received.index(order_trigger) + 1:]))
+                    output, blocks = order_food(user, " ".join(words_received[words_received.index(order_trigger) + 1:]))
                     break
     if not output and any(rating_trigger in words_received for rating_trigger in rating_triggers):
         if not output:
@@ -129,32 +129,34 @@ def add_text(blocks, value):
     blocks["blocks"].append(element)
 
 
-def add_pollentry(blocks, value):
+def add_pollentry(blocks, value, value_button):
     element = copy.deepcopy(template_pollentry)
-    element["elements"][0]["value"] = value
+    element["text"]["text"] = value
+    element["accessory"]["text"]["text"] = value_button
     blocks["blocks"].append(element)
 
-def add_option(blocks, value):
-    element = copy.deepcopy(template_pollentry)
-    element["elements"][0]["value"] = value
+
+def add_option(blocks):
+    element = copy.deepcopy(template_addoption)
+    blocks["blocks"].append(element)
+
+
+def add_votes(blocks, value):
+    element = copy.deepcopy(template_votes)
+    element["elements"][0]["text"] = value
+    blocks["blocks"].append(element)
+
+
+def add_divider(blocks):
+    element = copy.deepcopy(template_divider)
     blocks["blocks"].append(element)
 
 
 def get_order_overview(output):
     """Command: 'food overview'"""
-    # text1 = copy.deepcopy(template_text)
-    # divider1 = copy.deepcopy(template_divider)
-    # pollentry1 = copy.deepcopy(template_pollentry)
-    # votes1 = copy.deepcopy(template_votes)
-    # pollentry2 = copy.deepcopy(template_pollentry)
-    # votes2 = copy.deepcopy(template_votes)
-    # divider2 = copy.deepcopy(template_divider)
-    # addoption1 = copy.deepcopy(template_addoption)
-
     blocks = {"blocks": []}
-    add_text(blocks, "hallo1")
-    add_text(blocks, "hallo2")
-    add_option(blocks, "option1")
+    add_text(blocks, "We're getting food from " + current_food_place)
+    add_divider(blocks)
 
     # blocks["blocks"].append(text1)
     # blocks["blocks"].append(divider1)
@@ -164,16 +166,37 @@ def get_order_overview(output):
     # blocks["blocks"].append(votes2)
     # blocks["blocks"].append(divider2)
     # blocks["blocks"].append(addoption1)
+
+    orders = s.sql_db_to_list('SELECT name, item FROM food_orders ORDER BY item ASC')
+    prev_name = prev_item = None
+    count = 0
+    names = ""
+    for [name, item] in orders:
+        if prev_item is not None and prev_item != item:
+            add_pollentry(blocks, prev_item, "Add/Remove")
+            add_votes(blocks, names)
+            count = 0
+            names = ""
+        count = count + 1
+        prev_name = name
+        prev_item = item
+        names = names + " " + name
+
+    if len(orders) != 0:
+        add_pollentry(blocks, prev_item, "Add/Remove Vote")
+        add_votes(blocks, names)
+
     if not output:
-        output = ""
-    output += "We're getting food from " + current_food_place
-    output += "\n\n\n"
-    for [user, order] in current_user_orders:
-        output += user + " orders the following: " + order + "\n"
-    if len(current_user_orders) != 0:
-        output += "\nThis results in:\n"
-    for order, amount in pretty_orders.items():
-        output += "{} times {}\n".format(amount, order)
+        output = "-"
+    # output += "We're getting food from " + current_food_place
+    # output += "\n\n\n"
+    # current_user_orders.sort()
+    # for [user, order] in current_user_orders:
+    #     output += user + " orders the following: " + order + "\n"
+    # if len(current_user_orders) != 0:
+    #     output += "\nThis results in:\n"
+    # for order, amount in pretty_orders.items():
+    #     output += "{} times {}\n".format(amount, order)
     return output, blocks
 
 
@@ -183,11 +206,17 @@ def order_food(user, food):
         pretty_orders[food] += 1
     else:
         pretty_orders[food] = 1
-    s.sql_edit_insert('INSERT INTO food_orders (name, item, restaurant, "date") VALUES (?, ?, ?, ?)',
-                      (user, food, current_food_place, datetime.now()))
-    current_user_orders.append([user, food])  # can be deleted
-    adjective = requests.get("https://insult.mattbas.org/api/adjective").text
-    return "Order placed: {} for {} {}".format(food, adjective, user)
+    ordered = s.sql_db_to_list('SELECT name, item FROM food_orders WHERE name=? AND item=?', (user, food))
+    if len(ordered) == 0:
+        s.sql_edit_insert('INSERT INTO food_orders (name, item, restaurant, "date") VALUES (?, ?, ?, ?)',
+                          (user, food, current_food_place, datetime.now()))
+        current_user_orders.append([user, food])  # can be deleted
+        adjective = requests.get("https://insult.mattbas.org/api/adjective").text
+        output = "Order placed: {} for {} {}".format(food, adjective, user)
+    else:
+        output = "Order already exists for this user!"
+    output, blocks = get_order_overview(output)
+    return output, blocks
 
 
 def remove_order_food(user, food):
