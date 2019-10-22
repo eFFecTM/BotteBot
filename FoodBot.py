@@ -17,7 +17,6 @@ logger.debug('FoodBot started.')
 
 s = SQL_query('data/imaginelab.db')
 current_food_place = "Pizza Hut"
-current_user_orders = []
 pretty_orders = {}
 current_schedule = []
 restaurants = []
@@ -173,7 +172,7 @@ def get_order_overview(output):
     names = ""
     for [name, item] in orders:
         if prev_item is not None and prev_item != item:
-            add_pollentry(blocks, prev_item, "Add/Remove")
+            add_pollentry(blocks, prev_item, "Add/Remove Vote")
             add_votes(blocks, names)
             count = 0
             names = ""
@@ -185,19 +184,7 @@ def get_order_overview(output):
     if len(orders) != 0:
         add_pollentry(blocks, prev_item, "Add/Remove Vote")
         add_votes(blocks, names)
-
-    if not output:
-        output = "-"
-    # output += "We're getting food from " + current_food_place
-    # output += "\n\n\n"
-    # current_user_orders.sort()
-    # for [user, order] in current_user_orders:
-    #     output += user + " orders the following: " + order + "\n"
-    # if len(current_user_orders) != 0:
-    #     output += "\nThis results in:\n"
-    # for order, amount in pretty_orders.items():
-    #     output += "{} times {}\n".format(amount, order)
-    return output, blocks
+    return "-", blocks
 
 
 def order_food(user, food):
@@ -210,7 +197,6 @@ def order_food(user, food):
     if len(ordered) == 0:
         s.sql_edit_insert('INSERT INTO food_orders (name, item, restaurant, "date") VALUES (?, ?, ?, ?)',
                           (user, food, current_food_place, datetime.now()))
-        current_user_orders.append([user, food])  # can be deleted
         adjective = requests.get("https://insult.mattbas.org/api/adjective").text
         output = "Order placed: {} for {} {}".format(food, adjective, user)
     else:
@@ -221,16 +207,27 @@ def order_food(user, food):
 
 def remove_order_food(user, food):
     """Command: 'food order remove <food>'"""
-    if [user, food] in current_user_orders:
+    orders = s.sql_db_to_list('SELECT name, item FROM food_orders')
+    if [user, food] in orders:
         pretty_orders[food] -= 1
         if pretty_orders[food] == 0:
             pretty_orders.pop(food)
         s.sql_delete('DELETE FROM food_orders WHERE name=? AND item=?', (user, food))
-        current_user_orders.remove([user, food])  # can be deleted
     else:
         noun = requests.get("https://insult.mattbas.org/api/insult").text.split()[-1]
         return "There's no food from {} matching {}, buy some glasses, you blind {}".format(user, food, noun)
     return "Fine. No food for {}".format(user)
+
+
+def vote_order_food(user, food):
+    ordered = s.sql_db_to_list('SELECT name, item FROM food_orders WHERE name=? AND item=?', (user, food))
+    if len(ordered) == 0:
+        s.sql_edit_insert('INSERT INTO food_orders (name, item, restaurant, "date") VALUES (?, ?, ?, ?)',
+                          (user, food, current_food_place, datetime.now()))
+    else:
+        s.sql_delete('DELETE FROM food_orders WHERE name=? AND item=?', (user, food))
+    return True
+
 
 
 def remove_orders():

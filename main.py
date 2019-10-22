@@ -1,11 +1,16 @@
 """This is the main application for the Slackbot called BotteBot."""
+import asyncio
 import configparser
 import json
 import logging
 import threading
 import time
+import urllib.parse
+
+import requests
 import schedule
 import slack
+from aiohttp import web
 from googletrans import Translator
 from oxforddictionaries.words import OxfordDictionaries
 import FoodBot
@@ -19,6 +24,7 @@ from datetime import datetime, timedelta
 
 @slack.RTMClient.run_on(event='message')
 def on_message(**payload):
+    global webclient
     try:
         data = payload['data']
         global message, attachments, delivery, channel, blocks
@@ -50,7 +56,7 @@ def on_message(**payload):
 def send_message(text_to_send, channel, attachments, blocks):
     if blocks is None:
         blocks = {"blocks": []}
-    client.chat_postMessage(as_user="true", channel=channel, text=text_to_send, attachments=attachments, blocks=json.dumps(blocks["blocks"]))
+    webclient.chat_postMessage(as_user="true", channel=channel, text=text_to_send, attachments=attachments, blocks=json.dumps(blocks["blocks"]))
     logger.debug('Message sent to {}'.format(channel))
 
 
@@ -183,6 +189,51 @@ def toggle_imaginelab():
         return "iMagineLab has been rescheduled for this week."
 
 
+def aiohttp_server():
+    async def interactive_message(request):
+        update = None
+        if request.body_exists:
+            body = await request.text()
+            body = urllib.parse.unquote_plus(body)
+            if body.startswith("payload="):
+                data = json.loads(body[8:])
+                if data["type"] == "block_actions":
+                    user = data["user"]["name"]
+                    if len(data["actions"]) == 1:
+                        block_id = data["actions"][0]["block_id"]
+                        block_list = data["message"]["blocks"]
+                        for block in block_list:
+                            if block["type"] == "section" and block["block_id"] == block_id:
+                                food = block["text"]["text"]
+                                update = FoodBot.vote_order_food(user, food)
+                                break
+        if update:
+            output, blocks = FoodBot.get_order_overview(None)
+            updated_message = {}
+            updated_message["channel"] = data["channel"]["id"]
+            updated_message["replace_original"] = "true"
+            updated_message["blocks"] = blocks["blocks"]
+            requests.post(data["response_url"], json=updated_message)
+        return web.Response()
+    app = web.Application()
+    app.add_routes([web.post('/slack/interactive-endpoint', interactive_message)])
+    runner = web.AppRunner(app)
+    return runner
+
+
+def run_server(runner):
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    loop.run_until_complete(runner.setup())
+    site = web.TCPSite(runner, 'localhost', 3000)
+    loop.run_until_complete(site.start())
+    loop.run_forever()
+
+
+t = threading.Thread(target=run_server, args=(aiohttp_server(),))
+t.start()
+
+
 # Create global logger
 logger = logging.getLogger('main')
 formatstring = "%(asctime)s - %(name)s:%(funcName)s:%(lineno)i - %(levelname)s - %(message)s"
@@ -244,6 +295,7 @@ bugreport_triggers = json.loads(config.get("triggers", "BUG_REPORT"))
 ignored_words = json.loads(config.get("triggers", "IGNORED_WORDS"))
 
 # Init message and translator
+webclient = None
 message = None
 attachments = None
 delivery = None
