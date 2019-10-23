@@ -225,7 +225,7 @@ def run_server(runner):
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     loop.run_until_complete(runner.setup())
-    site = web.TCPSite(runner, 'localhost', 3000)
+    site = web.TCPSite(runner, '*', 3000)
     loop.run_until_complete(site.start())
     loop.run_forever()
 
@@ -237,7 +237,7 @@ t.start()
 # Create global logger
 logger = logging.getLogger('main')
 formatstring = "%(asctime)s - %(name)s:%(funcName)s:%(lineno)i - %(levelname)s - %(message)s"
-logging.basicConfig(format=formatstring, level=logging.DEBUG)
+logging.basicConfig(format=formatstring, level=logging.INFO)
 logger.info('Starting BotteBot application...')
 
 # Read init file
