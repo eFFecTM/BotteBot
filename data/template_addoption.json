@@ -5,7 +5,6 @@
 			"type": "button",
 			"text": {
 				"type": "plain_text",
-				"emoji": true,
 				"text": "Add Option"
 			},
 			"value": "template1"

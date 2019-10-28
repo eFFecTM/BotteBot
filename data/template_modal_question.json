@@ -1,0 +1,10 @@
+{
+	"type": "input",
+	"label": {
+		"type": "plain_text",
+		"text": "template2"
+	},
+	"element": {
+		"type": "plain_text_input"
+	}
+}

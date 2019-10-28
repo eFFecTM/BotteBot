@@ -1,4 +1,5 @@
 """This is the main application for the Slackbot called BotteBot."""
+import ast
 import asyncio
 import configparser
 import json
@@ -13,6 +14,8 @@ import slack
 from aiohttp import web
 from googletrans import Translator
 from oxforddictionaries.words import OxfordDictionaries
+from slack.web.slack_response import SlackResponse
+
 import FoodBot
 import ImageBot
 import RandomBot
@@ -54,10 +57,27 @@ def on_message(**payload):
 
 
 def send_message(text_to_send, channel, attachments, blocks):
+    global last_message_ts, last_channel_id
     if blocks is None:
         blocks = {"blocks": []}
-    webclient.chat_postMessage(as_user="true", channel=channel, text=text_to_send, attachments=attachments, blocks=json.dumps(blocks["blocks"]))
+    try:
+        if webclient is None:
+            data = client.chat_postMessage(as_user="true", channel=channel, text=text_to_send, attachments=attachments,
+                                           blocks=json.dumps(blocks["blocks"]))
+        else:
+            data = webclient.chat_postMessage(as_user="true", channel=channel, text=text_to_send, attachments=attachments,
+                                   blocks=json.dumps(blocks["blocks"]))
+            dict = ast.literal_eval(SlackResponse.__str__(data))
+            last_message_ts = dict["ts"]
+            last_channel_id = dict["channel"]
+    except RuntimeError:  # todo: fix the event loop problem by properly using asyncio
+        pass
+
     logger.debug('Message sent to {}'.format(channel))
+
+
+def update_message(ts, channel, blocks):
+    client.chat_update(as_user="true", channel=channel, ts=ts, blocks=json.dumps(blocks))
 
 
 def filter_ignore_words(words_received, ignored_words):
@@ -120,8 +140,10 @@ def check_general_keywords(user_name, words_received):
         for food_trigger in food_triggers:
             if food_trigger in words_received:
                 logger.debug('{} asked the FoodBot a request in channel {}'.format(user_name, channel))
-                message, blocks = FoodBot.process_call(user_name, words_received, set_triggers, overview_triggers, order_triggers,
-                                       schedule_triggers, add_triggers, remove_triggers, resto_triggers, rating_triggers, food_trigger)
+                message, blocks = FoodBot.process_call(user_name, words_received, set_triggers, overview_triggers,
+                                                       order_triggers,
+                                                       schedule_triggers, add_triggers, remove_triggers, resto_triggers,
+                                                       rating_triggers, food_trigger)
     if not message and any(word in words_received for word in menu_triggers):
         logger.debug('{} asked the Foodbot for menu in channel {}'.format(user_name, channel))
         message = FoodBot.get_menu(words_received)
@@ -135,7 +157,8 @@ def check_general_keywords(user_name, words_received):
         if user_name != "jan_dl":
             [message, delivery, channel] = RandomBot.joke(channel)
     if not message and all(word in no_imaginelab_triggers for word in words_received):
-        logger.debug('{} asked the Bottebot to toggle ImagineLab for this week in channel {}'.format(user_name, channel))
+        logger.debug(
+            '{} asked the Bottebot to toggle ImagineLab for this week in channel {}'.format(user_name, channel))
         message = toggle_imaginelab()
 
 
@@ -166,6 +189,7 @@ class Scheduler(threading.Thread):
 
 
 def print_where_food_notification():
+    global is_imaginelab
     if is_imaginelab:
         send_message("<!channel> Where are we going to order today?", notification_channel, None, None)
 
@@ -173,7 +197,9 @@ def print_where_food_notification():
 def print_what_food_notification():
     global is_imaginelab
     if is_imaginelab:
-        send_message("<!channel> What do you all want to order?", notification_channel, None, None)
+        send_message("<!channel> What do you all want to order? Someone @ me using the command 'food overview'", notification_channel, None, None)
+        # output, blocks = FoodBot.get_order_overview(None)
+        # send_message(output, notification_channel, None, blocks)
     is_imaginelab = True  # resetting for next time
 
 
@@ -191,29 +217,54 @@ def toggle_imaginelab():
 
 def aiohttp_server():
     async def interactive_message(request):
+        global last_message_ts, last_channel_id
         update = None
         if request.body_exists:
             body = await request.text()
             body = urllib.parse.unquote_plus(body)
             if body.startswith("payload="):
                 data = json.loads(body[8:])
+                user = data["user"]["name"]
                 if data["type"] == "block_actions":
-                    user = data["user"]["name"]
                     if len(data["actions"]) == 1:
-                        block_id = data["actions"][0]["block_id"]
-                        block_list = data["message"]["blocks"]
-                        for block in block_list:
-                            if block["type"] == "section" and block["block_id"] == block_id:
-                                food = block["text"]["text"]
-                                update = FoodBot.vote_order_food(user, food)
-                                break
-        if update:
-            output, blocks = FoodBot.get_order_overview(None)
-            updated_message = {}
-            updated_message["channel"] = data["channel"]["id"]
-            updated_message["replace_original"] = "true"
-            updated_message["blocks"] = blocks["blocks"]
-            requests.post(data["response_url"], json=updated_message)
+                        action_text = data["actions"][0]["text"]["text"]
+                        if action_text == "Add Option":  # user is adding a new option
+                            template_modal = json.load(open("data/template_modal.json"))
+                            blocks = {"blocks": []}
+                            FoodBot.add_modal_question(blocks, "What do you want to order? (single item)")
+                            template_modal["blocks"] = blocks["blocks"]
+                            open_modal = {"trigger_id": data["trigger_id"],
+                                          "view": template_modal}
+                            headers = {"Content-type": "application/json",
+                                       "Authorization": "Bearer " + SLACK_BOT_TOKEN}
+                            requests.post(url="https://slack.com/api/views.open", headers=headers, json=open_modal)
+                        elif action_text == "Add/Remove Vote":  # user is voting on an existing option
+                            block_id = data["actions"][0]["block_id"]
+                            block_list = data["message"]["blocks"]
+                            for block in block_list:
+                                if block["type"] == "section" and block["block_id"] == block_id:
+                                    food = block["text"]["text"]
+                                    update = FoodBot.vote_order_food(user, food)
+                                    break
+                            if update:
+                                output, blocks = FoodBot.get_order_overview(None)
+                                # todo: does not work, creating event loop in an event loop, using 'dirty' blocking way
+                                # update_message(data["message"]["ts"], data["channel"]["id"], blocks["blocks"])
+                                updated_message = {"channel": data["channel"]["id"],
+                                                   "replace_original": "true",
+                                                   "blocks": blocks["blocks"]}
+                                requests.post(data["response_url"], json=updated_message)
+                elif data["type"] == "view_submission":  # user is submitting the order through the modal
+                    block_id = data["view"]["blocks"][0]["block_id"]
+                    action_id = data["view"]["blocks"][0]["element"]["action_id"]
+                    order = data["view"]["state"]["values"][block_id][action_id]["value"]
+                    output, blocks = FoodBot.order_food(user, order)
+                    updated_message = {"channel": last_channel_id,
+                                       "ts": last_message_ts,
+                                       "blocks": blocks["blocks"]}
+                    headers = {"Content-type": "application/json",
+                               "Authorization": "Bearer " + SLACK_BOT_TOKEN}
+                    requests.post(url="https://slack.com/api/chat.update", headers=headers, json=updated_message)
         return web.Response()
     app = web.Application()
     app.add_routes([web.post('/slack/interactive-endpoint', interactive_message)])
@@ -258,13 +309,12 @@ config.read('config.ini')
 notification_channel = str(config.get("scheduler", "NOTIFICATION_CHANNEL"))
 where_time = str(config.get("scheduler", "WHERE_TIME"))
 what_time = str(config.get("scheduler", "WHAT_TIME"))
-schedule.every().wednesday.at(where_time).do(print_where_food_notification)
-schedule.every().wednesday.at(what_time).do(print_what_food_notification)
+schedule.every().monday.at(where_time).do(print_where_food_notification)
+schedule.every().monday.at(what_time).do(print_what_food_notification)
 schedule.every().wednesday.at("09:00").do(FoodBot.update_restaurant_database)
 schedule.every().wednesday.at("23:59").do(FoodBot.remove_orders)
 thread = Scheduler()
 thread.start()
-
 
 weather_triggers = json.loads(config.get("triggers", "WEATHER"))
 insult_triggers = json.loads(config.get("triggers", "INSULT"))
@@ -298,6 +348,8 @@ delivery = None
 counter = 0
 channel = None
 blocks = None
+last_message_ts = ""
+last_channel_id = ""
 counter_threshold = RandomBot.generate_threshold(8, 20)
 trans = Translator()
 

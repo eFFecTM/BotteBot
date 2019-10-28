@@ -31,13 +31,15 @@ snappy_responses = ["just like the dignity of your {} mother. Mama Mia!",
 
 with open("data/template_message.json") as a, open("data/template_text.json") as b,\
         open("data/template_divider.json") as c, open("data/template_pollentry.json") as d,\
-        open("data/template_votes.json") as e, open("data/template_addoption.json") as f:
+        open("data/template_votes.json") as e, open("data/template_addoption.json") as f,\
+        open("data/template_modal_question.json") as g:
     template_message = json.load(a)
     template_text = json.load(b)
     template_divider = json.load(c)
     template_pollentry = json.load(d)
     template_votes = json.load(e)
     template_addoption = json.load(f)
+    template_modal_question = json.load(g)
 
 
 def process_call(user, words_received, set_triggers, overview_triggers, order_triggers, schedule_triggers,
@@ -151,6 +153,12 @@ def add_divider(blocks):
     blocks["blocks"].append(element)
 
 
+def add_modal_question(blocks, value):
+    element = copy.deepcopy(template_modal_question)
+    element["label"]["text"] = value
+    blocks["blocks"].append(element)
+
+
 def get_order_overview(output):
     """Command: 'food overview'"""
     blocks = {"blocks": []}
@@ -174,7 +182,7 @@ def get_order_overview(output):
     if len(orders) != 0:
         add_pollentry(blocks, prev_item, "Add/Remove Vote")
         add_votes(blocks, names)
-    # add_option(blocks)
+    add_option(blocks)
     return "-", blocks
 
 
