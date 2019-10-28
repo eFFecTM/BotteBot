@@ -87,11 +87,11 @@ def repeat(words_received, triggers):
 
 def generate_threshold(min, max):
     temp = random.randint(min, max)
-    print(temp)
     return temp
 
-"""jokes from the joke api at https://sv443.net/jokeapi"""
+
 def joke(channel):
+    """jokes from the joke api at https://sv443.net/jokeapi"""
     # category = ["Miscellaneous", "Programming"]
     category = "Any"
     blacklist = ""

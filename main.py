@@ -134,7 +134,7 @@ def check_general_keywords(user_name, words_received):
     if not message and any((word in words_received for word in joke_triggers)):
         if user_name != "jan_dl":
             [message, delivery, channel] = RandomBot.joke(channel)
-    if not message and any((word in words_received for word in no_imaginelab_triggers)):
+    if not message and all(word in no_imaginelab_triggers for word in words_received):
         logger.debug('{} asked the Bottebot to toggle ImagineLab for this week in channel {}'.format(user_name, channel))
         message = toggle_imaginelab()
 
@@ -167,24 +167,24 @@ class Scheduler(threading.Thread):
 
 def print_where_food_notification():
     if is_imaginelab:
-        send_message("<!channel> Where are we going to order today?", notification_channel, None)
+        send_message("<!channel> Where are we going to order today?", notification_channel, None, None)
 
 
 def print_what_food_notification():
     global is_imaginelab
     if is_imaginelab:
-        send_message("<!channel> What do you all want to order?", notification_channel, None)
-    is_imaginelab = True
+        send_message("<!channel> What do you all want to order?", notification_channel, None, None)
+    is_imaginelab = True  # resetting for next time
 
 
 def toggle_imaginelab():
     global is_imaginelab
     if is_imaginelab:
-        send_message("<!channel> iMagineLab is cancelled for this week!", notification_channel, None)
+        send_message("<!channel> iMagineLab is cancelled for this week!", notification_channel, None, None)
         is_imaginelab = False
         return "iMagineLab is cancelled for this week."
     else:
-        send_message("<!channel> iMagineLab has been rescheduled for this week!", notification_channel, None)
+        send_message("<!channel> iMagineLab has been rescheduled for this week!", notification_channel, None, None)
         is_imaginelab = True
         return "iMagineLab has been rescheduled for this week."
 
@@ -222,16 +222,12 @@ def aiohttp_server():
 
 
 def run_server(runner):
-    loop = asyncio.new_event_loop()
+    global loop
     asyncio.set_event_loop(loop)
     loop.run_until_complete(runner.setup())
     site = web.TCPSite(runner, '*', 3000)
     loop.run_until_complete(site.start())
     loop.run_forever()
-
-
-t = threading.Thread(target=run_server, args=(aiohttp_server(),))
-t.start()
 
 
 # Create global logger
@@ -311,7 +307,7 @@ bot_id = client.auth_test()["user_id"]
 user_ids = [element["id"] for element in client.users_list()["members"]]
 public_channel_ids = [element["id"] for element in client.channels_list()["channels"]]
 
-#joke limiter
+# joke limiter
 previous_joke = datetime.now() - timedelta(hours=2)
 
 # Connect to SQLite3 database
@@ -320,8 +316,14 @@ logger.info('Connected to SQLite database!')
 # s.sql_delete('DELETE FROM restaurant_database')
 FoodBot.update_restaurant_database()
 
+# Start AIOHTTP Server
+loop = asyncio.new_event_loop()
+t = threading.Thread(target=run_server, args=(aiohttp_server(),))
+t.start()
+
 # Connect to Slack
 slackbot = slack.RTMClient(token=SLACK_BOT_TOKEN)
 logger.info('Connected to Slack!')
 slackbot.start()
 stop = True
+loop.call_soon_threadsafe(loop.stop)

@@ -12,7 +12,7 @@ from data.sqlquery import SQL_query
 # Create global logger
 logger = logging.getLogger('FoodBot')
 formatstring = "%(asctime)s - %(name)s:%(funcName)s:%(lineno)i - %(levelname)s - %(message)s"
-logging.basicConfig(format=formatstring, level=logging.DEBUG)
+logging.basicConfig(format=formatstring, level=logging.INFO)
 logger.debug('FoodBot started.')
 
 s = SQL_query('data/imaginelab.db')
@@ -157,15 +157,6 @@ def get_order_overview(output):
     add_text(blocks, "We're getting food from " + current_food_place)
     add_divider(blocks)
 
-    # blocks["blocks"].append(text1)
-    # blocks["blocks"].append(divider1)
-    # blocks["blocks"].append(pollentry1)
-    # blocks["blocks"].append(votes1)
-    # blocks["blocks"].append(pollentry2)
-    # blocks["blocks"].append(votes2)
-    # blocks["blocks"].append(divider2)
-    # blocks["blocks"].append(addoption1)
-
     orders = s.sql_db_to_list('SELECT name, item FROM food_orders ORDER BY item ASC')
     prev_name = prev_item = None
     count = 0
@@ -180,28 +171,28 @@ def get_order_overview(output):
         prev_name = name
         prev_item = item
         names = names + " " + name
-
     if len(orders) != 0:
         add_pollentry(blocks, prev_item, "Add/Remove Vote")
         add_votes(blocks, names)
+    # add_option(blocks)
     return "-", blocks
 
 
 def order_food(user, food):
     """Command: 'food order <food>'"""
-    if food in pretty_orders.keys():
-        pretty_orders[food] += 1
+    if food == "":
+        output = "No food input was provided!"
+        blocks = None
     else:
-        pretty_orders[food] = 1
-    ordered = s.sql_db_to_list('SELECT name, item FROM food_orders WHERE name=? AND item=?', (user, food))
-    if len(ordered) == 0:
-        s.sql_edit_insert('INSERT INTO food_orders (name, item, restaurant, "date") VALUES (?, ?, ?, ?)',
-                          (user, food, current_food_place, datetime.now()))
-        adjective = requests.get("https://insult.mattbas.org/api/adjective").text
-        output = "Order placed: {} for {} {}".format(food, adjective, user)
-    else:
-        output = "Order already exists for this user!"
-    output, blocks = get_order_overview(output)
+        ordered = s.sql_db_to_list('SELECT name, item FROM food_orders WHERE name=? AND item=?', (user, food))
+        if len(ordered) == 0:
+            s.sql_edit_insert('INSERT INTO food_orders (name, item, restaurant, "date") VALUES (?, ?, ?, ?)',
+                              (user, food, current_food_place, datetime.now()))
+            adjective = requests.get("https://insult.mattbas.org/api/adjective").text
+            output = "Order placed: {} for {} {}".format(food, adjective, user)
+        else:
+            output = "Order already exists for this user!"
+        output, blocks = get_order_overview(output)
     return output, blocks
 
 
@@ -227,7 +218,6 @@ def vote_order_food(user, food):
     else:
         s.sql_delete('DELETE FROM food_orders WHERE name=? AND item=?', (user, food))
     return True
-
 
 
 def remove_orders():
