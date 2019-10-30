@@ -217,6 +217,7 @@ def toggle_imaginelab():
 
 def aiohttp_server():
     async def interactive_message(request):
+        logger.debug("Receiving request from Slack: {}".format(str(request)))
         global last_message_ts, last_channel_id
         update = None
         if request.body_exists:
@@ -237,7 +238,6 @@ def aiohttp_server():
                                           "view": template_modal}
                             headers = {"Content-type": "application/json",
                                        "Authorization": "Bearer " + SLACK_BOT_TOKEN}
-                            logger.debug("Going to open modal for user {}".format(user))
                             requests.post(url="https://slack.com/api/views.open", headers=headers, json=open_modal)
                             logger.debug("Opening modal for user {}".format(user))
                         elif action_text == "Add/Remove Vote":  # user is voting on an existing option
