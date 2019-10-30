@@ -12,7 +12,7 @@ from data.sqlquery import SQL_query
 # Create global logger
 logger = logging.getLogger('FoodBot')
 formatstring = "%(asctime)s - %(name)s:%(funcName)s:%(lineno)i - %(levelname)s - %(message)s"
-logging.basicConfig(format=formatstring, level=logging.INFO)
+logging.basicConfig(format=formatstring, level=logging.DEBUG)
 logger.debug('FoodBot started.')
 
 s = SQL_query('data/imaginelab.db')

@@ -10,7 +10,7 @@ config.read('init.ini')
 # Create global logger
 logger = logging.getLogger('imagebot')
 formatstring = "%(asctime)s - %(name)s:%(funcName)s:%(lineno)i - %(levelname)s - %(message)s"
-logging.basicConfig(format=formatstring, level=logging.INFO)
+logging.basicConfig(format=formatstring, level=logging.DEBUG)
 
 
 def find_image(words_received, image_triggers):
