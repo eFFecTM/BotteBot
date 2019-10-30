@@ -237,8 +237,9 @@ def aiohttp_server():
                                           "view": template_modal}
                             headers = {"Content-type": "application/json",
                                        "Authorization": "Bearer " + SLACK_BOT_TOKEN}
+                            logger.debug("Going to open modal for user {}".format(user))
                             requests.post(url="https://slack.com/api/views.open", headers=headers, json=open_modal)
-                            logger.debug("Opening modal for user {}", user)
+                            logger.debug("Opening modal for user {}".format(user))
                         elif action_text == "Add/Remove Vote":  # user is voting on an existing option
                             block_id = data["actions"][0]["block_id"]
                             block_list = data["message"]["blocks"]
@@ -255,7 +256,7 @@ def aiohttp_server():
                                                    "replace_original": "true",
                                                    "blocks": blocks["blocks"]}
                                 requests.post(data["response_url"], json=updated_message)
-                                logger.debug("Updating message for user {}", user)
+                                logger.debug("Updating message for user {}".format(user))
                 elif data["type"] == "view_submission":  # user is submitting the order through the modal
                     block_id = data["view"]["blocks"][0]["block_id"]
                     action_id = data["view"]["blocks"][0]["element"]["action_id"]
@@ -267,7 +268,7 @@ def aiohttp_server():
                     headers = {"Content-type": "application/json",
                                "Authorization": "Bearer " + SLACK_BOT_TOKEN}
                     requests.post(url="https://slack.com/api/chat.update", headers=headers, json=updated_message)
-                    logger.debug("Order from modal accepted, updating message for user {}", user)
+                    logger.debug("Order from modal accepted, updating message for user {}".format(user))
         return web.Response()
     app = web.Application()
     app.add_routes([web.post('/slack/interactive-endpoint', interactive_message)])
