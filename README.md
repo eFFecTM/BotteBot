@@ -1,4 +1,5 @@
 # Botte Bot
+Doc is outdated, needs overhaul!
 
 ## Features
 This repository is used to create a Slack bot which can perform various things:

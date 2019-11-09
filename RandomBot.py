@@ -1,11 +1,15 @@
-import requests
 import json
 import random
+
+import requests
+
+import Globals
 
 
 def lmgtfy(words_received, triggers):
     """let me google that for you with link shortener"""
     found = False
+    triggered_word = None
     for word in triggers:
         if word.lower() in words_received:
             found = True
@@ -24,13 +28,14 @@ def lmgtfy(words_received, triggers):
     return None
 
 
-def insult(words_received, client, user_ids, translator):
+def insult(words_received, user_ids, translator):
     found = False
+    r = None
     for user_id_mention in user_ids:
         if '<@{}>'.format(user_id_mention.lower()) in words_received:
             found = True
             url = "https://insult.mattbas.org/api/insult?who=" \
-                  + client.users_info(user=user_id_mention)["user"]["real_name"].split(" ")[0]
+                  + Globals.web_client.users_info(user=user_id_mention)["user"]["real_name"].split(" ")[0]
             r = requests.get(url)
             break
     if not found:
@@ -57,13 +62,14 @@ def definition(words_received, triggers, translator, oxford):
             if 'definitions' in json_info['results'][0]['lexicalEntries'][0]['entries'][0]['senses'][0]:
                 answer = str(json_info['results'][0]['lexicalEntries'][0]['entries'][0]['senses'][0]['definitions'][0])
             elif 'crossReferenceMarkers' in json_info['results'][0]['lexicalEntries'][0]['entries'][0]['senses'][0]:
-                answer = str(json_info['results'][0]['lexicalEntries'][0]['entries'][0]['senses'][0]['crossReferenceMarkers'][0])
+                answer = str(
+                    json_info['results'][0]['lexicalEntries'][0]['entries'][0]['senses'][0]['crossReferenceMarkers'][0])
             else:
                 raise ValueError
             subject = str(json_info['results'][0]['id'])
             translated = translator.translate(subject + " is " + answer, src='en', dest='nl')
             return translated.text
-        except ValueError as e:
+        except ValueError:
             r = requests.get("https://insult.mattbas.org/api/adjective")
             return "You " + r.text + " person, that's no word!"
     return None
@@ -85,8 +91,8 @@ def repeat(words_received, triggers):
     return None
 
 
-def generate_threshold(min, max):
-    temp = random.randint(min, max)
+def generate_threshold(minimum, maximum):
+    temp = random.randint(minimum, maximum)
     return temp
 
 
@@ -95,17 +101,23 @@ def joke(channel):
     # category = ["Miscellaneous", "Programming"]
     category = "Any"
     blacklist = ""
-    # r = requests.get("https://sv443.net/jokeapi/category/"+category[random.randint(0, 1)]+"?blacklistFlags="+blacklist)
+    # r = requests.get("https://sv443.net/jokeapi/category/"+category[random.randint(0,
+    # 1)]+"?blacklistFlags="+blacklist)
     r = requests.get(
         "https://sv443.net/jokeapi/category/" + category + "?blacklistFlags=" + blacklist)
     json_info = r.json()
     if json_info['type'] == 'single':
         if json_info['category'] == 'Dark':
-            return json_info['joke'], None, "black"
+            Globals.delivery_channel = "black"
+            return json_info['joke']
         else:
-            return json_info['joke'], None, channel
+            Globals.delivery_channel = channel
+            return json_info['joke']
     else:
+        Globals.delivery = json_info['delivery']
         if json_info['category'] == 'Dark':
-            return json_info['setup'], json_info['delivery'], "black"
+            Globals.delivery_channel = "black"
+            return json_info['setup']
         else:
-            return json_info['setup'], json_info['delivery'], channel
+            Globals.delivery_channel = channel
+            return json_info['setup']

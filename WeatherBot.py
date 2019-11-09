@@ -1,7 +1,7 @@
 import pyowm
 
 
-def get_weather_message(words_received, api_key):
+def get_weather_message(api_key):
     """Get the current weather at a given location. Default location is Antwerp."""
     owm = pyowm.OWM(api_key)
     location = None
@@ -17,5 +17,7 @@ def get_weather_message(words_received, api_key):
 
     msg = "Current status in {}: {} :thermometer: {}°C (min = {}°C, max = {}°C) :tornado_cloud: {} km/h\n" \
           "Sunrise :sunrise: is at {}, sunset :city_sunset: is at {}. ".format(location, status, temperature['temp'],
-            temperature['temp_min'], temperature['temp_max'], wind['speed'], sunrise, sunset)
+                                                                               temperature['temp_min'],
+                                                                               temperature['temp_max'], wind['speed'],
+                                                                               sunrise, sunset)
     return msg

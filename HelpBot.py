@@ -1,18 +1,5 @@
 """Create a bot that responds on requests with 'help' keywords. List all available commands and features."""
-import configparser
-import logging
-from data.sqlquery import SQL_query
-
-# Read config file
-config = configparser.ConfigParser()
-config.read('init.ini')
-
-# Create global logger
-logger = logging.getLogger('helpbot')
-formatstring = "%(asctime)s - %(name)s:%(funcName)s:%(lineno)i - %(levelname)s - %(message)s"
-logging.basicConfig(format=formatstring, level=logging.DEBUG)
-
-s = SQL_query('data/imaginelab.db')
+import Globals
 
 
 def get_list_of_commands():
@@ -43,8 +30,10 @@ def get_list_of_commands():
                     \u2022 Let Me Google That For You (LMGTFY): `lmgtfy <text>`
                     \u2022 Define words: `define <word>`
                     \u2022 Repeat text in a channel: `repeat <text> in <channel>`
-                    \u2022 Get a list of restaurants that are able to deliver @ iMagineLab, sorted by rating: `restaurant top <number>`
-                    \u2022 Let the bot tell a random joke: _Sit back, relax and wait for the joke. If nothing happens, type_ `joke`
+                    \u2022 Get a list of restaurants that are able to deliver @ iMagineLab, sorted by rating: `restaurant 
+                    top <number>`
+                    \u2022 Let the bot tell a random joke: _Sit back, relax and wait for the joke. If nothing happens, 
+                    type_ `joke`
                    
                 """
     return response
@@ -58,9 +47,10 @@ def report_bug(words_received, triggers, user):
     """Command: 'bug <report>'. This saves the report to the bug report database, together with the username."""
     for trigger in triggers:
         if trigger in words_received:
-            after_trigger = " ".join(words_received[words_received.index(trigger)+1:])
-            logger.debug("reported bug {} by user {}".format(after_trigger, user))
-            s.sql_edit_insert('INSERT OR IGNORE INTO bug_report (date, report, user_name) VALUES (CURRENT_TIMESTAMP, ?, ?)', (after_trigger, user))
+            after_trigger = " ".join(words_received[words_received.index(trigger) + 1:])
+            Globals.logger.debug("reported bug {} by user {}".format(after_trigger, user))
+            Globals.database.sql_edit_insert(
+                'INSERT OR IGNORE INTO bug_report (date, report, user_name) VALUES (CURRENT_TIMESTAMP, ?, ?)',
+                (after_trigger, user))
             return "reported '{}', should I start pointing out your flaws too, {}?".format(after_trigger, user)
     return None
-

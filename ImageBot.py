@@ -1,16 +1,7 @@
 """Create an image bot to post or process images. See https://pythonspot.com/category/nltk/"""
-import configparser
-import logging
 from google_images_download import google_images_download
 
-# Read config file
-config = configparser.ConfigParser()
-config.read('init.ini')
-
-# Create global logger
-logger = logging.getLogger('imagebot')
-formatstring = "%(asctime)s - %(name)s:%(funcName)s:%(lineno)i - %(levelname)s - %(message)s"
-logging.basicConfig(format=formatstring, level=logging.DEBUG)
+import Globals
 
 
 def find_image(words_received, image_triggers):
@@ -23,7 +14,7 @@ def find_image(words_received, image_triggers):
         if word not in image_triggers:
             search_words.append(word)
     search_string = " ".join(search_words)
-    logger.debug('Searching Google Images for search: {}'.format(search_string))
+    Globals.logger.debug('Searching Google Images for search: {}'.format(search_string))
     image_title, image_url = get_image_url(search_string, animation=animation)
 
     # Add attachments to response message
@@ -68,8 +59,8 @@ def get_image_url(search_string, animation=False):
     try:
         x = response.download(arguments)
         url = next(iter(x.values()))[0]
-        logger.debug('URL of first found image: {}'.format(url))
+        Globals.logger.debug('URL of first found image: {}'.format(url))
         return search_string, url
 
     except Exception as e:
-        logger.exception(e)
+        Globals.logger.exception(e)

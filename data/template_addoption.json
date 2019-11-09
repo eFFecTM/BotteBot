@@ -7,7 +7,7 @@
 				"type": "plain_text",
 				"text": "Add Option"
 			},
-			"value": "template1"
+			"style": "primary"
 		}
 	]
 }

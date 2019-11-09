@@ -4,3 +4,4 @@ venv/
 .idea/
 init.ini
 data/imaginelab.db
+logs/

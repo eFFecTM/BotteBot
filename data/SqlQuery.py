@@ -1,7 +1,14 @@
 import sqlite3
 
 
-class SQL_query:
+def list_factory(cur, row):
+    d = []
+    for idx, col in enumerate(cur.description):
+        d.append(row[idx])
+    return d
+
+
+class SqlQuery:
     def __init__(self, db_name):
         # Connect to the SQL database
         self.conn = sqlite3.connect(db_name, check_same_thread=False)
@@ -35,7 +42,7 @@ class SQL_query:
 
     """Convert SQL data rows into a list of data"""
     def sql_db_to_list(self, query, var=None):
-        self.conn.row_factory = self.list_factory
+        self.conn.row_factory = list_factory
         cur = self.conn.cursor()
         if var:
             cur.execute(query, var)
@@ -43,12 +50,3 @@ class SQL_query:
             cur.execute(query)
         results = cur.fetchall()
         return results
-
-    def list_factory(self, cur, row):
-        d = []
-        for idx, col in enumerate(cur.description):
-            d.append(row[idx])
-        return d
-
-
-
