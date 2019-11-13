@@ -157,8 +157,6 @@ def get_order_overview():
     names = ""
     for [name, item] in orders:
         if prev_item is not None and prev_item != item:
-            # add_pollentry(blocks, prev_item, "Vote")
-            # add_votes(blocks, names)
             add_divider(blocks)
             add_pollentry(blocks, str(count) + ": " + names, prev_item)
             count = 0
@@ -167,12 +165,10 @@ def get_order_overview():
         prev_item = item
         names = names + " " + name
     if len(orders) != 0:
-        # add_pollentry(blocks, prev_item, "Vote")
-        # add_votes(blocks, names)
+        add_divider(blocks)
         add_pollentry(blocks, str(count) + ": " + names, prev_item)
         add_divider(blocks)
         add_text(blocks, "Total Votes: " + str(len(orders)) + "   |   Total Eaters: " + str(len(set(i[0] for i in orders))))
-        # add_divider(blocks)
     add_option(blocks)
     return blocks
 
@@ -392,7 +388,7 @@ def set_restaurant(restaurant):
     noun = r[-1]
     for resto in restaurants:
         if restaurant in resto[0].lower():
-            Globals.current_food_place = "{} \nwith url {}".format(resto[0], resto[2])
+            Globals.current_food_place = "{} with url: {}".format(resto[0], resto[2])
             return "restaurant set to {}. I heard they serve {} {}".format(resto[0], adjective, noun)
     return "Restaurant not in our database. Add it NOW with the command 'food restaurant add _restaurantname_ " \
            "_url_', you {} {}!".format(restaurant, adjective, noun)
