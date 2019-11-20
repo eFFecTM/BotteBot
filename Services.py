@@ -103,6 +103,11 @@ async def interactive_message(request):
                             template_modal["blocks"] = blocks["blocks"]
                             Globals.web_client.views_open(trigger_id=data["trigger_id"], view=template_modal)
                             Globals.logger.debug("Opening modal for user {}".format(user))
+                        elif action_text == "View as Text":
+                            template_modal_flattext = json.load(open("data/template_modal_flattext.json"))
+                            template_modal_flattext["blocks"][0]["text"]["text"] = FoodBot.get_order_overview(True)
+                            Globals.web_client.views_open(trigger_id=data["trigger_id"], view=template_modal_flattext)
+                            Globals.logger.debug("Opening modal for user {}".format(user))
                         else:  # user is voting on an existing option
                             block_id = data["actions"][0]["block_id"]
                             block_list = data["message"]["blocks"]
@@ -112,7 +117,7 @@ async def interactive_message(request):
                                     update = FoodBot.vote_order_food(user, food)
                                     break
                             if update:
-                                blocks = FoodBot.get_order_overview()
+                                blocks = FoodBot.get_order_overview(False)
                                 Helper.update_message(data["message"]["ts"], data["channel"]["id"], None,
                                                       json.dumps(blocks["blocks"]))
                                 Globals.logger.debug("Updating message for user {}".format(user))
@@ -122,7 +127,7 @@ async def interactive_message(request):
                     order = data["view"]["state"]["values"][block_id][action_id]["value"]
                     output, success = FoodBot.order_food(user, order)
                     if success:
-                        blocks = FoodBot.get_order_overview()
+                        blocks = FoodBot.get_order_overview(False)
                         Helper.update_message(Globals.last_message_ts, Globals.last_channel_id, None,
                                               json.dumps(blocks["blocks"]))
                         Globals.logger.debug("Order from modal accepted, updating message for user {}".format(user))

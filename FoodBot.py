@@ -20,7 +20,8 @@ snappy_responses = ["just like the dignity of your {} mother. Mama Mia!",
 with open("data/template_message.json") as a, open("data/template_text.json") as b, \
         open("data/template_divider.json") as c, open("data/template_pollentry.json") as d, \
         open("data/template_votes.json") as e, open("data/template_addoption.json") as f, \
-        open("data/template_modal_question.json") as g:
+        open("data/template_modal_question.json") as g, open("data/template_flattext.json") as h, \
+        open("data/template_modal_flattext.json") as i:
     template_message = json.load(a)
     template_text = json.load(b)
     template_divider = json.load(c)
@@ -28,6 +29,8 @@ with open("data/template_message.json") as a, open("data/template_text.json") as
     template_votes = json.load(e)
     template_addoption = json.load(f)
     template_modal_question = json.load(g)
+    template_flattext = json.load(h)
+    template_modal_flattext = json.load(i)
 
 
 def process_call(user, words_received, set_triggers, overview_triggers, order_triggers, schedule_triggers,
@@ -39,7 +42,7 @@ def process_call(user, words_received, set_triggers, overview_triggers, order_tr
                 output = set_restaurant(" ".join(words_received[words_received.index(set_trigger) + 1:]))
                 break
     if not output and any(overview_trigger in words_received for overview_trigger in overview_triggers):
-        blocks = get_order_overview()
+        blocks = get_order_overview(False)
     if not output and any(order_trigger in words_received for order_trigger in order_triggers):
         if not output:
             for remove_trigger in remove_triggers:
@@ -147,30 +150,56 @@ def add_modal_question(blocks, value):
     blocks["blocks"].append(element)
 
 
-def get_order_overview():
+def add_flattext(blocks):
+    element = copy.deepcopy(template_flattext)
+    blocks["blocks"].append(element)
+
+
+def get_order_overview(want_text):
     """Command: 'food overview'"""
-    blocks = {"blocks": []}
-    add_text(blocks, "We're getting food from " + Globals.current_food_place)
     orders = Globals.database.sql_db_to_list('SELECT name, item FROM food_orders ORDER BY item ASC')
-    prev_item = None
-    count = 0
-    names = ""
-    for [name, item] in orders:
-        if prev_item is not None and prev_item != item:
+    if want_text:
+        text = ""
+        text += "We're getting food from " + Globals.current_food_place + "\n"
+        prev_item = None
+        count = 0
+        names = ""
+        for [name, item] in orders:
+            if prev_item is not None and prev_item != item:
+                text += str(count) + ": " + names + "   |   " + prev_item + "\n"
+                count = 0
+                names = ""
+            count = count + 1
+            prev_item = item
+            names = names + " " + name
+        if len(orders) != 0:
+            text += str(count) + ": " + names + "   |   " + prev_item + "\n"
+            text += "Total Votes: " + str(len(orders)) + "   |   Total Eaters: " + str(len(set(j[0] for j in orders)))
+        return text
+    else:
+        blocks = {"blocks": []}
+        add_text(blocks, "We're getting food from " + Globals.current_food_place)
+
+        prev_item = None
+        count = 0
+        names = ""
+        for [name, item] in orders:
+            if prev_item is not None and prev_item != item:
+                add_divider(blocks)
+                add_pollentry(blocks, str(count) + ": " + names, prev_item)
+                count = 0
+                names = ""
+            count = count + 1
+            prev_item = item
+            names = names + " " + name
+        if len(orders) != 0:
             add_divider(blocks)
             add_pollentry(blocks, str(count) + ": " + names, prev_item)
-            count = 0
-            names = ""
-        count = count + 1
-        prev_item = item
-        names = names + " " + name
-    if len(orders) != 0:
-        add_divider(blocks)
-        add_pollentry(blocks, str(count) + ": " + names, prev_item)
-        add_divider(blocks)
-        add_text(blocks, "Total Votes: " + str(len(orders)) + "   |   Total Eaters: " + str(len(set(i[0] for i in orders))))
-    add_option(blocks)
-    return blocks
+            add_divider(blocks)
+            add_text(blocks, "Total Votes: " + str(len(orders)) + "   |   Total Eaters: " + str(len(set(j[0] for j in orders))))
+        add_option(blocks)
+        add_flattext(blocks)
+        return blocks
 
 
 def order_food(user, food):
@@ -187,7 +216,7 @@ def order_food(user, food):
             output = "Order placed: {} for {} {}".format(food, adjective, user)
             success = True
         else:
-            output = "Order already exists for this user!"
+            output = "Order: {} already exists for user {}!".format(food, user)
             success = False
     return output, success
 
