@@ -108,16 +108,14 @@ def joke(channel):
     json_info = r.json()
     if json_info['type'] == 'single':
         if json_info['category'] == 'Dark':
-            Globals.delivery_channel = "black"
-            return json_info['joke']
+            return [json_info['joke'], "black"]
         else:
-            Globals.delivery_channel = channel
-            return json_info['joke']
+            return [json_info['joke'], channel]
     else:
         Globals.delivery = json_info['delivery']
         if json_info['category'] == 'Dark':
             Globals.delivery_channel = "black"
-            return json_info['setup']
+            return [json_info['setup'], "black"]
         else:
             Globals.delivery_channel = channel
-            return json_info['setup']
+            return [json_info['setup'], channel]

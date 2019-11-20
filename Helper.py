@@ -118,7 +118,7 @@ def check_general_keywords(user_name, words_received, channel, message):
         Globals.logger.debug('{} asked the ImageBot a request in channel {}'.format(user_name, channel))
         message, attachments = ImageBot.find_image(words_received, Globals.image_triggers)
     if not message and any((word in words_received for word in Globals.joke_triggers)):
-        message = RandomBot.joke(channel)
+        [message, channel] = RandomBot.joke(channel)
     if not message and all(word in Globals.no_imaginelab_triggers for word in words_received):
         Globals.logger.debug(
             '{} asked the Bottebot to toggle ImagineLab for this week in channel {}'.format(user_name, channel))
