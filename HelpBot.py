@@ -9,7 +9,6 @@ def get_list_of_commands():
     
                     \u2022 Get the current weather: `weather in <city>`
                     \u2022 Get the menu of a restaurant: `menu <restaurant> top <number>`
-                    \u2022 Order food: `help food`
                     \u2022 Image search: `image of <text>` or `animation of <text>`
                     \u2022 Report a bug: `bug <text>`
                     \u2022 Get help: `help`
