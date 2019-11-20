@@ -387,11 +387,12 @@ def set_restaurant(restaurant):
     adjective = r[3]
     noun = r[-1]
     for resto in restaurants:
-        if restaurant in resto[0].lower():
+        print('{} is {}? '.format(restaurant, resto[0].lower()))
+        if restaurant == resto[0].lower():
             Globals.current_food_place = "{} with url: {}".format(resto[0], resto[2])
             return "restaurant set to {}. I heard they serve {} {}".format(resto[0], adjective, noun)
-    return "Restaurant not in our database. Add it NOW with the command 'food restaurant add _restaurantname_ " \
-           "_url_', you {} {}!".format(restaurant, adjective, noun)
+    return "Restaurant '{}' not in our database. Add it NOW with the command 'food restaurant add < _restaurantname_ > " \
+           "< _url_ >', you {} {}!".format(restaurant, adjective, noun)
 
 
 def add_restaurant(words_received, trigger):
