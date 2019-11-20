@@ -53,7 +53,7 @@ def main():
     Globals.lmgtfy_triggers = json.loads(config.get("triggers", "LMGTFY"))
     Globals.def_triggers = json.loads(config.get("triggers", "DEF"))
     Globals.food_triggers = json.loads(config.get("triggers", "FOOD"))
-    Globals.repeat_triggers = json.loads(config.get("triggers", "INSULT"))
+    Globals.repeat_triggers = json.loads(config.get("triggers", "REPEAT"))
     Globals.image_triggers = json.loads(config.get("triggers", "IMAGE"))
     Globals.help_triggers = json.loads(config.get("triggers", "HELP"))
     Globals.joke_triggers = json.loads(config.get("triggers", "JOKE"))
