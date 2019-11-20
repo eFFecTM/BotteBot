@@ -3,6 +3,7 @@ import asyncio
 import configparser
 import json
 import logging
+import os
 from datetime import datetime, timedelta
 from logging.handlers import TimedRotatingFileHandler
 
@@ -22,6 +23,8 @@ def main():
     Globals.init()
 
     # Create global logger
+    if not os.path.exists('logs'):
+        os.makedirs('logs')
     Globals.logger = logging.getLogger()
     handler = TimedRotatingFileHandler("logs/BotteBot.log", when="midnight", interval=1)
     handler.suffix = "%Y-%m-%d"
