@@ -5,6 +5,8 @@
 		"text": "template2"
 	},
 	"element": {
-		"type": "plain_text_input"
+		"type": "plain_text_input",
+		"min_length": 2,
+		"max_length": 75
 	}
 }
