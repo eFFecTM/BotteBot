@@ -152,6 +152,7 @@ def print_what_food_notification():
         blocks = FoodBot.get_order_overview(False)
         blocks = json.dumps(blocks["blocks"])
         send_message(Globals.notification_channel, None, None, blocks)
+        Globals.web_client.pins_add(channel=Globals.last_channel_id, timestamp=Globals.last_message_ts)
     Globals.is_imaginelab = True  # resetting for next time
 
 

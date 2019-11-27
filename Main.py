@@ -27,7 +27,7 @@ def main():
         os.makedirs('logs')
     Globals.logger = logging.getLogger()
     handler = TimedRotatingFileHandler("logs/log", when="midnight", interval=1)
-    logging.basicConfig(level=logging.INFO, format='%(asctime)s | %(message)s', handlers=[handler, logging.StreamHandler()])
+    logging.basicConfig(level=logging.DEBUG, format='%(asctime)s | %(message)s', handlers=[handler, logging.StreamHandler()])
     logging.getLogger('apscheduler.scheduler').setLevel(logging.WARNING)
     Globals.logger.info('Starting BotteBot application...')
 

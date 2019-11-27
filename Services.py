@@ -10,6 +10,9 @@ import FoodBot
 import Globals
 import Helper
 
+template_modal = json.load(open("data/template_modal.json"))
+template_modal_flattext = json.load(open("data/template_modal_flattext.json"))
+
 
 async def start_scheduler():
     try:
@@ -103,15 +106,16 @@ async def interactive_message(request):
                     if len(data["actions"]) == 1:
                         action_text = data["actions"][0]["text"]["text"]
                         if action_text == "Add Option":  # user is adding a new option
-                            template_modal = json.load(open("data/template_modal.json"))
+                            Globals.logger.debug("Add Option")
                             blocks = {"blocks": []}
                             FoodBot.add_modal_question(blocks, "What do you want to order? (single item)")
                             template_modal["blocks"] = blocks["blocks"]
                             Globals.web_client.views_open(trigger_id=data["trigger_id"], view=template_modal)
                             Globals.logger.debug("Opening modal for user {}".format(user))
                         elif action_text == "View as Text":
-                            template_modal_flattext = json.load(open("data/template_modal_flattext.json"))
+                            Globals.logger.debug("View as Text")
                             template_modal_flattext["blocks"][0]["text"]["text"] = FoodBot.get_order_overview(True)
+                            Globals.logger.debug("Got order overview")
                             Globals.web_client.views_open(trigger_id=data["trigger_id"], view=template_modal_flattext)
                             Globals.logger.debug("Opening modal for user {}".format(user))
                         else:  # user is voting on an existing option
