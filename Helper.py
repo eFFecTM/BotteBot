@@ -149,7 +149,7 @@ def print_where_food_notification():
 def print_what_food_notification():
     if Globals.is_imaginelab:
         send_message(Globals.notification_channel, "<!channel> What do you all want to order?", None, None)
-        blocks = FoodBot.get_order_overview()
+        blocks = FoodBot.get_order_overview(False)
         blocks = json.dumps(blocks["blocks"])
         send_message(Globals.notification_channel, None, None, blocks)
     Globals.is_imaginelab = True  # resetting for next time

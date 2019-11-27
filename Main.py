@@ -26,9 +26,8 @@ def main():
     if not os.path.exists('logs'):
         os.makedirs('logs')
     Globals.logger = logging.getLogger()
-    handler = TimedRotatingFileHandler("logs/BotteBot.log", when="midnight", interval=1)
-    handler.suffix = "%Y-%m-%d"
-    logging.basicConfig(level=logging.INFO, handlers=[handler, logging.StreamHandler()])
+    handler = TimedRotatingFileHandler("logs/log", when="midnight", interval=1)
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s | %(message)s', handlers=[handler, logging.StreamHandler()])
     logging.getLogger('apscheduler.scheduler').setLevel(logging.WARNING)
     Globals.logger.info('Starting BotteBot application...')
 
@@ -95,8 +94,14 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
     loop = asyncio.get_event_loop()
-    nest_asyncio.apply(loop)
-    loop.run_until_complete(
-        asyncio.gather(Services.start_scheduler(), Services.start_slack_client(), Services.start_web_server()))
+    try:
+        main()
+        nest_asyncio.apply(loop)
+        loop.run_until_complete(
+            asyncio.gather(Services.start_scheduler(), Services.start_slack_client(), Services.start_web_server()))
+    except Exception as e:
+        Globals.logger.exception(e)
+    finally:
+        loop.close()
+        logging.shutdown()

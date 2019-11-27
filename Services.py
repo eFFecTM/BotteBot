@@ -12,17 +12,20 @@ import Helper
 
 
 async def start_scheduler():
-    scheduler = AsyncIOScheduler()
-    scheduler.add_job(Helper.print_where_food_notification,
-                      CronTrigger(day_of_week="wed", hour=Globals.where_time.split(":")[0],
-                                  minute=Globals.where_time.split(":")[1]))
-    scheduler.add_job(Helper.print_what_food_notification,
-                      CronTrigger(day_of_week="wed", hour=Globals.what_time.split(":")[0],
-                                  minute=Globals.what_time.split(":")[1]))
-    scheduler.add_job(FoodBot.update_restaurant_database, CronTrigger(day_of_week="wed", hour="09"))
-    scheduler.add_job(FoodBot.remove_orders, CronTrigger(day_of_week="wed", hour="23", minute="59"))
-    scheduler.start()
-    Globals.logger.info('Started APScheduler!')
+    try:
+        scheduler = AsyncIOScheduler()
+        scheduler.add_job(Helper.print_where_food_notification,
+                          CronTrigger(day_of_week="wed", hour=Globals.where_time.split(":")[0],
+                                      minute=Globals.where_time.split(":")[1]))
+        scheduler.add_job(Helper.print_what_food_notification,
+                          CronTrigger(day_of_week="wed", hour=Globals.what_time.split(":")[0],
+                                      minute=Globals.what_time.split(":")[1]))
+        scheduler.add_job(FoodBot.update_restaurant_database, CronTrigger(day_of_week="wed", hour="09"))
+        scheduler.add_job(FoodBot.remove_orders, CronTrigger(day_of_week="wed", hour="23", minute="59"))
+        scheduler.start()
+        Globals.logger.info('Started APScheduler!')
+    except Exception as e:
+        Globals.logger.exception(e)
 
 
 async def start_slack_client():
@@ -74,13 +77,16 @@ def on_message(**payload):
 
 
 async def start_web_server():
-    app = web.Application()
-    app.add_routes([web.post('/slack/interactive-endpoint', interactive_message)])
-    runner = web.AppRunner(app)
-    await runner.setup()
-    site = web.TCPSite(runner, '*', 3000)
-    await site.start()
-    Globals.logger.info('Started AIOHTTP Server!')
+    try:
+        app = web.Application()
+        app.add_routes([web.post('/slack/interactive-endpoint', interactive_message)])
+        runner = web.AppRunner(app)
+        await runner.setup()
+        site = web.TCPSite(runner, '*', 3000)
+        await site.start()
+        Globals.logger.info('Started AIOHTTP Server!')
+    except Exception as e:
+        Globals.logger.exception(e)
 
 
 async def interactive_message(request):
