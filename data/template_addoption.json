@@ -5,7 +5,7 @@
 			"type": "button",
 			"text": {
 				"type": "plain_text",
-				"text": "Add Option"
+				"text": "Manage Your Options"
 			},
 			"style": "primary"
 		}

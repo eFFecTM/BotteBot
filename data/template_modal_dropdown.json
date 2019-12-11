@@ -1,0 +1,19 @@
+{
+    "type": "input",
+    "label": {
+        "type": "plain_text",
+        "text": "template1",
+        "emoji": true
+    },
+    "element": {
+        "type": "multi_static_select",
+        "placeholder": {
+            "type": "plain_text",
+            "text": "...",
+            "emoji": true
+        },
+        "options": [],
+        "initial_options": []
+    },
+    "optional": true
+}

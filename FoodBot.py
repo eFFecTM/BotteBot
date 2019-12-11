@@ -21,7 +21,8 @@ with open("data/template_message.json") as a, open("data/template_text.json") as
         open("data/template_divider.json") as c, open("data/template_pollentry.json") as d, \
         open("data/template_votes.json") as e, open("data/template_addoption.json") as f, \
         open("data/template_modal_question.json") as g, open("data/template_flattext.json") as h, \
-        open("data/template_modal_flattext.json") as i:
+        open("data/template_modal_flattext.json") as i, open("data/template_modal_dropdown.json") as j, \
+        open("data/template_dropdown_option.json") as k:
     template_message = json.load(a)
     template_text = json.load(b)
     template_divider = json.load(c)
@@ -31,6 +32,8 @@ with open("data/template_message.json") as a, open("data/template_text.json") as
     template_modal_question = json.load(g)
     template_flattext = json.load(h)
     template_modal_flattext = json.load(i)
+    template_modal_dropdown = json.load(j)
+    template_dropdown_option = json.load(k)
 
 
 def process_call(user, words_received, set_triggers, overview_triggers, order_triggers, schedule_triggers,
@@ -155,6 +158,22 @@ def add_flattext(blocks):
     blocks["blocks"].append(element)
 
 
+def create_modal_dropdown(value):
+    element = copy.deepcopy(template_modal_dropdown)
+    element["label"]["text"] = value
+    return element
+
+
+def add_dropdown_option(dropdown, initial, value):
+    element = copy.deepcopy(template_dropdown_option)
+    element["text"]["text"] = value
+    element["value"] = value
+    if initial:
+        dropdown["element"]["initial_options"].append(element)
+    else:
+        dropdown["element"]["options"].append(element)
+
+
 def get_order_overview(want_text):
     """Command: 'food overview'"""
     orders = Globals.database.sql_db_to_list('SELECT name, item FROM food_orders ORDER BY item ASC')
@@ -180,22 +199,22 @@ def get_order_overview(want_text):
         blocks = {"blocks": []}
         add_text(blocks, "We're getting food from " + Globals.current_food_place)
 
-        prev_item = None
-        count = 0
-        names = ""
-        for [name, item] in orders:
-            if prev_item is not None and prev_item != item:
-                add_divider(blocks)
-                add_pollentry(blocks, str(count) + ": " + names, prev_item)
-                count = 0
-                names = ""
-            count = count + 1
-            prev_item = item
-            names = names + " " + name
+        # prev_item = None
+        # count = 0
+        # names = ""
+        # for [name, item] in orders:
+        #     if prev_item is not None and prev_item != item:
+        #         add_divider(blocks)
+        #         add_pollentry(blocks, str(count) + ": " + names, prev_item)
+        #         count = 0
+        #         names = ""
+        #     count = count + 1
+        #     prev_item = item
+        #     names = names + " " + name
         if len(orders) != 0:
-            add_divider(blocks)
-            add_pollentry(blocks, str(count) + ": " + names, prev_item)
-            add_divider(blocks)
+            # add_divider(blocks)
+            # add_pollentry(blocks, str(count) + ": " + names, prev_item)
+            # add_divider(blocks)
             add_text(blocks, "Total Votes: " + str(len(orders)) + "   |   Total Eaters: " + str(len(set(j[0] for j in orders))))
         add_option(blocks)
         add_flattext(blocks)

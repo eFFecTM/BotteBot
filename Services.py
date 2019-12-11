@@ -105,14 +105,26 @@ async def interactive_message(request):
                 if data["type"] == "block_actions":
                     if len(data["actions"]) == 1:
                         action_text = data["actions"][0]["text"]["text"]
-                        if action_text == "Add Option":  # user is adding a new option
-                            Globals.logger.debug("Add Option")
+                        if action_text == "Manage Your Options":  # user is adding a new option
+                            Globals.logger.debug("Manage Your Options")
                             blocks = {"blocks": []}
-                            FoodBot.add_modal_question(blocks, "What do you want to order? (single item)")
+                            FoodBot.add_modal_question(blocks, "Adding a new option (single item)")
+                            dropdown = FoodBot.create_modal_dropdown("Or modify your current options")
+                            orders = Globals.database.sql_db_to_list(
+                                'SELECT item FROM food_orders GROUP BY item ORDER BY item ASC')
+                            my_orders = Globals.database.sql_db_to_list(
+                                'SELECT name, item FROM food_orders WHERE name =? ORDER BY item ASC', (user,))
+                            for [item] in orders:
+                                FoodBot.add_dropdown_option(dropdown, False, item)
+                            for [name, item] in my_orders:
+                                FoodBot.add_dropdown_option(dropdown, True, item)
+                            if len(my_orders) == 0:
+                                dropdown["element"].pop("initial_options")
+                            blocks["blocks"].append(dropdown)
                             template_modal["blocks"] = blocks["blocks"]
                             Globals.web_client.views_open(trigger_id=data["trigger_id"], view=template_modal)
                             Globals.logger.debug("Opening modal for user {}".format(user))
-                        elif action_text == "View as Text":
+                        elif action_text == "View All Orders as Text":
                             Globals.logger.debug("View as Text")
                             template_modal_flattext["blocks"][0]["text"]["text"] = FoodBot.get_order_overview(True)
                             Globals.logger.debug("Got order overview")
@@ -132,10 +144,27 @@ async def interactive_message(request):
                                                       json.dumps(blocks["blocks"]))
                                 Globals.logger.debug("Updating message for user {}".format(user))
                 elif data["type"] == "view_submission":  # user is submitting the order through the modal
-                    block_id = data["view"]["blocks"][0]["block_id"]
-                    action_id = data["view"]["blocks"][0]["element"]["action_id"]
-                    order = data["view"]["state"]["values"][block_id][action_id]["value"]
-                    output, success = FoodBot.order_food(user, order)
+                    block_id_0 = data["view"]["blocks"][0]["block_id"]
+                    action_id_0 = data["view"]["blocks"][0]["element"]["action_id"]
+                    block_id_1 = data["view"]["blocks"][1]["block_id"]
+                    action_id_1 = data["view"]["blocks"][1]["element"]["action_id"]
+                    new_order = orders = None
+                    if block_id_0 in data["view"]["state"]["values"] and "value" in \
+                            data["view"]["state"]["values"][block_id_0][action_id_0]:
+                        new_order = data["view"]["state"]["values"][block_id_0][action_id_0]["value"]
+                    if block_id_1 in data["view"]["state"]["values"] and "selected_options" in \
+                            data["view"]["state"]["values"][block_id_1][action_id_1]:
+                        orders = data["view"]["state"]["values"][block_id_1][action_id_1]["selected_options"]
+                    output = ""
+                    success = True
+                    if new_order:
+                        output, success = FoodBot.order_food(user, new_order)
+                    else:
+                        # remove all orders of the user and add the ones selected
+                        Globals.database.sql_delete('DELETE FROM food_orders WHERE name=?', (user,))
+                        if orders:
+                            for order in orders:
+                                output, success = FoodBot.order_food(user, order["value"])
                     if success:
                         blocks = FoodBot.get_order_overview(False)
                         Helper.update_message(Globals.last_message_ts, Globals.last_channel_id, None,
