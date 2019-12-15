@@ -11,9 +11,7 @@
             "type": "plain_text",
             "text": "...",
             "emoji": true
-        },
-        "options": [],
-        "initial_options": []
+        }
     },
     "optional": true
 }

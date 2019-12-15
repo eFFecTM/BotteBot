@@ -114,13 +114,15 @@ async def interactive_message(request):
                                 'SELECT item FROM food_orders GROUP BY item ORDER BY item ASC')
                             my_orders = Globals.database.sql_db_to_list(
                                 'SELECT name, item FROM food_orders WHERE name =? ORDER BY item ASC', (user,))
-                            for [item] in orders:
-                                FoodBot.add_dropdown_option(dropdown, False, item)
-                            for [name, item] in my_orders:
-                                FoodBot.add_dropdown_option(dropdown, True, item)
-                            if len(my_orders) == 0:
-                                dropdown["element"].pop("initial_options")
-                            blocks["blocks"].append(dropdown)
+                            if orders:
+                                dropdown["element"]["options"] = []
+                                for [item] in orders:
+                                    FoodBot.add_dropdown_option(dropdown, False, item)
+                                if my_orders:
+                                    dropdown["element"]["initial_options"] = []
+                                    for [name, item] in my_orders:
+                                        FoodBot.add_dropdown_option(dropdown, True, item)
+                                blocks["blocks"].append(dropdown)
                             template_modal["blocks"] = blocks["blocks"]
                             Globals.web_client.views_open(trigger_id=data["trigger_id"], view=template_modal)
                             Globals.logger.debug("Opening modal for user {}".format(user))
@@ -144,17 +146,19 @@ async def interactive_message(request):
                                                       json.dumps(blocks["blocks"]))
                                 Globals.logger.debug("Updating message for user {}".format(user))
                 elif data["type"] == "view_submission":  # user is submitting the order through the modal
-                    block_id_0 = data["view"]["blocks"][0]["block_id"]
-                    action_id_0 = data["view"]["blocks"][0]["element"]["action_id"]
-                    block_id_1 = data["view"]["blocks"][1]["block_id"]
-                    action_id_1 = data["view"]["blocks"][1]["element"]["action_id"]
                     new_order = orders = None
-                    if block_id_0 in data["view"]["state"]["values"] and "value" in \
-                            data["view"]["state"]["values"][block_id_0][action_id_0]:
+                    try:
+                        block_id_0 = data["view"]["blocks"][0]["block_id"]
+                        action_id_0 = data["view"]["blocks"][0]["element"]["action_id"]
                         new_order = data["view"]["state"]["values"][block_id_0][action_id_0]["value"]
-                    if block_id_1 in data["view"]["state"]["values"] and "selected_options" in \
-                            data["view"]["state"]["values"][block_id_1][action_id_1]:
+                    except (KeyError, IndexError):
+                        pass
+                    try:
+                        block_id_1 = data["view"]["blocks"][1]["block_id"]
+                        action_id_1 = data["view"]["blocks"][1]["element"]["action_id"]
                         orders = data["view"]["state"]["values"][block_id_1][action_id_1]["selected_options"]
+                    except (KeyError, IndexError):
+                        pass
                     output = ""
                     success = True
                     if new_order:
@@ -170,8 +174,9 @@ async def interactive_message(request):
                         Helper.update_message(Globals.last_message_ts, Globals.last_channel_id, None,
                                               json.dumps(blocks["blocks"]))
                         Globals.logger.debug("Order from modal accepted, updating message for user {}".format(user))
-                    else:
-                        Helper.send_message(Globals.last_channel_id, output, None, None)
+                    # todo: replace with private whisper, need to implement saving user ids first
+                    # else:
+                    #     Helper.send_message(Globals.last_channel_id, output, None, None)
         return web.Response()
     except Exception as e:
         Globals.logger.exception(e)
