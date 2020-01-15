@@ -9,7 +9,7 @@
         "type": "multi_static_select",
         "placeholder": {
             "type": "plain_text",
-            "text": "...",
+            "text": "Pick your options",
             "emoji": true
         }
     },

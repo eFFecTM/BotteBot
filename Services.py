@@ -105,11 +105,11 @@ async def interactive_message(request):
                 if data["type"] == "block_actions":
                     if len(data["actions"]) == 1:
                         action_text = data["actions"][0]["text"]["text"]
-                        if action_text == "Manage Your Options":  # user is adding a new option
+                        if action_text == "Manage Your Options":  # user is adding a new option / managing existing ones
                             Globals.logger.debug("Manage Your Options")
                             blocks = {"blocks": []}
-                            FoodBot.add_modal_question(blocks, "Adding a new option (single item)")
-                            dropdown = FoodBot.create_modal_dropdown("Or modify your current options")
+                            FoodBot.add_modal_question(blocks, "Add a new option")
+                            dropdown = FoodBot.create_modal_dropdown("Pick from existing options")
                             orders = Globals.database.sql_db_to_list(
                                 'SELECT item FROM food_orders GROUP BY item ORDER BY item ASC')
                             my_orders = Globals.database.sql_db_to_list(
