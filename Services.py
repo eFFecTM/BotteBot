@@ -32,9 +32,12 @@ async def start_scheduler():
 
 
 async def start_slack_client():
-    rtm_client = slack.RTMClient(token=Globals.SLACK_BOT_TOKEN, run_async=True)
-    await rtm_client.start()
-    Globals.logger.info('Connected to Slack!')
+    try:
+        rtm_client = slack.RTMClient(token=Globals.SLACK_BOT_TOKEN, run_async=True)
+        Globals.logger.info('Connected to Slack!')
+        await rtm_client.start()
+    except Exception as e:
+        Globals.logger.exception(e)
 
 
 @slack.RTMClient.run_on(event='hello')
