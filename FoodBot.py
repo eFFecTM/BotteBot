@@ -36,42 +36,43 @@ with open("data/template_message.json") as a, open("data/template_text.json") as
     template_dropdown_option = json.load(k)
 
 
-def process_call(user, words_received, set_triggers, overview_triggers, order_triggers, schedule_triggers,
-                 add_triggers, remove_triggers, restaurant_triggers, rating_triggers, food_trigger):
+def process_call(user, words_received):
     output = blocks = None
     if not output:
-        for set_trigger in set_triggers:
+        for set_trigger in Globals.set_triggers:
             if set_trigger in words_received:
                 output = set_restaurant(" ".join(words_received[words_received.index(set_trigger) + 1:]))
                 break
-    if not output and any(overview_trigger in words_received for overview_trigger in overview_triggers):
+    if not output and any(overview_trigger in words_received for overview_trigger in Globals.overview_triggers):
         blocks = get_order_overview(False)
-    if not output and any(order_trigger in words_received for order_trigger in order_triggers):
+    if not output and any(order_trigger in words_received for order_trigger in Globals.order_triggers):
         if not output:
-            for remove_trigger in remove_triggers:
+            for remove_trigger in Globals.remove_triggers:
                 if remove_trigger in words_received:
                     output = remove_order_food(user, " ".join(words_received[words_received.index(remove_trigger) + 1:]))
                     break
         if not output:
-            for order_trigger in order_triggers:
+            for order_trigger in Globals.order_triggers:
                 if order_trigger in words_received:
                     output, success = order_food(user, " ".join(words_received[words_received.index(order_trigger) + 1:]))
                     break
-    if not output and any(rating_trigger in words_received for rating_trigger in rating_triggers):
+    if not output and any(rating_trigger in words_received for rating_trigger in Globals.rating_triggers):
         if not output:
-            for rating_trigger in rating_triggers:
+            for rating_trigger in Globals.rating_triggers:
                 if rating_trigger in words_received:
-                    output = add_restaurant_rating(words_received, rating_trigger, food_trigger)
+                    output = add_restaurant_rating(words_received, rating_trigger, Globals.food_trigger)
                     break
-    if not output and any(restaurant_trigger in words_received for restaurant_trigger in restaurant_triggers):
+    if not output and any(resto_trigger in words_received for resto_trigger in Globals.resto_triggers):
         if not output:
-            for add_trigger in add_triggers:
+            for add_trigger in Globals.add_triggers:
                 if add_trigger in words_received:
                     output = add_restaurant(words_received, add_trigger)
                     break
-    if not output and any(schedule_trigger in words_received for schedule_trigger in schedule_triggers):
+    if not output and any(resetpoll_trigger in words_received for resetpoll_trigger in Globals.resetpoll_triggers):
+        output = remove_orders()
+    if not output and any(schedule_trigger in words_received for schedule_trigger in Globals.schedule_triggers):
         if not output:
-            for add_trigger in add_triggers:
+            for add_trigger in Globals.add_triggers:
                 if add_trigger in words_received:
                     next_word = words_received[words_received.index(add_trigger) + 1]
                     day = None
@@ -92,7 +93,7 @@ def process_call(user, words_received, set_triggers, overview_triggers, order_tr
                         output = "You're going to add no date? No one's going to date you're {} ass anyway.".format(
                             adjective)
         if not output:
-            for remove_trigger in remove_triggers:
+            for remove_trigger in Globals.remove_triggers:
                 if remove_trigger in words_received:
                     next_word = words_received[words_received.index(remove_trigger) + 1]
                     day = None
@@ -267,6 +268,7 @@ def vote_order_food(user, food):
 
 def remove_orders():
     Globals.database.sql_delete('DELETE FROM food_orders')
+    return "Successfully cleared food_orders table!"
 
 
 def get_schedule_overview():

@@ -103,11 +103,7 @@ def check_general_keywords(user_name, words_received, channel, message):
         for food_trigger in Globals.food_triggers:
             if food_trigger in words_received:
                 Globals.logger.debug('{} asked the FoodBot a request in channel {}'.format(user_name, channel))
-                message, blocks = FoodBot.process_call(user_name, words_received, Globals.set_triggers,
-                                                       Globals.overview_triggers, Globals.order_triggers,
-                                                       Globals.schedule_triggers, Globals.add_triggers,
-                                                       Globals.remove_triggers, Globals.resto_triggers,
-                                                       Globals.rating_triggers, food_trigger)
+                message, blocks = FoodBot.process_call(user_name, words_received)
     if not message and any(word in words_received for word in Globals.menu_triggers):
         Globals.logger.debug('{} asked the Foodbot for menu in channel {}'.format(user_name, channel))
         message = FoodBot.get_menu(words_received)

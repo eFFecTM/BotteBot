@@ -23,7 +23,7 @@ def init():
     global weather_triggers, insult_triggers, lmgtfy_triggers, def_triggers, food_triggers, repeat_triggers, \
         image_triggers, help_triggers, joke_triggers, resto_triggers, menu_triggers, set_triggers, overview_triggers,\
         order_triggers, schedule_triggers, add_triggers, remove_triggers, rating_triggers, no_imaginelab_triggers, \
-        bugreport_triggers
+        bugreport_triggers, resetpoll_triggers
 
     web_client = None
     bot_id = None
@@ -68,3 +68,4 @@ def init():
     rating_triggers = None
     no_imaginelab_triggers = None
     bugreport_triggers = None
+    resetpoll_triggers = None

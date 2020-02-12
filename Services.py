@@ -32,12 +32,15 @@ async def start_scheduler():
 
 
 async def start_slack_client():
-    try:
-        rtm_client = slack.RTMClient(token=Globals.SLACK_BOT_TOKEN, run_async=True)
-        Globals.logger.info('Connected to Slack!')
-        await rtm_client.start()
-    except Exception as e:
-        Globals.logger.exception(e)
+    isRunning = True
+    rtm_client = slack.RTMClient(token=Globals.SLACK_BOT_TOKEN, run_async=True)
+    while isRunning:
+        try:
+            Globals.logger.info('Connected to Slack!')
+            await rtm_client.start()
+            isRunning = False
+        except Exception as e:
+            Globals.logger.exception(e)
 
 
 @slack.RTMClient.run_on(event='hello')
@@ -86,7 +89,7 @@ async def start_web_server():
     try:
         app = web.Application()
         app.add_routes([web.post('/slack/interactive-endpoint', interactive_message)])
-        runner = web.AppRunner(app)
+        runner = web.AppRunner(app, access_log=None)
         await runner.setup()
         site = web.TCPSite(runner, '*', 3000)
         await site.start()

@@ -4,6 +4,8 @@ import configparser
 import json
 import logging
 import os
+import signal
+import sys
 from datetime import datetime, timedelta
 from logging.handlers import TimedRotatingFileHandler
 
@@ -71,6 +73,7 @@ def main():
     Globals.rating_triggers = json.loads(config.get("triggers", 'RATING'))
     Globals.no_imaginelab_triggers = json.loads(config.get("triggers", "NO_IMAGINELAB"))
     Globals.bugreport_triggers = json.loads(config.get("triggers", "BUG_REPORT"))
+    Globals.resetpoll_triggers = json.loads(config.get("triggers", "RESET_FOOD_POLL"))
 
     # Define ignored words
     Globals.ignored_words = json.loads(config.get("triggers", "IGNORED_WORDS"))
@@ -90,12 +93,18 @@ def main():
     # Connect to SQLite3 database
     Globals.database = SqlQuery('data/imaginelab.db')
     Globals.logger.info('Connected to SQLite database!')
-    # s.sql_delete('DELETE FROM restaurant_database')
     FoodBot.update_restaurant_database()
+
+
+def signal_handler():
+    Globals.logger.info("Program exiting gracefully")
+    sys.exit(0)
 
 
 if __name__ == '__main__':
     loop = asyncio.get_event_loop()
+    loop.add_signal_handler(signal.SIGINT, signal_handler)
+    loop.add_signal_handler(signal.SIGTERM, signal_handler)
     try:
         main()
         nest_asyncio.apply(loop)
