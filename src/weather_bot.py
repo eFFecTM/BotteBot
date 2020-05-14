@@ -1,9 +1,11 @@
 import pyowm
 
+from constants import open_weather_key
 
-def get_weather_message(api_key):
+
+def get_weather_message():
     """Get the current weather at a given location. Default location is Antwerp."""
-    owm = pyowm.OWM(api_key)
+    owm = pyowm.OWM(open_weather_key)
     location = None
     if location is None:
         location = 'Antwerp'  # Default location

@@ -2,6 +2,6 @@ __pycache__/
 downloads/
 venv/
 .idea/
-init.ini
+config/init.ini
 data/imaginelab.db
 logs/

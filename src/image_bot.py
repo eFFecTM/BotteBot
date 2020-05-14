@@ -1,7 +1,9 @@
 """Create an image bot to post or process images. See https://pythonspot.com/category/nltk/"""
+import logging
+
 from google_images_download import google_images_download
 
-import Globals
+logger = logging.getLogger()
 
 
 def find_image(words_received, image_triggers):
@@ -14,7 +16,7 @@ def find_image(words_received, image_triggers):
         if word not in image_triggers:
             search_words.append(word)
     search_string = " ".join(search_words)
-    Globals.logger.debug('Searching Google Images for search: {}'.format(search_string))
+    logger.debug('Searching Google Images for search: {}'.format(search_string))
     image_title, image_url = get_image_url(search_string, animation=animation)
 
     # Add attachments to response message
@@ -59,8 +61,8 @@ def get_image_url(search_string, animation=False):
     try:
         x = response.download(arguments)
         url = next(iter(x.values()))[0]
-        Globals.logger.debug('URL of first found image: {}'.format(url))
+        logger.debug('URL of first found image: {}'.format(url))
         return search_string, url
 
     except Exception as e:
-        Globals.logger.exception(e)
+        logger.exception(e)
