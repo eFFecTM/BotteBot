@@ -24,7 +24,7 @@ def find_image(words_received, image_triggers):
     message = "Here is an image of it!"
     return message, attachments
 
-
+# todo: this package does not work anymore, multiple people report issues on the github page
 def get_image_url(search_string, animation=False):
     response = google_images_download.googleimagesdownload()
 

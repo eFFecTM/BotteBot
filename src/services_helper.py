@@ -2,7 +2,7 @@ import ast
 import json
 import logging
 
-from slack.web.slack_response import SlackResponse
+from slack_sdk.web.slack_response import SlackResponse
 
 import food_bot
 import help_bot
@@ -23,7 +23,7 @@ def init(slack_client):
     # Get all user IDs and channel IDs
     bot_id = client.auth_test()["user_id"]
     user_ids = [element["id"] for element in client.users_list()["members"]]
-    public_channel_ids = [element["id"] for element in client.channels_list()["channels"]]
+    public_channel_ids = [element["id"] for element in client.conversations_list()["channels"]]
     is_imaginelab = False
 
 
@@ -58,6 +58,8 @@ def send_message(channel, text, attachments, blocks):
         return
     if text is not None:  # text has priority over blocks
         blocks = None
+    else:
+        text = "test"  # avoiding a user warning
     # todo: check whether this is still needed
     data = ast.literal_eval(SlackResponse.__str__(
         client.chat_postMessage(as_user="true", channel=channel, text=text, attachments=attachments, blocks=blocks)))
@@ -84,6 +86,8 @@ def update_message(timestamp=None, channel=None, text=None, blocks=None):
         return
     if text is not None:  # text has priority over blocks
         blocks = None
+    else:
+        text = "test"  # avoiding a user warning
     client.chat_update(as_user="true", ts=timestamp, channel=channel, text=text, blocks=blocks)
 
 

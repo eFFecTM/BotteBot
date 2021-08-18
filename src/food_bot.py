@@ -1,4 +1,5 @@
 import copy
+import json
 import logging
 import random
 import re
@@ -247,31 +248,22 @@ def get_menu(words_received):
 
 
 def get_restaurants_from_takeaway():
-    response = requests.get('https://www.takeaway.com/be/eten-bestellen-antwerpen-2020')
+    with open("resources/takeaway_restaurants.json") as a:
+        takeaway_restaurants = json.load(a)
 
-    soup = BeautifulSoup(response.content, 'html.parser')
-    find = soup.find_all('script')
-    text = find[9].text
-    location = text.find('name')
     restaurants = []
-
-    while location != -1:
-        text = text[location + len('"name":"') - 1:]
-        location = text.find('"')
-        temp_name = text[:location].replace("\'", '')
-        location = text.find('url')
-        text = text[location + len('"url":"') - 1:]
-        location = text.find('"')
-        temp_url = ("https://www.takeaway.com" + text[:location]).replace("\\", '')
-        restaurants.append([temp_name, 6, temp_url])
-        location = text.find('name')
+    for takeaway_restaurant in takeaway_restaurants["restaurants"]:
+        temp_name = takeaway_restaurant["brand"]["name"]
+        default_rating = 6
+        temp_url = "https://www.takeaway.com/be/menu/" + takeaway_restaurant["primarySlug"]
+        restaurants.append([temp_name, default_rating, temp_url])
     return restaurants
 
 
 def update_restaurant_database():
     restaurants = get_restaurants_from_takeaway()
     for resto in restaurants:
-        query.add_restaurant(resto[0], 6, resto[2])
+        query.add_restaurant(resto[0], resto[1], resto[2])
     logger.debug('Updated restaurant database')
     return restaurants
 

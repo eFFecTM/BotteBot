@@ -1,11 +1,13 @@
+import asyncio
 import json
 import logging
+import threading
 import urllib.parse
 
-import slack
 from aiohttp import web
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
+from slack_sdk.rtm_v2 import RTMClient
 
 import food_bot
 import query
@@ -14,6 +16,8 @@ import services_helper
 from constants import slack_bot_token, where_time, what_time, template_modal, template_modal_flattext
 
 logger = logging.getLogger()
+rtm_client = RTMClient(token=slack_bot_token)
+
 
 
 async def start_scheduler():
@@ -34,34 +38,34 @@ async def start_scheduler():
 
 
 async def start_slack_client():
-    is_running = True
-    rtm_client = slack.RTMClient(token=slack_bot_token, run_async=True)
-    while is_running:
-        try:
-            logger.info('Connected to Slack!')
-            await rtm_client.start()
-            is_running = False
-        except Exception as e:
-            logger.exception(e)
-
-
-@slack.RTMClient.run_on(event='hello')
-def on_message(**payload):
+    thread = threading.Thread(target=start_slack_thread, daemon=True)
+    thread.start()
     try:
-        services_helper.init(payload['web_client'])
+        services_helper.init(rtm_client.web_client)
         random_bot.init()  # initialize runtime variables
     except Exception as e:
         logger.exception(e)
+    while True:
+        await asyncio.sleep(60)
 
 
-@slack.RTMClient.run_on(event='message')
-def on_message(**payload):
+def start_slack_thread():
+    global rtm_client
     try:
-        data = payload['data']
-        if "user" in data:
-            services_helper.receive_message(data['user'], data['text'], data['channel'])
+        logger.info('Connected to Slack!')
+        rtm_client.start()
     except Exception as e:
         logger.exception(e)
+
+
+@rtm_client.on("message")
+def handle(client: RTMClient, event: dict):
+    if 'text' in event:
+        try:
+            if 'user' in event:
+                services_helper.receive_message(event['user'], event['text'], event['channel'])
+        except Exception as e:
+            logger.exception(e)
 
 
 async def start_web_server():

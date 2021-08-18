@@ -49,6 +49,7 @@ def insult(first_name):
         r = requests.get("https://insult.mattbas.org/api/insult?who=" + first_name)
     else:
         r = requests.get("https://insult.mattbas.org/api/insult")
+    # todo: this package does not work anymore, multiple people report issues on the github page, version 4.0.0rc1 might work
     translated = translator.translate(r.text, dest='nl', src='en')
     return translated.text
 
@@ -105,7 +106,7 @@ def generate_threshold(minimum, maximum):
 
 
 def joke(channel, is_triggered):
-    """jokes from the joke api at https://sv443.net/jokeapi"""
+    """jokes from the joke api at https://sv443.net/jokeapi/v2/"""
     global counter_threshold, counter_joke, previous_joke
 
     if is_triggered:
@@ -130,9 +131,9 @@ def joke_helper(channel):
     # category = ["Miscellaneous", "Programming"]
     category = "Any"
     blacklist = ""
-    # r = requests.get("https://sv443.net/jokeapi/category/"+category[random.randint(0,
+    # r = requests.get("https://v2.jokeapi.dev/joke/"+category[random.randint(0,
     # 1)]+"?blacklistFlags="+blacklist)
-    r = requests.get("https://sv443.net/jokeapi/category/" + category + "?blacklistFlags=" + blacklist)
+    r = requests.get("https://v2.jokeapi.dev/joke/" + category + "?blacklistFlags=" + blacklist)
     json_info = r.json()
     logger.debug('Joke joked. Joking again in {} messages'.format(counter_threshold))
     if json_info['type'] == 'single':

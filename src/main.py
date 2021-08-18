@@ -31,8 +31,9 @@ def main():
 
 
 def signal_handler():
+    loop.stop()
     logger.info("Program exiting gracefully")
-    sys.exit(0)
+    logging.shutdown()
 
 
 if __name__ == '__main__':
@@ -45,8 +46,5 @@ if __name__ == '__main__':
         nest_asyncio.apply(loop)
         loop.run_until_complete(
             asyncio.gather(services.start_scheduler(), services.start_slack_client(), services.start_web_server()))
-    except Exception as e:
-        logger.exception(e)
     finally:
-        loop.close()
-        logging.shutdown()
+        sys.exit(0)
