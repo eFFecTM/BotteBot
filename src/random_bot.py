@@ -50,8 +50,8 @@ def insult(first_name):
     else:
         r = requests.get("https://insult.mattbas.org/api/insult")
     # todo: this package does not work anymore, multiple people report issues on the github page, version 4.0.0rc1 might work
-    translated = translator.translate(r.text, dest='nl', src='en')
-    return translated.text
+    # translated = translator.translate(r.text, dest='nl', src='en')
+    return r.text
 
 
 def definition(words_received):
@@ -65,8 +65,8 @@ def definition(words_received):
             if word.startswith("<"):  # people and channels
                 words_received.remove(word)
         next_word = words_received[words_received.index(triggered_word) + 1]
-        translated = translator.translate(next_word, dest='en')
-        info = oxford.get_info_about_word(translated.text)
+        # translated = translator.translate(next_word, dest='en')
+        info = oxford.get_info_about_word(next_word) # this package does not work anymore, response 404 url not found :/
         try:
             json_info = json.loads(info.text)
             if 'definitions' in json_info['results'][0]['lexicalEntries'][0]['entries'][0]['senses'][0]:

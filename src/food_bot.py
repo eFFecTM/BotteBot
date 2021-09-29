@@ -20,9 +20,10 @@ snappy_responses = ["just like the dignity of your {} mother. Mama Mia!",
 
 logger = logging.getLogger()
 current_food_place = "..."
+takeaway_restaurants = []
 
 
-def process(user, words_received):
+def process(user, words_received, food_trigger):
     output = blocks = None
     if not output:
         for set_trigger in constants.set_triggers:
@@ -48,7 +49,7 @@ def process(user, words_received):
         if not output:
             for rating_trigger in constants.rating_triggers:
                 if rating_trigger in words_received:
-                    output = add_restaurant_rating(words_received, rating_trigger, None)
+                    output = add_restaurant_rating(words_received, rating_trigger, food_trigger)
                     break
     if not output and any(resto_trigger in words_received for resto_trigger in constants.resto_triggers):
         if not output:
@@ -248,35 +249,31 @@ def get_menu(words_received):
 
 
 def get_restaurants_from_takeaway():
+    global takeaway_restaurants
     with open("resources/takeaway_restaurants.json") as a:
-        takeaway_restaurants = json.load(a)
+        takeaway_restaurants_json = json.load(a)
 
-    restaurants = []
-    for takeaway_restaurant in takeaway_restaurants["restaurants"]:
+    for takeaway_restaurant in takeaway_restaurants_json["restaurants"]:
         temp_name = takeaway_restaurant["brand"]["name"]
-        default_rating = 6
         temp_url = "https://www.takeaway.com/be/menu/" + takeaway_restaurant["primarySlug"]
-        restaurants.append([temp_name, default_rating, temp_url])
-    return restaurants
-
-
-def update_restaurant_database():
-    restaurants = get_restaurants_from_takeaway()
-    for resto in restaurants:
-        query.add_restaurant(resto[0], resto[1], resto[2])
-    logger.debug('Updated restaurant database')
-    return restaurants
+        default_rating = 6
+        takeaway_restaurants.append([temp_name, default_rating, temp_url])
+    return takeaway_restaurants
 
 
 def get_restaurants(words_received=None):
-    restaurants = query.get_restaurants()
+    if words_received and 'takeaway' in words_received:
+        restaurants = takeaway_restaurants
+    else:
+        restaurants = query.get_restaurants()
+    amount_restaurants = len(restaurants)
 
     if words_received and 'top' in words_received:
         next_word = words_received[words_received.index('top') + 1]
         try:
             top_number = int(next_word)
-            if top_number > len(restaurants):
-                top_number = len(restaurants)
+            if top_number > amount_restaurants:
+                top_number = amount_restaurants
             elif top_number < 1:
                 top_number = 1
         except ValueError:
@@ -285,9 +282,12 @@ def get_restaurants(words_received=None):
         top_number = 10
 
     return_message = ""
-    for i in range(0, top_number):
-        return_message = "{}{}: {} - {}/10 - {}\n".format(return_message, i + 1,
-                                                          restaurants[i][0], restaurants[i][1], restaurants[i][2])
+    if 0 != amount_restaurants:
+        for i in range(0, amount_restaurants if amount_restaurants < top_number else top_number):
+            return_message = "{}{}: {} - {}/10 - {}\n".format(return_message, i + 1,
+                                                              restaurants[i][0], restaurants[i][1], restaurants[i][2])
+    else:
+        return_message = "No restaurants available!"
     return return_message, restaurants
 
 
@@ -295,8 +295,8 @@ def set_restaurant(restaurant):
     """set restaurant: food set <restaurantname>"""
     global current_food_place
     restaurants = query.get_restaurants()
-    if len(restaurants) == 0:
-        restaurants = update_restaurant_database()  # generate restaurants
+    # if len(restaurants) == 0:
+    #     restaurants = update_restaurant_database()  # generate restaurants
     r = requests.get("https://insult.mattbas.org/api/insult").text.split()
     adjective = r[3]
     noun = r[-1]
@@ -315,7 +315,7 @@ def add_restaurant(words_received, trigger):
     resto_name = words_received[words_received.index(trigger) + 1:-1]
     resto_url = words_received[-1]
     if ("." in resto_url) and len(resto_name) != 0:
-        query.add_restaurant(" ".join(resto_name).replace(",", ""), resto_url, 6)
+        query.add_restaurant(" ".join(resto_name).replace(",", ""), 6, resto_url)
         return "{} added to restaurants.".format(" ".join(resto_name).replace(",", ""))
     else:
         return "The right format is <restaurant name> <url> but I didn't expect you could use it anyway. {} ~ {}" \
@@ -337,7 +337,7 @@ def add_restaurant_rating(words_received, rating_trigger, food_trigger):
     # Update rating with mean of old and new rating
     if len(old_rating) != 0:
         mean = int((old_rating[0][0] + rating) / 2)
-        query.set_restaurant_rating(mean, restaurant_name)
+        query.set_restaurant_rating(restaurant_name, mean)
         msg = "Restaurant {}: mean rating changed to {}".format(restaurant_name, mean)
     else:
         msg = "you soab, that's a restaurant I do not know."

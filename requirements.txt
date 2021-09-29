@@ -1,11 +1,10 @@
 requests==2.26.0
-slack_sdk==3.9.1
-pyowm==2.10.0
+slack_sdk==3.11.2
+pyowm==3.2.0
 googletrans==3.0.0
 oxforddictionaries==0.1.101
-numpy==1.17.3
 google_images_download==2.8.0
 bs4==0.0.1
 aiohttp==3.7.4.post0
-apscheduler==3.7.0
+apscheduler==3.8.0
 nest-asyncio==1.5.1

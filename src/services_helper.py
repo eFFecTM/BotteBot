@@ -24,7 +24,7 @@ def init(slack_client):
     bot_id = client.auth_test()["user_id"]
     user_ids = [element["id"] for element in client.users_list()["members"]]
     public_channel_ids = [element["id"] for element in client.conversations_list()["channels"]]
-    is_imaginelab = False
+    is_imaginelab = True
 
 
 def receive_message(user_id, text_received, channel_read):
@@ -131,10 +131,10 @@ def check_random_keywords(user_name, words_received, channel, message):
                 message = random_bot.insult(first_name)
                 logger.debug('{} insulted someone in {}'.format(user_name, channel))
                 break
-    if not message:
-        message = random_bot.definition(words_received)
-        if message:
-            logger.debug('{} asked for a definition a word in {}'.format(user_name, channel))
+    # if not message:
+    #     message = random_bot.definition(words_received)
+    #     if message:
+    #         logger.debug('{} asked for a definition a word in {}'.format(user_name, channel))
     if not message:
         message = random_bot.repeat(words_received)
         if message:
@@ -154,16 +154,16 @@ def check_general_keywords(user_name, words_received, channel, message):
         for food_trigger in food_triggers:
             if food_trigger in words_received:
                 logger.debug('{} asked the FoodBot a request in channel {}'.format(user_name, channel))
-                message, blocks = food_bot.process(user_name, words_received)
+                message, blocks = food_bot.process(user_name, words_received, food_trigger)
     if not message and any(word in words_received for word in menu_triggers):
         logger.debug('{} asked the Foodbot for menu in channel {}'.format(user_name, channel))
         message = food_bot.get_menu(words_received)
     if not message and any(word in words_received for word in resto_triggers):
         logger.debug('{} asked the Foodbot for restaurants in channel {}'.format(user_name, channel))
         message, restaurants = food_bot.get_restaurants(words_received)
-    if not message and any((word in words_received for word in image_triggers)):
-        logger.debug('{} asked the ImageBot a request in channel {}'.format(user_name, channel))
-        message, attachments = image_bot.find_image(words_received, image_triggers)
+    # if not message and any((word in words_received for word in image_triggers)):
+    #     logger.debug('{} asked the ImageBot a request in channel {}'.format(user_name, channel))
+    #     message, attachments = image_bot.find_image(words_received, image_triggers)
     if not message and any((word in words_received for word in joke_triggers)):
         message, channel = random_bot.joke(channel, True)
     if not message and all(word in no_imaginelab_triggers for word in words_received):
@@ -188,14 +188,15 @@ def mention_question(user_name, words_received, channel, message):
 
 
 def print_where_food_notification():
+    global is_imaginelab
     if is_imaginelab:
-        send_message(notification_channel, "<!channel> Where are we going to order today?", None, None)
+        send_message(notification_channel, "Good morning <!channel>, it's ImagineLab today, Where are we going to order food today?", None, None)
 
 
 def print_what_food_notification():
     global is_imaginelab
     if is_imaginelab:
-        send_message(notification_channel, "<!channel> What do you all want to order?", None, None)
+        send_message(notification_channel, "<!channel> What do you all want to order? Add your options below.", None, None)
         blocks = food_bot.get_order_overview(False)
         blocks = json.dumps(blocks["blocks"])
         send_message(notification_channel, None, None, blocks)

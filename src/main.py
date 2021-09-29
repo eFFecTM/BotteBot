@@ -9,7 +9,6 @@ from logging.handlers import TimedRotatingFileHandler
 import nest_asyncio
 
 import constants
-import food_bot
 import services
 
 
@@ -27,7 +26,6 @@ def main():
 
     # Connect to SQLite3 database
     logger.info('Connected to SQLite database!')
-    food_bot.update_restaurant_database()
 
 
 def signal_handler():

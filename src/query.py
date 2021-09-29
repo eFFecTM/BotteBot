@@ -50,11 +50,11 @@ def get_restaurants():
 
 
 def get_restaurant_rating(restaurant):
-    database.sql_get('SELECT rating FROM restaurant_database where ? LIKE restaurant LIMIT 1', (restaurant,))
+    return database.sql_get('SELECT rating FROM restaurant_database where restaurant LIKE ? LIMIT 1', (restaurant,))
 
 
 def set_restaurant_rating(restaurant, rating):
-    database.sql_set('UPDATE restaurant_database SET rating=? WHERE ? LIKE restaurant', (rating, restaurant))
+    database.sql_set('UPDATE restaurant_database SET rating=? WHERE restaurant LIKE ?', (rating, restaurant))
 
 
 """Bug Reports"""

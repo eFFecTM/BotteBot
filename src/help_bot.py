@@ -21,9 +21,6 @@ def get_list_of_commands():
     \u2022 View current restaurant and all current orders: `food list`
     \u2022 Place a food order: `food order <meal>`
     \u2022 Remove a food order: `food order remove <meal>`
-    \u2022 View ImagineLab schedule: `food schedule`
-    \u2022 Add date to ImagineLab schedule: `food schedule add <date>`
-    \u2022 Remove date from ImagineLab schedule: `food schedule remove <date>`
     \u2022 Manually add a restaurant that is not on Takeaway: `food restaurant add <restaurant-name> <url>`
     \u2022 Add rating to a restaurant (number from 0 to 10): `food rating <restaurant> <rating>`
     \u2022 Set or change the restaurant where we are ordering food: `food set <restaurant>`
@@ -33,7 +30,8 @@ def get_list_of_commands():
     \u2022 Let Me Google That For You (LMGTFY): `lmgtfy <text>`
     \u2022 Define words: `define <word>`
     \u2022 Repeat text in a channel: `repeat <text> in <channel>`
-    \u2022 Get a list of restaurants that are able to deliver @ iMagineLab, sorted by rating: `restaurant top <number>`
+    \u2022 Get a list of restaurants that we ordered at before, sorted by rating: `restaurant top <number>`
+    \u2022 Get a list of restaurants that are able to deliver @ iMagineLab, sorted by rating: `restaurant takeaway top <number>`
     \u2022 Let the bot tell a random joke: _Sit back, relax and wait for the joke. If nothing happens, type_ `joke`
     """
     return response
