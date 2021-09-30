@@ -1,5 +1,7 @@
 import sqlite3
 
+from constants import base_dir
+
 
 class SqlQuery:
     """Contains convenience functions for running SQL queries: SELECT, DELETE, INSERT and UPDATE"""
@@ -37,4 +39,4 @@ def list_factory(cur, row):
     return d
 
 
-database = SqlQuery('data/imaginelab.db')
+database = SqlQuery(base_dir / 'data/imaginelab.db')
