@@ -17,7 +17,7 @@ def main():
     if not os.path.exists(f'{constants.base_dir}/logs'):
         os.makedirs(f'{constants.base_dir}/logs')
 
-    handler = TimedRotatingFileHandler("logs/log", when="midnight", interval=1)
+    handler = TimedRotatingFileHandler(f'{constants.base_dir}/logs/log', when="midnight", interval=1)
     logging.basicConfig(level=constants.logging_level, format='%(asctime)s | %(levelname)s | %(name)s | %(message)s',
                         handlers=[handler, logging.StreamHandler()])
 
@@ -44,5 +44,7 @@ if __name__ == '__main__':
         nest_asyncio.apply(loop)
         loop.run_until_complete(
             asyncio.gather(services.start_scheduler(), services.start_slack_client(), services.start_web_server()))
+    except Exception as e:
+        logger.error(e)
     finally:
         sys.exit(0)
