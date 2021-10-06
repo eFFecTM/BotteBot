@@ -5,7 +5,7 @@ from pathlib import Path
 base_dir = Path(__file__).parent.parent
 
 config = configparser.ConfigParser()
-config.read(base_dir / 'config/config.ini')
+config.read(f'{base_dir}/config/config.ini')
 
 logging_level = config.get('system', 'LOGGING_LEVEL')
 
@@ -37,25 +37,25 @@ bugreport_triggers = json.loads(config.get("triggers", "BUG_REPORT"))
 resetpoll_triggers = json.loads(config.get("triggers", "RESET_FOOD_POLL"))
 
 init = configparser.ConfigParser()
-init.read(base_dir / 'config/init.ini')
+init.read(f'{base_dir}/config/init.ini')
 
 slack_bot_token = str(init.get('slackbot', 'SLACK_BOT_TOKEN'))
 open_weather_key = str(init.get('open_weather_map', 'API_KEY'))
 oxford_id = str(init.get('oxford', 'ID'))
 oxford_key = str(init.get('oxford', 'KEY'))
 
-with open(base_dir / "resources/template_message.json") as a, \
-        open(base_dir / "resources/template_text.json") as b, \
-        open(base_dir / "resources/template_divider.json") as c, \
-        open(base_dir / "resources/template_pollentry.json") as d, \
-        open(base_dir / "resources/template_votes.json") as e, \
-        open(base_dir / "resources/template_addoption.json") as f, \
-        open(base_dir / "resources/template_modal_question.json") as g, \
-        open(base_dir / "resources/template_flattext.json") as h, \
-        open(base_dir / "resources/template_modal_flattext.json") as i, \
-        open(base_dir / "resources/template_modal_dropdown.json") as j, \
-        open(base_dir / "resources/template_dropdown_option.json") as k, \
-        open(base_dir / "resources/template_modal.json") as l:
+with open(f'{base_dir}/resources/template_message.json') as a, \
+        open(f'{base_dir}/resources/template_text.json') as b, \
+        open(f'{base_dir}/resources/template_divider.json') as c, \
+        open(f'{base_dir}/resources/template_pollentry.json') as d, \
+        open(f'{base_dir}/resources/template_votes.json') as e, \
+        open(f'{base_dir}/resources/template_addoption.json') as f, \
+        open(f'{base_dir}/resources/template_modal_question.json') as g, \
+        open(f'{base_dir}/resources/template_flattext.json') as h, \
+        open(f'{base_dir}/resources/template_modal_flattext.json') as i, \
+        open(f'{base_dir}/resources/template_modal_dropdown.json') as j, \
+        open(f'{base_dir}/resources/template_dropdown_option.json') as k, \
+        open(f'{base_dir}/resources/template_modal.json') as l:
     template_message = json.load(a)
     template_text = json.load(b)
     template_divider = json.load(c)

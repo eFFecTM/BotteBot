@@ -250,7 +250,7 @@ def get_menu(words_received):
 
 def get_restaurants_from_takeaway():
     global takeaway_restaurants
-    with open(constants.base_dir / "resources/takeaway_restaurants.json") as a:
+    with open(f'{constants.base_dir}/resources/takeaway_restaurants.json') as a:
         takeaway_restaurants_json = json.load(a)
 
     for takeaway_restaurant in takeaway_restaurants_json["restaurants"]:

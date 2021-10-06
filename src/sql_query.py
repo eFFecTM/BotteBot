@@ -39,4 +39,4 @@ def list_factory(cur, row):
     return d
 
 
-database = SqlQuery(base_dir / 'data/imaginelab.db')
+database = SqlQuery(f'{base_dir}/data/imaginelab.db')

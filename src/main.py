@@ -14,8 +14,8 @@ import services
 
 def main():
     # Init logger
-    if not os.path.exists(constants.base_dir / 'logs'):
-        os.makedirs(constants.base_dir / 'logs')
+    if not os.path.exists(f'{constants.base_dir}/logs'):
+        os.makedirs(f'{constants.base_dir}/logs')
 
     handler = TimedRotatingFileHandler("logs/log", when="midnight", interval=1)
     logging.basicConfig(level=constants.logging_level, format='%(asctime)s | %(levelname)s | %(name)s | %(message)s',
