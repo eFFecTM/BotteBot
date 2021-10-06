@@ -1,6 +1,6 @@
 requests==2.26.0
 slack_sdk==3.11.2
-pyowm==3.2.0
+pyowm==2.10.0
 googletrans==3.0.0
 oxforddictionaries==0.1.101
 google_images_download==2.8.0
