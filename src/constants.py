@@ -10,6 +10,7 @@ config.read(f'{base_dir}/config/config.ini')
 logging_level = config.get('system', 'LOGGING_LEVEL')
 
 notification_channel = str(config.get("scheduler", "NOTIFICATION_CHANNEL"))
+weekday = str(config.get("scheduler", "WEEKDAY"))
 where_time = str(config.get("scheduler", "WHERE_TIME"))
 what_time = str(config.get("scheduler", "WHAT_TIME"))
 

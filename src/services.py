@@ -13,7 +13,7 @@ import food_bot
 import query
 import random_bot
 import services_helper
-from constants import slack_bot_token, where_time, what_time, template_modal, template_modal_flattext
+from constants import slack_bot_token, weekday, where_time, what_time, template_modal, template_modal_flattext
 
 logger = logging.getLogger()
 rtm_client = RTMClient(token=slack_bot_token)
@@ -23,14 +23,14 @@ async def start_scheduler():
     try:
         scheduler = AsyncIOScheduler()
         scheduler.add_job(services_helper.print_where_food_notification,
-                          CronTrigger(day_of_week="wed", hour=where_time.split(":")[0],
+                          CronTrigger(day_of_week=weekday, hour=where_time.split(":")[0],
                                       minute=where_time.split(":")[1]))
         scheduler.add_job(services_helper.print_what_food_notification,
-                          CronTrigger(day_of_week="wed", hour=what_time.split(":")[0],
+                          CronTrigger(day_of_week=weekday, hour=what_time.split(":")[0],
                                       minute=what_time.split(":")[1]))
         # scheduler.add_job(food_bot.update_restaurant_database, CronTrigger(day_of_week="wed", hour="09")) # Not needed as Takeaway scraping is broken
         food_bot.get_restaurants_from_takeaway()
-        scheduler.add_job(food_bot.remove_orders, CronTrigger(day_of_week="wed", hour="23", minute="59"))
+        scheduler.add_job(food_bot.reset_orders, CronTrigger(day_of_week="wed", hour="23", minute="59"))
         scheduler.start()
         logger.info('Started APScheduler!')
     except Exception as e:

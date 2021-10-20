@@ -58,7 +58,7 @@ def process(user, words_received, food_trigger):
                     output = add_restaurant(words_received, add_trigger)
                     break
     if not output and any(resetpoll_trigger in words_received for resetpoll_trigger in constants.resetpoll_triggers):
-        output = remove_orders()
+        output = reset_orders()
     return output, blocks
 
 
@@ -179,8 +179,10 @@ def remove_order_food(user, food):
     return "Fine. No food for {}".format(user)
 
 
-def remove_orders():
+def reset_orders():
+    global current_food_place
     query.remove_food_orders()
+    current_food_place = "..."
     return "Successfully cleared food_orders table!"
 
 
