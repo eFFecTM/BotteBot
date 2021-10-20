@@ -63,7 +63,7 @@ def handle(client: RTMClient, event: dict):
     if 'text' in event:
         try:
             if 'user' in event:
-                services_helper.receive_message(event['user'], event['text'], event['channel'])
+                services_helper.receive_message(event['user'], event['text'], event['channel'], event['ts'])
         except Exception as e:
             logger.exception(e)
 

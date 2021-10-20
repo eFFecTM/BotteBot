@@ -27,8 +27,9 @@ def init(slack_client):
     is_imaginelab = True
 
 
-def receive_message(user_id, text_received, channel_read):
+def receive_message(user_id, text_received, channel_read, thread_ts):
     attachments = blocks = None
+    reply_in_thread = False
     if user_id != bot_id:
         user_name = get_user_info(user_id)["user"]["name"]
         words_received = text_received.lower().split()
@@ -38,17 +39,17 @@ def receive_message(user_id, text_received, channel_read):
             [channel, words_received] = check_channel(words_received, channel_read)
             [words_received, mention] = filter_ignore_words(words_received)
             if not message and (mention or (channel not in public_channel_ids)):
-                message, channel, attachments, blocks = mention_question(user_name, words_received, channel, message)
+                message, channel, attachments, blocks, reply_in_thread = mention_question(user_name, words_received, channel, message, reply_in_thread)
             if not message:
                 message, channel = check_random_keywords(user_name, words_received, channel, message)
         if message or attachments or blocks:
             if blocks is not None:
                 blocks = json.dumps(blocks["blocks"])
-            send_message(channel, message, attachments, blocks)
+            send_message(channel, message, attachments, blocks, thread_ts if reply_in_thread else None)
     return None
 
 
-def send_message(channel, text, attachments, blocks):
+def send_message(channel, text, attachments, blocks, thread_ts):
     global last_message_ts, last_channel_id
     if channel is None:
         logger.error('Channel is not initialized!')
@@ -62,7 +63,7 @@ def send_message(channel, text, attachments, blocks):
         text = "test"  # avoiding a user warning
     # todo: check whether this is still needed
     data = ast.literal_eval(SlackResponse.__str__(
-        client.chat_postMessage(as_user="true", channel=channel, text=text, attachments=attachments, blocks=blocks)))
+        client.chat_postMessage(as_user="true", channel=channel, text=text, attachments=attachments, blocks=blocks, thread_ts=thread_ts)))
     last_message_ts = data["ts"]
     last_channel_id = data["channel"]
     logger.debug('Message sent to {}'.format(channel))
@@ -144,11 +145,12 @@ def check_random_keywords(user_name, words_received, channel, message):
     return message, channel
 
 
-def check_general_keywords(user_name, words_received, channel, message):
+def check_general_keywords(user_name, words_received, channel, message, reply_in_thread):
     """Check for serious shit. Predefined commands etc."""
     attachments = blocks = None
     if not message and any(word in words_received for word in help_triggers):
         message = help_bot.get_list_of_commands()
+        reply_in_thread = True
         logger.debug('{} asked the HelpBot for info in channel {}'.format(user_name, channel))
     if not message:
         for food_trigger in food_triggers:
@@ -169,22 +171,22 @@ def check_general_keywords(user_name, words_received, channel, message):
     if not message and all(word in no_imaginelab_triggers for word in words_received):
         logger.debug('{} asked the bot to toggle ImagineLab for this week in channel {}'.format(user_name, channel))
         message = toggle_imaginelab()
-    return message, channel, attachments, blocks
+    return message, channel, attachments, blocks, reply_in_thread
 
 
-def mention_question(user_name, words_received, channel, message):
+def mention_question(user_name, words_received, channel, message, reply_in_thread):
     """bot got mentioned or pm'd, answer the question"""
     logger.debug('BotteBot got mentioned in {}'.format(channel))
     attachments = blocks = None
     if not message:
-        message, channel, attachments, blocks = check_general_keywords(user_name, words_received, channel, message)
+        message, channel, attachments, blocks, reply_in_thread = check_general_keywords(user_name, words_received, channel, message, reply_in_thread)
     if not message and any(word in words_received for word in weather_triggers):
         message = weather_bot.get_weather_message()
     if not message:
         message = random_bot.lmgtfy(words_received)
     if not message:
         message = help_bot.report_bug(words_received, user_name)
-    return message, channel, attachments, blocks
+    return message, channel, attachments, blocks, reply_in_thread
 
 
 def print_where_food_notification():
