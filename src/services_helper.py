@@ -192,7 +192,7 @@ def mention_question(user_name, words_received, channel, message, reply_in_threa
 def print_where_food_notification():
     global is_imaginelab
     if is_imaginelab:
-        send_message(notification_channel, "Good morning <!channel>, it's ImagineLab today, Where are we going to order food today?", None, None)
+        send_message(notification_channel, "Good morning <!channel>, it's ImagineLab tomorrow, Where are we going to order food today?", None, None)
 
 
 def print_what_food_notification():
