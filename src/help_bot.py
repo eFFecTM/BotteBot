@@ -10,24 +10,20 @@ logger = logging.getLogger()
 def get_list_of_commands():
     response = """ >Need help :question: Here is a list of available features and corresponding commands. 
     You can use synonyms of these words as trigger words.\n
-    General stuff (mention me using `@BotteBot`):
+    General stuff (mention me using `@RUDE-i`):
     \u2022 Get the current weather: `weather in <city>`
-    \u2022 Get the menu of a restaurant: `menu <restaurant> top <number>`
-    \u2022 Image search: `image of <text>` or `animation of <text>`
     \u2022 Report a bug: `bug <text>`
-    \u2022 Get help: `help`
+    \u2022 Let Me Google That For You (LMGTFY): `lmgtfy <text>`
+    \u2022 Get help: call 112 or type `help`
                     
-    Food-related stuff (mention me using `@BotteBot`):\n
-    \u2022 View current restaurant and all current orders: `food list`
-    \u2022 Place a food order: `food order <meal>`
-    \u2022 Remove a food order: `food order remove <meal>`
+    Food-related stuff (mention me using `@RUDE-i`):\n
+    \u2022 View current restaurant and all current orders: `food list`. Note that I'll already automatically show the current restaurant at noon.
     \u2022 Manually add a restaurant that is not on Takeaway: `food restaurant add <restaurant-name> <url>`
     \u2022 Add rating to a restaurant (number from 0 to 10): `food rating <restaurant> <rating>`
     \u2022 Set or change the restaurant where we are ordering food: `food set <restaurant>`
                     
     For these features, there is no need to mention me, unless you really want spam in the channel:\n
     \u2022 Insulting people: `insult <name> in <channel>`
-    \u2022 Let Me Google That For You (LMGTFY): `lmgtfy <text>`
     \u2022 Define words: `define <word>`
     \u2022 Repeat text in a channel: `repeat <text> in <channel>`
     \u2022 Get a list of restaurants that we ordered at before, sorted by rating: `restaurant top <number>`
