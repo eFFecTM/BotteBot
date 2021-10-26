@@ -1,5 +1,9 @@
 """Create a bot that responds on requests with 'help' keywords. List all available commands and features."""
 import logging
+from datetime import datetime
+
+import git
+import pytz
 
 import query
 from constants import bugreport_triggers
@@ -42,3 +46,10 @@ def report_bug(words_received, user):
             query.add_bug_report(after_trigger, user)
             return "reported '{}', should I start pointing out your flaws too, {}?".format(after_trigger, user)
     return None
+
+
+def get_version():
+    """Command: 'version'. Retrieves the latest commit id and date."""
+    repo = git.Repo(search_parent_directories=True)
+    latest_datetime = datetime.fromtimestamp(repo.head.object.committed_date, pytz.timezone('Europe/Brussels'))
+    return f'I\'m running version of {latest_datetime}\nfrom commit: {repo.head.object.hexsha}'

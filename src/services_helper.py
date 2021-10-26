@@ -6,12 +6,11 @@ from slack_sdk.web.slack_response import SlackResponse
 
 import food_bot
 import help_bot
-import image_bot
 import random_bot
 import weather_bot
 from constants import insult_triggers, no_imaginelab_triggers, food_triggers, \
-    menu_triggers, resto_triggers, image_triggers, joke_triggers, weather_triggers, \
-    notification_channel, help_triggers, ignored_words
+    resto_triggers, joke_triggers, weather_triggers, \
+    notification_channel, help_triggers, ignored_words, version_triggers
 
 logger = logging.getLogger()
 client = bot_id = user_ids = public_channel_ids = last_message_ts = last_channel_id = is_imaginelab = None
@@ -25,6 +24,7 @@ def init(slack_client):
     user_ids = [element["id"] for element in client.users_list()["members"]]
     public_channel_ids = [element["id"] for element in client.conversations_list()["channels"]]
     is_imaginelab = True
+    send_message('test_channel', f'Hello world! I\'m back alive. It seems that you cannot run this place without me?\n{help_bot.get_version()}', None, None)
 
 
 def receive_message(user_id, text_received, channel_read, thread_ts):
@@ -49,7 +49,7 @@ def receive_message(user_id, text_received, channel_read, thread_ts):
     return None
 
 
-def send_message(channel, text, attachments, blocks, thread_ts):
+def send_message(channel, text, attachments, blocks, thread_ts=None):
     global last_message_ts, last_channel_id
     if channel is None:
         logger.error('Channel is not initialized!')
@@ -152,14 +152,18 @@ def check_general_keywords(user_name, words_received, channel, message, reply_in
         message = help_bot.get_list_of_commands()
         reply_in_thread = True
         logger.debug('{} asked the HelpBot for info in channel {}'.format(user_name, channel))
+    if not message and any(word in words_received for word in version_triggers):
+        message = help_bot.get_version()
+        reply_in_thread = True
+        logger.debug('{} asked the HelpBot for its version in channel {}'.format(user_name, channel))
     if not message:
         for food_trigger in food_triggers:
             if food_trigger in words_received:
                 logger.debug('{} asked the FoodBot a request in channel {}'.format(user_name, channel))
                 message, blocks = food_bot.process(user_name, words_received, food_trigger)
-    if not message and any(word in words_received for word in menu_triggers):
-        logger.debug('{} asked the Foodbot for menu in channel {}'.format(user_name, channel))
-        message = food_bot.get_menu(words_received)
+    # if not message and any(word in words_received for word in menu_triggers):
+    #     logger.debug('{} asked the Foodbot for menu in channel {}'.format(user_name, channel))
+    #     message = food_bot.get_menu(words_received)
     if not message and any(word in words_received for word in resto_triggers):
         logger.debug('{} asked the Foodbot for restaurants in channel {}'.format(user_name, channel))
         message, restaurants = food_bot.get_restaurants(words_received)

@@ -36,6 +36,7 @@ rating_triggers = json.loads(config.get("triggers", 'RATING'))
 no_imaginelab_triggers = json.loads(config.get("triggers", "NO_IMAGINELAB"))
 bugreport_triggers = json.loads(config.get("triggers", "BUG_REPORT"))
 resetpoll_triggers = json.loads(config.get("triggers", "RESET_FOOD_POLL"))
+version_triggers = json.loads(config.get("triggers", "VERSION"))
 
 init = configparser.ConfigParser()
 init.read(f'{base_dir}/config/init.ini')
