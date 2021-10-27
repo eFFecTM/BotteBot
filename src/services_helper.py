@@ -22,7 +22,7 @@ def init(slack_client):
     # Get all user IDs and channel IDs
     bot_id = client.auth_test()["user_id"]
     user_ids = [element["id"] for element in client.users_list()["members"]]
-    public_channel_ids = [element["id"] for element in client.conversations_list()["channels"]]
+    public_channel_ids = [element["id"] for element in client.conversations_list(types=["public_channel","private_channel"])["channels"]]
     is_imaginelab = True
     send_message('test_channel', f'Hello world! I\'m back alive. It seems that you cannot run this place without me?\n{help_bot.get_version()}', None, None)
 
