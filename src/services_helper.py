@@ -161,9 +161,6 @@ def check_general_keywords(user_name, words_received, channel, message, reply_in
             if food_trigger in words_received:
                 logger.debug('{} asked the FoodBot a request in channel {}'.format(user_name, channel))
                 message, blocks = food_bot.process(user_name, words_received, food_trigger)
-    # if not message and any(word in words_received for word in menu_triggers):
-    #     logger.debug('{} asked the Foodbot for menu in channel {}'.format(user_name, channel))
-    #     message = food_bot.get_menu(words_received)
     if not message and any(word in words_received for word in resto_triggers):
         logger.debug('{} asked the Foodbot for restaurants in channel {}'.format(user_name, channel))
         message, restaurants = food_bot.get_restaurants(words_received)

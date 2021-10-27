@@ -1,7 +1,6 @@
 import copy
 import json
 import logging
-import random
 import re
 from datetime import datetime
 
@@ -31,19 +30,6 @@ def process(user, words_received, food_trigger):
                 break
     if not output and any(overview_trigger in words_received for overview_trigger in constants.overview_triggers):
         blocks = get_order_overview(False)
-    if not output and any(order_trigger in words_received for order_trigger in constants.order_triggers):
-        if not output:
-            for remove_trigger in constants.remove_triggers:
-                if remove_trigger in words_received:
-                    output = remove_order_food(user,
-                                               " ".join(words_received[words_received.index(remove_trigger) + 1:]))
-                    break
-        if not output:
-            for order_trigger in constants.order_triggers:
-                if order_trigger in words_received:
-                    output, success = order_food(user,
-                                                 " ".join(words_received[words_received.index(order_trigger) + 1:]))
-                    break
     if not output and any(rating_trigger in words_received for rating_trigger in constants.rating_triggers):
         if not output:
             for rating_trigger in constants.rating_triggers:
@@ -183,70 +169,6 @@ def reset_orders():
     query.remove_food_orders()
     current_food_place = "..."
     return "Successfully cleared food_orders table!"
-
-
-# def get_menu(words_received):
-#     """Command: 'menu <restaurant name> top <number>'"""
-#     return_message, restaurants = get_restaurants()
-#     found = []
-#     message = ""
-#     if len(restaurants) == 0:
-#         get_restaurants('top 1')  # generate restaurants
-#     for resto in restaurants:
-#         if all(word in resto[0].lower().split(" ") for word in words_received[1:]):
-#             found = resto
-#             message = "Restaurant: *{}*\n\n".format(resto[0])
-#             break
-#     if found:
-#         response = requests.get(found[2])
-#
-#         soup = BeautifulSoup(response.content, 'html.parser')
-#         location = soup.text.find('MenucardProducts')
-#         text = soup.text[location:]
-#
-#         if 'top' in words_received:
-#             next_word = words_received[words_received.index('top') + 1]
-#             try:
-#                 top_number = int(next_word)
-#                 if top_number > 50:
-#                     top_number = 50
-#                 elif top_number < 1:
-#                     top_number = 1
-#             except ValueError:
-#                 top_number = 10
-#         else:
-#             top_number = 10
-#
-#         location = text.find('name')
-#         menu = [[], []]
-#         while location != -1:
-#             text = text[location + len('"name": "') - 1:]
-#             location = text.find('"')
-#             if "{" in text[:location]:
-#                 break
-#             menu[0].append(text[:location])
-#             location = text.find('price')
-#             text = text[location + len('"price": ') - 1:]
-#             location = text.find(",")
-#             menu[1].append(text[:location])
-#             location = text.find('name')
-#
-#         rand = random.randint(0, top_number * 3)
-#         location_number = 0
-#         if top_number > len(menu[0]):
-#             top_number = len(menu[0])
-#         for i in range(0, top_number):
-#             location_number += 1
-#             if rand == i:
-#                 adjective = requests.get("https://insult.mattbas.org/api/adjective").text
-#                 message = "{}{}: Your {} mother for €0\n".format(message, location_number, adjective)
-#                 location_number += 1
-#             message = "{}{}: {} for €{}\n".format(message, location_number, menu[0][i], menu[1][i])
-#     else:
-#         rand = random.randint(0, len(snappy_responses) - 1)
-#         r = requests.get("https://insult.mattbas.org/api/adjective")
-#         return "The restaurant is not found, {}".format(snappy_responses[rand].replace("{}", r.text))
-#     return message
 
 
 def get_restaurants_from_takeaway():

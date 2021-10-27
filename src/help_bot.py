@@ -19,6 +19,7 @@ def get_list_of_commands():
     \u2022 Report a bug: `bug <text>`
     \u2022 Let Me Google That For You (LMGTFY): `lmgtfy <text>`
     \u2022 Get help: call 112 or type `help`
+    \u2022 Want to know my current age? type `version`
                     
     Food-related stuff (mention me using `@RUDE-i`):\n
     \u2022 View current restaurant and all current orders: `food list`. Note that I'll already automatically show the current restaurant at noon.
