@@ -1,5 +1,4 @@
-# Botte Bot
-Doc is outdated, needs overhaul!
+# Botte Bot - RUDE-i
 
 ## Features
 This repository is used to create a Slack bot which can perform various things:
@@ -10,16 +9,15 @@ This repository is used to create a Slack bot which can perform various things:
 * ... More coming soon!
 
 ## Get started (incomplete, does not consider database)
-* Install python and pip3.
-* Install the requirements.txt file (pip3 install -r requirements.txt).
-* Get the necessary API keys and add them to a _init.ini_ file which has to be created inside the config folder.
+* Install python and pip3 for your OS.
+* Install the requirements.txt file (`pip3 install -r requirements.txt`).
+* Get the necessary API keys and add them to a _init.ini_ file which has to be created inside the _config_ folder.
 
 ## To do
 * Use user ids instead of nicknames for persisting data.
-* Expand food order poll system to a generic poll which users can create (replaced of Polly).
+* Replace modal text for ordering with table
 * Further improve visualisation of polls and their results based on feedback.
 * Automatic setup of database schema (programatically)
-* polls on tuesday instead of wednesday
 * bug: last message is modified to food order
 * store user ids to display users
 * bring back food order lists view, but only show first 5 or 10 with extra info

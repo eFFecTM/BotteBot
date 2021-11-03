@@ -18,6 +18,7 @@ snappy_responses = ["just like the dignity of your {} mother. Mama Mia!",
 
 logger = logging.getLogger()
 current_food_place = "..."
+current_food_place_url = "..."
 takeaway_restaurants = []
 
 
@@ -104,32 +105,34 @@ def add_dropdown_option(dropdown, initial, value):
 
 
 def get_order_overview(want_text):
-    """Command: 'food overview'"""
+    """
+    Command: 'food overview'
+    Markdown guide for Slack API: https://api.slack.com/reference/surfaces/formatting
+    """
     orders = query.get_food_orders()
     if want_text:
         text = ""
-        text += "We're getting food from " + current_food_place + "\n"
+        text += f"We're getting food from <{current_food_place_url}|{current_food_place}>!\n\n"
         prev_item = None
         count = 0
-        names = ""
+        names = []
         for [name, item] in orders:
             if prev_item is not None and prev_item != item:
-                text += str(count) + ": " + names + "   |   " + prev_item + "\n"
+                text += f'• *{str(count)} x {prev_item}*: {", ".join(names)}\n'
                 count = 0
-                names = ""
+                names = []
             count = count + 1
             prev_item = item
-            names = names + " " + name
+            names.append(name)
         if len(orders) != 0:
-            text += str(count) + ": " + names + "   |   " + prev_item + "\n"
-            text += "Total Votes: " + str(len(orders)) + "   |   Total Eaters: " + str(len(set(j[0] for j in orders)))
+            text += f'• *{str(count)} x {prev_item}*: {", ".join(names)}\n'
+            text += f"\n\n_*Total votes: {len(orders)} | Total eaters: {len(set(j[0] for j in orders))}*_"
         return text
     else:
         blocks = {"blocks": []}
-        add_text(blocks, "We're getting food from " + current_food_place)
+        add_text(blocks, f"We're getting food from *<{current_food_place_url}|{current_food_place}>*!\n\n")
         if len(orders) != 0:
-            add_text(blocks, "Total Votes: " + str(len(orders)) +
-                     "   |   Total Eaters: " + str(len(set(j[0] for j in orders))))
+            add_text(blocks, f"*Total votes: {len(orders)} | Total eaters: {len(set(j[0] for j in orders))}*")
         add_option(blocks)
         add_flattext(blocks)
         return blocks
@@ -166,8 +169,10 @@ def remove_order_food(user, food):
 
 def reset_orders():
     global current_food_place
+    global current_food_place_url
     query.remove_food_orders()
     current_food_place = "..."
+    current_food_place_url = "..."
     return "Successfully cleared food_orders table!"
 
 
@@ -217,6 +222,7 @@ def get_restaurants(words_received=None):
 def set_restaurant(restaurant):
     """set restaurant: food set <restaurantname>"""
     global current_food_place
+    global current_food_place_url
     restaurants = query.get_restaurants()
     # if len(restaurants) == 0:
     #     restaurants = update_restaurant_database()  # generate restaurants
@@ -226,8 +232,9 @@ def set_restaurant(restaurant):
     for resto in restaurants:
         logger.debug('{} is {}? '.format(restaurant, resto[0].lower()))
         if restaurant == resto[0].lower():
-            current_food_place = "{} with url: {}".format(resto[0], resto[2])
-            return "restaurant set to {}. I heard they serve {} {}".format(resto[0], adjective, noun)
+            current_food_place = f"{resto[0].title()}"
+            current_food_place_url = resto[2]
+            return f"Restaurant set to {current_food_place}. I heard they serve {adjective} {noun}"
     return "Restaurant '{}' not in our database. " \
            "Add it NOW with the command 'food restaurant add < _restaurantname_ > < _url_ >', you {} {}!" \
         .format(restaurant, adjective, noun)
