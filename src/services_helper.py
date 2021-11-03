@@ -1,6 +1,7 @@
 import ast
 import json
 import logging
+import requests
 
 from slack_sdk.web.slack_response import SlackResponse
 
@@ -24,7 +25,8 @@ def init(slack_client):
     user_ids = [element["id"] for element in client.users_list()["members"]]
     public_channel_ids = [element["id"] for element in client.conversations_list(types=["public_channel","private_channel"])["channels"]]
     is_imaginelab = True
-    send_message('test_channel', f'Hello world! I\'m back alive. It seems that you cannot run this place without me?\n{help_bot.get_version()}', None, None)
+    noun = requests.get("https://insult.mattbas.org/api/insult").text.split()[-1]
+    send_message('test_channel', f'Hello {noun}! I\'m back, baby! Can\'t run this place without me, huh?\n{help_bot.get_version()}', None, None)
 
 
 def receive_message(user_id, text_received, channel_read, thread_ts):
@@ -193,13 +195,15 @@ def mention_question(user_name, words_received, channel, message, reply_in_threa
 def print_where_food_notification():
     global is_imaginelab
     if is_imaginelab:
-        send_message(notification_channel, "Good morning <!channel>, it's ImagineLab tomorrow, Where are we going to order food today?", None, None)
+        noun = requests.get("https://insult.mattbas.org/api/insult").text.split()[-1]
+        send_message(notification_channel, "Good morning "+noun+"s <!channel>, it's iMagineLab tomorrow, where are we going to order food?", None, None)
 
 
 def print_what_food_notification():
     global is_imaginelab
     if is_imaginelab:
-        send_message(notification_channel, "<!channel> What do you all want to order? Add your options below.", None, None)
+        adjective = requests.get("https://insult.mattbas.org/api/insult").text.split()[3]
+        send_message(notification_channel, "<!channel> What do you all want to order? Add your "+adjective+" options below.", None, None)
         blocks = food_bot.get_order_overview(False)
         blocks = json.dumps(blocks["blocks"])
         send_message(notification_channel, None, None, blocks)
