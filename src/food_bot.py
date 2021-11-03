@@ -266,7 +266,7 @@ def add_restaurant_rating(words_received, rating_trigger, food_trigger):
 
     # Update rating with mean of old and new rating
     if len(old_rating) != 0:
-        mean = int((old_rating[0][0] + rating) / 2)
+        mean = (old_rating[0][0] + rating) / 2
         query.set_restaurant_rating(restaurant_name, mean)
         msg = "Restaurant {}: mean rating changed to {}".format(restaurant_name, mean)
     else:

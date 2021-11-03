@@ -14,17 +14,16 @@ This repository is used to create a Slack bot which can perform various things:
 * Get the necessary API keys and add them to a _init.ini_ file which has to be created inside the _config_ folder.
 
 ## To do
-* Use user ids instead of nicknames for persisting data.
+### Features
 * Replace modal text for ordering with table
-* Further improve visualisation of polls and their results based on feedback.
-* Automatic setup of database schema (programatically)
-* bug: last message is modified to food order
-* store user ids to display users
-* bring back food order lists view, but only show first 5 or 10 with extra info
-* close poll after wednesday 16:00
 * separate poll for voting restaurant
-* separate poll after food wednesday evening to vote / give rating
+* Use user ids instead of nicknames for persisting data.
+* Automatic setup of database schema (programatically)
 * bot should reply in thread when it was triggered from an existing thread (e.g. insult is posted separately now)
+* View list of bugs
+
+### Known bugs
+* ... (see also the database of bugs!
 
 ## Authors
 * Jan De Laet
