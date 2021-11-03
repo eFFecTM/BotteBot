@@ -14,7 +14,7 @@ from constants import insult_triggers, no_imaginelab_triggers, food_triggers, \
     notification_channel, help_triggers, ignored_words, version_triggers
 
 logger = logging.getLogger()
-client = bot_id = user_ids = public_channel_ids = last_message_ts = last_channel_id = is_imaginelab = None
+client = bot_id = user_ids = public_channel_ids = last_message_ts = last_block_message_ts = last_channel_id = is_imaginelab = None
 
 
 def init(slack_client):
@@ -52,7 +52,7 @@ def receive_message(user_id, text_received, channel_read, thread_ts):
 
 
 def send_message(channel, text, attachments, blocks, thread_ts=None):
-    global last_message_ts, last_channel_id
+    global last_message_ts, last_channel_id, last_block_message_ts
     if channel is None:
         logger.error('Channel is not initialized!')
         return
@@ -67,6 +67,9 @@ def send_message(channel, text, attachments, blocks, thread_ts=None):
     data = ast.literal_eval(SlackResponse.__str__(
         client.chat_postMessage(as_user="true", channel=channel, text=text, attachments=attachments, blocks=blocks, thread_ts=thread_ts)))
     last_message_ts = data["ts"]
+    # todo: currently, blocks is only used in food overview. If it gets used in multiple cases, it should keep timestamps for every type
+    if blocks is not None:
+        last_block_message_ts = last_message_ts
     last_channel_id = data["channel"]
     logger.debug('Message sent to {}'.format(channel))
 
@@ -83,7 +86,10 @@ def update_message(timestamp=None, channel=None, text=None, blocks=None):
             logger.error('Timestamp (of last message) is not initialized!')
             return
         else:
-            timestamp = last_message_ts
+            if last_block_message_ts is None:
+                timestamp = last_message_ts
+            else:
+                timestamp = last_block_message_ts
     if text is None and blocks is None:
         logger.error('Cannot update as both text and blocks are not initialized!')
         return
