@@ -172,7 +172,7 @@ def check_general_keywords(user_name, words_received, channel, message, reply_in
     if not message and any((word in words_received for word in joke_triggers)):
         message, channel = random_bot.joke(channel, True)
     if not message and all(word in no_imaginelab_triggers for word in words_received):
-        logger.debug('{} asked the bot to toggle ImagineLab for this week in channel {}'.format(user_name, channel))
+        logger.debug('{} asked the bot to toggle iMagineLab for this week in channel {}'.format(user_name, channel))
         message = toggle_imaginelab()
     return message, channel, attachments, blocks, reply_in_thread
 
