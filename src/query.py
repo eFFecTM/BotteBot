@@ -63,3 +63,7 @@ def set_restaurant_rating(restaurant, rating):
 def add_bug_report(report, user):
     database.sql_set('INSERT OR IGNORE INTO bug_report (date, report, user_name) VALUES (CURRENT_TIMESTAMP, ?, ?)',
                      (report, user))
+
+
+def show_bug_report():
+    return database.sql_get('SELECT report, user_name, date FROM bug_report ORDER BY date')

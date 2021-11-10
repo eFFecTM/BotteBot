@@ -29,10 +29,9 @@ This repository is used to create a Slack bot which can perform various things:
 * Display full username instead of nickname when ordering food.
 * Automatic setup of database schema (programmatically)
 * bot should reply in thread when it was triggered from an existing thread (e.g. insult is posted separately now)
-* View list of bugs
+* Add more rickrolls
 
 ### Known bugs
-* Update label of food orders to display number of eaters and votes correctly
 * Check issues with saving orders
 * _See also the database of bugs!_
 

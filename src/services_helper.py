@@ -170,7 +170,7 @@ def check_general_keywords(user_name, words_received, channel, message, reply_in
                 logger.debug('{} asked the FoodBot a request in channel {}'.format(user_name, channel))
                 message, blocks = food_bot.process(user_name, words_received, food_trigger)
     if not message and any(word in words_received for word in resto_triggers):
-        logger.debug('{} asked the Foodbot for restaurants in channel {}'.format(user_name, channel))
+        logger.debug('{} asked the FoodBot for restaurants in channel {}'.format(user_name, channel))
         message, restaurants = food_bot.get_restaurants(words_received)
     # if not message and any((word in words_received for word in image_triggers)):
     #     logger.debug('{} asked the ImageBot a request in channel {}'.format(user_name, channel))
@@ -195,6 +195,8 @@ def mention_question(user_name, words_received, channel, message, reply_in_threa
         message = random_bot.lmgtfy(words_received)
     if not message:
         message = help_bot.report_bug(words_received, user_name)
+    if not message:
+        message = help_bot.get_bugs(words_received, user_name)
     return message, channel, attachments, blocks, reply_in_thread
 
 

@@ -6,7 +6,7 @@ import git
 import pytz
 
 import query
-from constants import bugreport_triggers
+from constants import bugreport_triggers, add_triggers, overview_triggers
 
 logger = logging.getLogger()
 
@@ -15,38 +15,58 @@ def get_list_of_commands():
     response = """ >Need help :question: Here is a list of available features and corresponding commands. 
     You can use synonyms of these words as trigger words.\n
     General stuff (mention me using `@RUDE-i`):
-    \u2022 Get the current weather: `weather in <city>`
-    \u2022 Report a bug: `bug <text>`
-    \u2022 Let Me Google That For You (LMGTFY): `lmgtfy <text>`
-    \u2022 Get help: call 112 or type `help`
-    \u2022 Want to know my current age? type `version`
+    • Get the current weather: `weather in <city>`
+    • Report a bug: `bug add <text>`
+    • Show an overview of bugs: `bug overview' 
+    • Let Me Google That For You (LMGTFY): `lmgtfy <text>`
+    • Get help: call 112 or type `help`
+    • Want to know my current age? type `version`
                     
     Food-related stuff (mention me using `@RUDE-i`):\n
-    \u2022 View current restaurant and all current orders: `food list`. Note that I'll already automatically show the current restaurant at noon.
-    \u2022 Manually add a restaurant that is not on Takeaway: `food restaurant add <restaurant-name> <url>`
-    \u2022 Add rating to a restaurant (number from 0 to 10): `food rating <restaurant> <rating>`
-    \u2022 Set or change the restaurant where we are ordering food: `food set <restaurant>`
+    • View current restaurant and all current orders: `food list`. Note that I'll already automatically show the current restaurant at noon.
+    • Manually add a restaurant that is not on Takeaway: `food restaurant add <restaurant-name> <url>`
+    • Add rating to a restaurant (number from 0 to 10): `food rating <restaurant> <rating>`
+    • Set or change the restaurant where we are ordering food: `food set <restaurant>`
                     
     For these features, there is no need to mention me, unless you really want spam in the channel:\n
-    \u2022 Insulting people: `insult <name> in <channel>`
-    \u2022 Define words: `define <word>`
-    \u2022 Repeat text in a channel: `repeat <text> in <channel>`
-    \u2022 Get a list of restaurants that we ordered at before, sorted by rating: `restaurant top <number>`
-    \u2022 Get a list of restaurants that are able to deliver @ iMagineLab, sorted by rating: `restaurant takeaway top <number>`
-    \u2022 Let the bot tell a random joke: _Sit back, relax and wait for the joke. If nothing happens, type_ `joke`
+    • Insulting people: `insult <name> in <channel>`
+    • Define words: `define <word>`
+    • Repeat text in a channel: `repeat <text> in <channel>`
+    • Get a list of restaurants that we ordered at before, sorted by rating: `restaurant top <number>`
+    • Get a list of restaurants that are able to deliver @ iMagineLab, sorted by rating: `restaurant takeaway top <number>`
+    • Let the bot tell a random joke: _Sit back, relax and wait for the joke. If nothing happens, type_ `joke`
     """
     return response
 
 
-def report_bug(words_received, user):
-    """Command: 'bug <report>'. This saves the report to the bug report database, together with the username."""
-    for trigger in bugreport_triggers:
-        if trigger in words_received:
-            after_trigger = " ".join(words_received[words_received.index(trigger) + 1:])
-            logger.debug("reported bug {} by user {}".format(after_trigger, user))
-            query.add_bug_report(after_trigger, user)
-            return "reported '{}', should I start pointing out your flaws too, {}?".format(after_trigger, user)
+def report_bug(words_received: list, user):
+    """Command: 'bug add <report>'. This saves the report to the bug report database, together with the username."""
+    for bug_trigger in bugreport_triggers:
+        if bug_trigger in words_received:
+            for add_trigger in add_triggers:
+                if add_trigger in words_received:
+                    words_received.remove(add_trigger)
+                    words_received.remove(bug_trigger)
+                    bug = " ".join(words_received)
+                    logger.debug(f"reported bug {bug} by user {user}")
+                    query.add_bug_report(bug, user)
+                    return f"Reported '{bug}', should I start pointing out your flaws too, {user}? :ladybug:"
     return None
+
+
+def get_bugs(words_received: list, user):
+    """Command: 'bug overview'. This shows a list of bugs in the database.'"""
+    for bug_trigger in bugreport_triggers:
+        if bug_trigger in words_received:
+            for overview_trigger in overview_triggers:
+                if overview_trigger in words_received:
+                    logger.debug(f"Showing an overview of reported bugs.")
+                    bugs = query.show_bug_report()
+                    text = ""
+                    for bug in bugs:
+                        text += f'• {bug[0]} ~ _{bug[1]} on {bug[2]}_\n'
+
+                    return f"Here is a list of all your flaws, {user}!\n{text}"
 
 
 def get_version():

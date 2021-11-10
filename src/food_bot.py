@@ -17,8 +17,8 @@ snappy_responses = ["just like the dignity of your {} mother. Mama Mia!",
                     "the restaurant and blackjack."]
 
 logger = logging.getLogger()
-current_food_place = "..."
-current_food_place_url = "..."
+current_food_place = "my personal favorite"
+current_food_place_url = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"  # rickroll
 takeaway_restaurants = []
 
 
