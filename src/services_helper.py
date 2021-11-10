@@ -26,7 +26,7 @@ def init(slack_client):
     public_channel_ids = [element["id"] for element in client.conversations_list(types=["public_channel","private_channel"])["channels"]]
     is_imaginelab = True
     noun = requests.get("https://insult.mattbas.org/api/insult").text.split()[-1]
-    send_message('test_channel', f'Hello {noun}! I\'m back, baby! Can\'t run this place without me, huh?\n{help_bot.get_version()}', None, None)
+    send_message('test_channel', f'Hello {noun}! I\'m back, baby! Can\'t run this place without me, huh? :poop:\n{help_bot.get_version()}', None, None)
 
 
 def receive_message(user_id, text_received, channel_read, thread_ts):

@@ -234,8 +234,8 @@ def set_restaurant(restaurant):
         if restaurant == resto[0].lower():
             current_food_place = f"{resto[0].title()}"
             current_food_place_url = resto[2]
-            return f"Restaurant set to {current_food_place}. I heard they serve {adjective} {noun}"
-    return "Restaurant '{}' not in our database. " \
+            return f"Restaurant set to {current_food_place}. I heard they serve {adjective} {noun} :face_vomiting:"
+    return ":no_entry_sign: Restaurant '{}' not in our database. " \
            "Add it NOW with the command 'food restaurant add < _restaurantname_ > < _url_ >', you {} {}!" \
         .format(restaurant, adjective, noun)
 

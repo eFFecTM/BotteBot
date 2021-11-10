@@ -89,7 +89,7 @@ async def interactive_message(request):
             body = urllib.parse.unquote_plus(body)
             if body.startswith("payload="):
                 data = json.loads(body[8:])
-                user = data["user"]["name"]
+                user = services_helper.get_user_info(data["user"]["id"])["user"]["real_name"]
                 if data["type"] == "block_actions":
                     if len(data["actions"]) == 1:
                         action_text = data["actions"][0]["text"]["text"]
