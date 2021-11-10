@@ -12,23 +12,23 @@ logger = logging.getLogger()
 
 
 def get_list_of_commands():
-    response = """ >Need help :question: Here is a list of available features and corresponding commands. 
+    response = """ Need help :question: Here is a list of available features and corresponding commands. 
     You can use synonyms of these words as trigger words.\n
-    General stuff (mention me using `@RUDE-i`):
+    :one: *General stuff (mention me using `@RUDE-i`):*
     • Get the current weather: `weather in <city>`
     • Report a bug: `bug add <text>`
-    • Show an overview of bugs: `bug overview' 
+    • Show an overview of bugs: `bug overview`
     • Let Me Google That For You (LMGTFY): `lmgtfy <text>`
     • Get help: call 112 or type `help`
     • Want to know my current age? type `version`
                     
-    Food-related stuff (mention me using `@RUDE-i`):\n
+    :two: *Food-related stuff (mention me using `@RUDE-i`):*
     • View current restaurant and all current orders: `food list`. Note that I'll already automatically show the current restaurant at noon.
     • Manually add a restaurant that is not on Takeaway: `food restaurant add <restaurant-name> <url>`
     • Add rating to a restaurant (number from 0 to 10): `food rating <restaurant> <rating>`
     • Set or change the restaurant where we are ordering food: `food set <restaurant>`
                     
-    For these features, there is no need to mention me, unless you really want spam in the channel:\n
+    :three: *For these features, there is no need to mention me, unless you really want spam in the channel:*
     • Insulting people: `insult <name> in <channel>`
     • Define words: `define <word>`
     • Repeat text in a channel: `repeat <text> in <channel>`

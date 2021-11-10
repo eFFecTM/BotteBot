@@ -25,8 +25,7 @@ This repository is used to create a Slack bot which can perform various things:
 ### Features
 * Replace modal text for ordering with table
 * separate poll for voting restaurant
-* Use user ids instead of nicknames for persisting data.
-* Display full username instead of nickname when ordering food.
+* Request all user info once a day, and based on the id, get all user info from a dict.
 * Automatic setup of database schema (programmatically)
 * bot should reply in thread when it was triggered from an existing thread (e.g. insult is posted separately now)
 * Add more rickrolls
