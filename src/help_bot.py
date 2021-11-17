@@ -21,6 +21,7 @@ def get_list_of_commands():
     • Let Me Google That For You (LMGTFY): `lmgtfy <text>`
     • Get help: call 112 or type `help`
     • Want to know my current age? type `version`
+    • Search for a gif: `gif <search terms>`
                     
     :two: *Food-related stuff (mention me using `@RUDE-i`):*
     • View current restaurant and all current orders: `food list`. Note that I'll already automatically show the current restaurant at noon.
@@ -32,6 +33,7 @@ def get_list_of_commands():
     • Insulting people: `insult <name> in <channel>`
     • Define words: `define <word>`
     • Repeat text in a channel: `repeat <text> in <channel>`
+    • Repeat:clap:all:clap:words:clap:in:clap:style: `clap <text> in <channel>`
     • Get a list of restaurants that we ordered at before, sorted by rating: `restaurant top <number>`
     • Get a list of restaurants that are able to deliver @ iMagineLab, sorted by rating: `restaurant takeaway top <number>`
     • Let the bot tell a random joke: _Sit back, relax and wait for the joke. If nothing happens, type_ `joke`

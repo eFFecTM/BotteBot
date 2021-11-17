@@ -127,7 +127,7 @@ def check_channel(text_words, channel):
     for channel_id in public_channel_ids:
         for word in text_words:
             if '#{}'.format(channel_id.lower()) in word:
-                logger.critical(channel_id)
+                logger.debug(channel_id)
                 text_words.remove(word)
                 channel = channel_id
                 break

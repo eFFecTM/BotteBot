@@ -7,7 +7,7 @@ import requests
 from googletrans import Translator
 from oxforddictionaries.words import OxfordDictionaries
 
-from constants import oxford_id, oxford_key, lmgtfy_triggers, def_triggers, repeat_triggers
+from constants import oxford_id, oxford_key, lmgtfy_triggers, def_triggers, repeat_triggers, clap_triggers
 
 logger = logging.getLogger()
 delivery = delivery_channel = oxford = counter_threshold = counter_joke = previous_joke = translator = None
@@ -87,15 +87,22 @@ def definition(words_received):
 
 def repeat(words_received):
     triggered_word = None
+    normal_repeat = True
     for word in repeat_triggers:
         if word.lower() in words_received:
             triggered_word = word
             break
+    if not triggered_word:
+        for word in clap_triggers:
+            if word.lower() in words_received:
+                normal_repeat = False
+                triggered_word = word
+                break
     if triggered_word:
         for word in words_received:
             if word.startswith("<#"):
                 words_received.remove(word)
-        text_received = " ".join(words_received)
+        text_received = (" " if normal_repeat else u"\U0001F44F").join(words_received)
         text_received = text_received.replace('@channel', '<!channel>')
         return text_received.replace(triggered_word, '', 1)
     return None
@@ -116,7 +123,7 @@ def joke(channel, is_triggered):
         counter_joke += 1
         return None, channel
 
-    message = channel = None
+    message = None
     if (previous_joke + timedelta(hours=2)) < datetime.now():
         message, channel = joke_helper(channel)
         previous_joke = datetime.now()
