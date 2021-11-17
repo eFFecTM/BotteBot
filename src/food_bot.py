@@ -22,7 +22,7 @@ current_food_place_url = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"  # rickro
 takeaway_restaurants = []
 
 
-def process(user, words_received, food_trigger):
+def process(words_received, food_trigger):
     output = blocks = None
     if not output:
         for set_trigger in constants.set_triggers:
@@ -43,8 +43,6 @@ def process(user, words_received, food_trigger):
                 if add_trigger in words_received:
                     output = add_restaurant(words_received, add_trigger)
                     break
-    if not output and any(resetpoll_trigger in words_received for resetpoll_trigger in constants.resetpoll_triggers):
-        output = reset_orders()
     return output, blocks
 
 
@@ -165,15 +163,6 @@ def remove_order_food(user, food):
         noun = requests.get("https://insult.mattbas.org/api/insult").text.split()[-1]
         return "There's no food from {} matching {}, buy some glasses, you blind {}".format(user, food, noun)
     return "Fine. No food for {}".format(user)
-
-
-def reset_orders():
-    global current_food_place
-    global current_food_place_url
-    query.remove_food_orders()
-    current_food_place = "..."
-    current_food_place_url = "..."
-    return "Successfully cleared food_orders table!"
 
 
 def get_restaurants_from_takeaway():

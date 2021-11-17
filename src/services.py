@@ -9,6 +9,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 from slack_sdk.rtm_v2 import RTMClient
 
+import admin_bot
 import food_bot
 import query
 import random_bot
@@ -28,9 +29,11 @@ async def start_scheduler():
         scheduler.add_job(services_helper.print_what_food_notification,
                           CronTrigger(day_of_week=weekday, hour=what_time.split(":")[0],
                                       minute=what_time.split(":")[1]))
+        scheduler.add_job(services_helper.get_users_and_channels_info,
+                          CronTrigger(day_of_week=weekday, hour="03", minute="00"))
         # scheduler.add_job(food_bot.update_restaurant_database, CronTrigger(day_of_week="wed", hour="09")) # Not needed as Takeaway scraping is broken
         food_bot.get_restaurants_from_takeaway()
-        scheduler.add_job(food_bot.reset_orders, CronTrigger(day_of_week="wed", hour="23", minute="59"))
+        scheduler.add_job(admin_bot.reset_orders, CronTrigger(day_of_week="wed", hour="23", minute="59"))
         scheduler.start()
         logger.info('Started APScheduler!')
     except Exception as e:

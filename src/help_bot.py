@@ -65,7 +65,7 @@ def get_bugs(words_received: list, user):
             for overview_trigger in overview_triggers:
                 if overview_trigger in words_received:
                     logger.debug(f"Showing an overview of reported bugs.")
-                    bugs = query.show_bug_report()
+                    bugs = query.get_bug_report()
                     text = ""
                     for bug in bugs:
                         text += f'• {bug[0]} ~ _{bug[1]} on {bug[2]}_\n'

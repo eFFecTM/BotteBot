@@ -65,5 +65,16 @@ def add_bug_report(report, user):
                      (report, user))
 
 
-def show_bug_report():
+def get_bug_report():
     return database.sql_get('SELECT report, user_name, date FROM bug_report ORDER BY date')
+
+
+"""Admin"""
+
+
+def get_query(query_str: str):
+    return database.sql_get(query_str)
+
+
+def set_query(query_str: str):
+    database.sql_set(query_str)
