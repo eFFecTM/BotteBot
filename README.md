@@ -23,7 +23,6 @@ This repository is used to create a Slack bot which can perform various things:
 
 ## To do
 ### Features
-* Replace modal text for ordering with table
 * separate poll for voting restaurant
 * Request all user info once a day, and based on the id, get all user info from a dict.
 * Automatic setup of database schema (programmatically)

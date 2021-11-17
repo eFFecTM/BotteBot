@@ -6,6 +6,7 @@ import requests
 from slack_sdk.web.slack_response import SlackResponse
 
 import food_bot
+import drinks_bot
 import help_bot
 import random_bot
 import weather_bot
@@ -199,6 +200,8 @@ def mention_question(user_name, words_received, channel, message, reply_in_threa
         message = help_bot.report_bug(words_received, user_name)
     if not message:
         message = help_bot.get_bugs(words_received, user_name)
+    if not message:
+        message = drinks_bot.get_drinks_prices(words_received)
     return message, channel, attachments, blocks, reply_in_thread
 
 
