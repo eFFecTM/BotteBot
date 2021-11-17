@@ -21,13 +21,15 @@ def get_list_of_commands():
     • Let Me Google That For You (LMGTFY): `lmgtfy <text>`
     • Get help: call 112 or type `help`
     • Want to know my current age? type `version`
-    • Search for a gif: `gif <search terms>`
+    • Search for a GIF: `gif <search terms>`
+    • Get price of drinks: `drinks price <cola/cola zero/ice tea>`
                     
     :two: *Food-related stuff (mention me using `@RUDE-i`):*
     • View current restaurant and all current orders: `food list`. Note that I'll already automatically show the current restaurant at noon.
     • Manually add a restaurant that is not on Takeaway: `food restaurant add <restaurant-name> <url>`
     • Add rating to a restaurant (number from 0 to 10): `food rating <restaurant> <rating>`
     • Set or change the restaurant where we are ordering food: `food set <restaurant>`
+    
                     
     :three: *For these features, there is no need to mention me, unless you really want spam in the channel:*
     • Insulting people: `insult <name> in <channel>`

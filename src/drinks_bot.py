@@ -9,6 +9,7 @@ snappy_responses = ['. Is that cheap enough for ya?',
                     '. Run for your life, Jef Colruyt is chasing you!'
                     ]
 
+
 def get_drinks_prices(words_received):
     """Command: drinks price <cola/cola-zero/ice-tea>. Retrieve price from Collect&Go website."""
     if any(drinks_trigger in words_received for drinks_trigger in constants.drinks_triggers):
