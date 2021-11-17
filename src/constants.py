@@ -42,6 +42,7 @@ slack_bot_token = str(init.get('slackbot', 'SLACK_BOT_TOKEN'))
 open_weather_key = str(init.get('open_weather_map', 'API_KEY'))
 oxford_id = str(init.get('oxford', 'ID'))
 oxford_key = str(init.get('oxford', 'KEY'))
+giphy_key = str(init.get('giphy', 'KEY'))
 
 with open(f'{base_dir}/resources/template_message.json') as a, \
         open(f'{base_dir}/resources/template_text.json') as b, \

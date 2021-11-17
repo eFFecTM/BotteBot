@@ -9,9 +9,10 @@ import food_bot
 import help_bot
 import random_bot
 import weather_bot
+import image_bot
 from constants import insult_triggers, no_imaginelab_triggers, food_triggers, \
     resto_triggers, joke_triggers, weather_triggers, \
-    notification_channel, help_triggers, ignored_words, version_triggers
+    notification_channel, help_triggers, ignored_words, version_triggers, image_triggers
 
 logger = logging.getLogger()
 client = bot_id = user_ids = public_channel_ids = last_message_ts = last_block_message_ts = last_channel_id = is_imaginelab = None
@@ -38,9 +39,10 @@ def receive_message(user_id, text_received, channel_read, thread_ts):
         message, channel = random_bot.joke_second()
 
         if message is None or channel is None:
+            in_private_channel = channel not in public_channel_ids
             [channel, words_received] = check_channel(words_received, channel_read)
             [words_received, mention] = filter_ignore_words(words_received)
-            if not message and (mention or (channel not in public_channel_ids)):
+            if not message and (mention or in_private_channel):
                 message, channel, attachments, blocks, reply_in_thread = mention_question(user_name, words_received, channel, message, reply_in_thread)
             if not message:
                 message, channel = check_random_keywords(user_name, words_received, channel, message)
@@ -172,9 +174,9 @@ def check_general_keywords(user_name, words_received, channel, message, reply_in
     if not message and any(word in words_received for word in resto_triggers):
         logger.debug('{} asked the FoodBot for restaurants in channel {}'.format(user_name, channel))
         message, restaurants = food_bot.get_restaurants(words_received)
-    # if not message and any((word in words_received for word in image_triggers)):
-    #     logger.debug('{} asked the ImageBot a request in channel {}'.format(user_name, channel))
-    #     message, attachments = image_bot.find_image(words_received, image_triggers)
+    if not message and any((word in words_received for word in image_triggers)):
+        logger.debug('{} asked the ImageBot a request in channel {}'.format(user_name, channel))
+        message, attachments = image_bot.find_image(words_received, image_triggers)
     if not message and any((word in words_received for word in joke_triggers)):
         message, channel = random_bot.joke(channel, True)
     if not message and all(word in no_imaginelab_triggers for word in words_received):
