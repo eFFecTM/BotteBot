@@ -2,7 +2,6 @@ from typing import List
 
 import food_bot
 import query
-from services_helper import send_message
 
 admin_channel = 'admin-bot'
 admin_channel_id: str
@@ -24,11 +23,9 @@ def is_triggered_in_admin_channel(channel_id: str) -> bool:
 def toggle_imaginelab():
     global is_imaginelab
     if is_imaginelab:
-        send_message(admin_channel, "<!channel> iMagineLab is cancelled for this week!", None, None)
         is_imaginelab = False
         return "iMagineLab is cancelled for this week."
     else:
-        send_message(admin_channel, "<!channel> iMagineLab has been rescheduled for this week!", None, None)
         is_imaginelab = True
         return "iMagineLab has been rescheduled for this week."
 
