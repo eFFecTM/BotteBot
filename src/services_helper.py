@@ -22,11 +22,12 @@ logger = logging.getLogger()
 client: slack_sdk.WebClient
 users_info: Dict[str, dict]
 channels_info: Dict[str, dict]
+bot_ids: List[str]
 bot_id = last_message_ts = last_block_message_ts = last_channel_id = None
 
 
 def init(slack_client):
-    global client, bot_id, users_info, channels_info
+    global client, users_info, channels_info
     client = slack_client
     # Get all users and channels
     get_users_and_channels_info()
@@ -40,7 +41,7 @@ def init(slack_client):
 def receive_message(user_id, text_received, channel_read, thread_ts):
     attachments = blocks = None
     reply_in_thread = False
-    if user_id != bot_id:
+    if user_id not in bot_ids:
         user_name = get_user_info(user_id)["user"]["name"]
         words_received = text_received.lower().split()
         message, channel = random_bot.joke_second()
@@ -245,8 +246,12 @@ def print_what_food_notification():
 
 
 def get_users_and_channels_info():
-    global bot_id, users_info, channels_info
+    global bot_id, bot_ids, users_info, channels_info
     bot_id = client.auth_test()["user_id"]
     users_info = {element["id"]: element for element in client.users_list()["members"]}
+    bot_ids = []
+    for user_id, user_info in users_info.items():
+        if user_info["is_bot"]:
+            bot_ids.append(user_id)
     channels_info = {element["id"]: element for element in
                      client.conversations_list(types=["public_channel", "private_channel"])["channels"]}

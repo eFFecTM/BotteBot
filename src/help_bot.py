@@ -9,6 +9,8 @@ import query
 from constants import bugreport_triggers, add_triggers, overview_triggers
 
 logger = logging.getLogger()
+timezone = pytz.timezone('Europe/Brussels')
+startup_datetime = datetime.now(timezone).isoformat(' ', 'seconds')
 
 
 def get_list_of_commands():
@@ -76,5 +78,6 @@ def get_bugs(words_received: list, user):
 def get_version():
     """Command: 'version'. Retrieves the latest commit id and date."""
     repo = git.Repo(search_parent_directories=True)
-    latest_datetime = datetime.fromtimestamp(repo.head.object.committed_date, pytz.timezone('Europe/Brussels'))
-    return f'I\'m running version of {latest_datetime}\nfrom commit: {repo.head.object.hexsha}'
+    latest_datetime = datetime.fromtimestamp(repo.head.object.committed_date, timezone)
+    return f'I *woke* up at {startup_datetime} while my *brain* still thinks it\'s {latest_datetime}\nfrom *commit*: ' \
+           f'{repo.head.object.hexsha}\nwith *message*: "{repo.head.object.message}"'
