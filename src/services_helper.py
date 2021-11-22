@@ -226,8 +226,7 @@ def mention_question(user_name, words_received, channel, message, reply_in_threa
 
 
 def print_where_food_notification():
-    global is_imaginelab
-    if is_imaginelab:
+    if admin_bot.is_imaginelab:
         noun = requests.get("https://insult.mattbas.org/api/insult").text.split()[-1]
         send_message(notification_channel,
                      "Good morning " + noun + "s <!channel>, it's iMagineLab tomorrow, where are we going to order food?",
@@ -235,8 +234,7 @@ def print_where_food_notification():
 
 
 def print_what_food_notification():
-    global is_imaginelab
-    if is_imaginelab:
+    if admin_bot.is_imaginelab:
         adjective = requests.get("https://insult.mattbas.org/api/insult").text.split()[3]
         send_message(notification_channel,
                      "<!channel> What do you all want to order? Add your " + adjective + " options below.", None, None)
