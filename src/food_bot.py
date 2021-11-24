@@ -232,7 +232,7 @@ def set_restaurant(restaurant):
 def add_restaurant(words_received, trigger):
     """Command: 'food restaurant add <restaurant-name> <url>' """
     resto_name = words_received[words_received.index(trigger) + 1:-1]
-    resto_url = words_received[-1]
+    resto_url = words_received[-1][1:-1]  # remove < > due to link generation by Slack
     if ("." in resto_url) and len(resto_name) != 0:
         query.add_restaurant(" ".join(resto_name).replace(",", ""), 6, resto_url)
         return "{} added to restaurants.".format(" ".join(resto_name).replace(",", ""))
