@@ -1,19 +1,19 @@
 import ast
 import json
 import logging
-import requests
-import slack_sdk
-
-from slack_sdk.web.slack_response import SlackResponse
 from typing import List, Dict
 
+import requests
+import slack_sdk
+from slack_sdk.web.slack_response import SlackResponse
+
 import admin_bot
-import food_bot
 import drinks_bot
+import food_bot
 import help_bot
+import image_bot
 import random_bot
 import weather_bot
-import image_bot
 from constants import insult_triggers, no_imaginelab_triggers, food_triggers, resto_triggers, joke_triggers, \
     weather_triggers, notification_channel, help_triggers, ignored_words, version_triggers, image_triggers, \
     resetpoll_triggers, dbquery_triggers

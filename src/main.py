@@ -2,17 +2,14 @@
 import asyncio
 import logging
 import os
-import signal
 import sys
 from logging.handlers import TimedRotatingFileHandler
-
-import nest_asyncio
 
 import constants
 import services
 
 
-def main():
+def setup():
     # Init logger
     if not os.path.exists(f'{constants.base_dir}/logs'):
         os.makedirs(f'{constants.base_dir}/logs')
@@ -28,22 +25,15 @@ def main():
     logger.info('Connected to SQLite database!')
 
 
-def signal_handler():
-    loop.stop()
-    logger.info("Program exiting gracefully")
-    logging.shutdown()
+async def main():
+    await asyncio.gather(services.start_scheduler(), services.start_slack_client(), services.start_web_server())
 
 
 if __name__ == '__main__':
     logger = logging.getLogger()
-    loop = asyncio.get_event_loop()
-    loop.add_signal_handler(signal.SIGINT, signal_handler)
-    loop.add_signal_handler(signal.SIGTERM, signal_handler)
     try:
-        main()
-        nest_asyncio.apply(loop)
-        loop.run_until_complete(
-            asyncio.gather(services.start_scheduler(), services.start_slack_client(), services.start_web_server()))
+        setup()
+        asyncio.run(main())
     except Exception as e:
         logger.error(e)
     finally:

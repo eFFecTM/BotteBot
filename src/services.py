@@ -4,6 +4,7 @@ import logging
 import threading
 import urllib.parse
 
+import tzlocal
 from aiohttp import web
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
@@ -22,7 +23,7 @@ rtm_client = RTMClient(token=slack_bot_token)
 
 async def start_scheduler():
     try:
-        scheduler = AsyncIOScheduler()
+        scheduler = AsyncIOScheduler(timezone=str(tzlocal.get_localzone()))
         scheduler.add_job(services_helper.print_where_food_notification,
                           CronTrigger(day_of_week=weekday, hour=where_time.split(":")[0],
                                       minute=where_time.split(":")[1]))

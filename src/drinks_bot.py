@@ -1,8 +1,9 @@
-import logging
+import random
+
 import requests
 from bs4 import BeautifulSoup
+
 import constants
-import random
 
 snappy_responses = ['. Is that cheap enough for ya?',
                     ', you cheapo!',

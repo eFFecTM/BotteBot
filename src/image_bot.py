@@ -1,7 +1,7 @@
 """Create an image bot to post or process images. See https://pythonspot.com/category/nltk/"""
+import json
 import logging
 import urllib
-import json
 
 from constants import giphy_key
 

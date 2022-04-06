@@ -1,12 +1,13 @@
-requests==2.26.0
-slack_sdk==3.11.2
-pyowm==2.10.0
-googletrans==3.0.0
-oxforddictionaries==0.1.101
-google_images_download==2.8.0
-bs4==0.0.1
-aiohttp==3.7.4.post0
-apscheduler==3.8.1
-nest-asyncio==1.5.1
-gitpython==3.1.20
-pytz==2021.3
+requests==2.27.1 # send requests, used for jokes, insults, etc.
+slack_sdk==3.15.2 # slack
+pyowm==3.3.0 # weather bot
+googletrans==3.0.0 # translations, todo: does this still work?
+oxforddictionaries==0.1.101 # find definitions
+google_images_download==2.8.0 # download images from google
+aiohttp==3.8.1 # user slack interactivity, for local testing, use localtunnel (lt)
+apscheduler==3.9.1 # scheduler for retrieving user data or food bot messages
+gitpython==3.1.27 # retrieve git info for simple bot diagnostics
+pytz==2022.1 # timezones
+tzlocal==2.1 # keep 2.1, otherwise PytzUsageWarning: The localize method is no longer necessary, 3.0 not compatible with apscheduler
+bs4==0.0.1 # dummy for beautiful soup
+beautifulsoup4==4.10.0 # beautiful soup to webscrape
