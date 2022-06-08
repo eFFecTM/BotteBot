@@ -58,6 +58,7 @@ def receive_message(user_id, text_received, channel_read, thread_ts):
                 message, channel = check_random_keywords(user_name, words_received, channel, message)
         if message or attachments or blocks:
             if blocks is not None:
+                message = blocks['blocks'][0]['text']['text']
                 blocks = json.dumps(blocks["blocks"])
             send_message(channel, message, attachments, blocks, thread_ts if reply_in_thread else None)
     return None
@@ -68,13 +69,9 @@ def send_message(channel, text, attachments, blocks, thread_ts=None):
     if channel is None:
         logger.error('Channel is not initialized!')
         return
-    if text is None and blocks is None:
+    if text is None:
         logger.error('Cannot send as both text and blocks are not initialized!')
         return
-    if text is not None:  # text has priority over blocks
-        blocks = None
-    else:
-        text = "test"  # avoiding a user warning
     # todo: check whether this is still needed
     data = ast.literal_eval(SlackResponse.__str__(
         client.chat_postMessage(as_user=True, channel=channel, text=text, attachments=attachments, blocks=blocks,

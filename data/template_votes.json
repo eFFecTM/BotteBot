@@ -1,0 +1,10 @@
+{
+	"type": "context",
+	"elements": [
+		{
+			"type": "plain_text",
+			"emoji": true,
+			"text": "template1"
+		}
+	]
+}
