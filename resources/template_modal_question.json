@@ -7,7 +7,7 @@
 	"element": {
 		"type": "plain_text_input",
 		"min_length": 0,
-		"max_length": 75
+		"max_length": 1000
 	},
 	"optional": true
 }

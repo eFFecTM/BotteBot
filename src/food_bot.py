@@ -1,4 +1,5 @@
 import copy
+import hashlib
 import json
 import logging
 import re
@@ -94,8 +95,10 @@ def create_modal_dropdown(value):
 
 def add_dropdown_option(dropdown, initial, value):
     element = copy.deepcopy(constants.template_dropdown_option)
+    element["value"] = hashlib.sha256(value.encode('utf-8')).hexdigest()
+    if len(value) > 75:
+        value = f'{value[:72]}...'
     element["text"]["text"] = value
-    element["value"] = value
     if initial:
         dropdown["element"]["initial_options"].append(element)
     else:

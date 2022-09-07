@@ -1,4 +1,5 @@
 import asyncio
+import hashlib
 import json
 import logging
 import threading
@@ -97,6 +98,8 @@ async def interactive_message(request):
                 if data["type"] == "block_actions":
                     if len(data["actions"]) == 1:
                         action_text = data["actions"][0]["text"]["text"]
+                        services_helper.last_channel_id = data["channel"]["id"]
+                        services_helper.last_block_message_ts = data["message"]["ts"]
                         if action_text == "Manage Your Options":  # user is adding a new option / managing existing ones
                             logger.debug("Manage Your Options")
                             blocks = {"blocks": []}
@@ -139,22 +142,25 @@ async def interactive_message(request):
                         orders = data["view"]["state"]["values"][block_id_1][action_id_1]["selected_options"]
                     except (KeyError, IndexError):
                         pass
-                    success = True
                     # remove all orders from the user and add the ones selected
+                    items = query.get_food_order_items()
                     query.remove_food_orders_by_user(user)
                     if orders:
                         for order in orders:
-                            output, success = food_bot.order_food(user, order["value"])
+                            output = None
+                            for [item] in items:
+                                if order["value"] == hashlib.sha256(item.encode('utf-8')).hexdigest():
+                                    output, success = food_bot.order_food(user, item)
+                                    break
+                            if not output:
+                                logger.warning("Cannot find item with name {} and checksum {}. Adding as new order.".format(order["text"]["text"], order["value"]))
+                                food_bot.order_food(user, order["text"]["text"])
                     # add a new order if it was filled in
                     if new_order:
-                        output, success = food_bot.order_food(user, new_order)
-                    if success:
-                        blocks = food_bot.get_order_overview(False)
-                        services_helper.update_message(blocks=json.dumps(blocks["blocks"]))
-                        logger.debug("Order from modal accepted, updating message for user {}".format(user))
-                    # todo: replace with private whisper, need to implement saving user ids first
-                    # else:
-                    #     Helper.send_message(last_channel_id, output, None, None)
+                        food_bot.order_food(user, new_order)
+                    blocks = food_bot.get_order_overview(False)
+                    services_helper.update_message(blocks=json.dumps(blocks["blocks"]))
+                    logger.debug("Order from modal accepted, updating message for user {}".format(user))
         return web.Response()
     except Exception as e:
         logger.exception(e)
