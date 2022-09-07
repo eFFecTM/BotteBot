@@ -31,7 +31,6 @@ def process(words_received, food_trigger):
                 break
     if not output and any(overview_trigger in words_received for overview_trigger in constants.overview_triggers):
         blocks = get_order_overview(False)
-        # output = 'Food overviewwwwww'
     if not output and any(rating_trigger in words_received for rating_trigger in constants.rating_triggers):
         if not output:
             for rating_trigger in constants.rating_triggers:

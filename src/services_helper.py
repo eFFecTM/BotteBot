@@ -69,9 +69,6 @@ def send_message(channel, text, attachments, blocks, thread_ts=None):
     if channel is None:
         logger.error('Channel is not initialized!')
         return
-    if text is None:
-        logger.error('Cannot send as both text and blocks are not initialized!')
-        return
     # todo: check whether this is still needed
     data = ast.literal_eval(SlackResponse.__str__(
         client.chat_postMessage(as_user=True, channel=channel, text=text, attachments=attachments, blocks=blocks,
