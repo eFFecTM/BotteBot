@@ -35,7 +35,7 @@ async def start_scheduler():
                           CronTrigger(day_of_week=weekday, hour="03", minute="00"))
         # scheduler.add_job(food_bot.update_restaurant_database, CronTrigger(day_of_week="wed", hour="09")) # Not needed as Takeaway scraping is broken
         food_bot.get_restaurants_from_takeaway()
-        scheduler.add_job(admin_bot.reset_orders, CronTrigger(day_of_week="sun", hour="23", minute="59"))
+        scheduler.add_job(admin_bot.reset_orders, CronTrigger(day_of_week="wed", hour="23", minute="59"))
         scheduler.start()
         logger.info('Started APScheduler!')
     except Exception as e:
