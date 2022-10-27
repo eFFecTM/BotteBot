@@ -9,6 +9,7 @@ import requests
 
 import constants
 import query
+import utils
 
 snappy_responses = ["just like the dignity of your {} mother. Mama Mia!",
                     "pick again you {} idiot!",
@@ -145,6 +146,7 @@ def order_food(user, food):
         output = "No food input was provided!"
         success = False
     else:
+        food = utils.markdown_to_text(food)
         ordered = query.get_food_order(user, food)
         if len(ordered) == 0:
             query.add_food_order(user, food, current_food_place, datetime.now())
