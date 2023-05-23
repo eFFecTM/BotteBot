@@ -1,4 +1,4 @@
-requests==2.27.1 # send requests, used for jokes, insults, etc.
+requests==2.31.0 # send requests, used for jokes, insults, etc.
 slack_sdk==3.15.2 # slack
 pyowm==3.3.0 # weather bot
 googletrans==3.0.0 # translations, todo: does this still work?
