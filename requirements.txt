@@ -6,7 +6,7 @@ oxforddictionaries==0.1.101 # find definitions
 google_images_download==2.8.0 # download images from google
 aiohttp==3.8.1 # user slack interactivity, for local testing, use localtunnel (lt)
 apscheduler==3.9.1 # scheduler for retrieving user data or food bot messages
-gitpython==3.1.27 # retrieve git info for simple bot diagnostics
+gitpython==3.1.32 # retrieve git info for simple bot diagnostics
 pytz==2022.1 # timezones
 tzlocal==2.1 # keep 2.1, otherwise PytzUsageWarning: The localize method is no longer necessary, 3.0 not compatible with apscheduler
 bs4==0.0.1 # dummy for beautiful soup
