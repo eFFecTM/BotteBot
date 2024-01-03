@@ -46,7 +46,7 @@ def add_restaurant(restaurant, rating, url):
 
 
 def get_restaurants():
-    return database.sql_get('SELECT restaurant, rating, url, timestamp FROM restaurant_database ORDER BY rating DESC, timestamp')
+    return database.sql_get('SELECT restaurant, rating, url, timestamp FROM restaurant_database ORDER BY rating DESC, timestamp DESC')
 
 
 def get_restaurant_rating(restaurant):

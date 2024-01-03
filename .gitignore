@@ -5,3 +5,4 @@ venv/
 config/init.ini
 data/
 logs/
+.DS_Store
