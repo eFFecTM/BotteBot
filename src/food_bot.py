@@ -187,7 +187,7 @@ def get_restaurants(words_received=None):
     if words_received and 'takeaway' in words_received:
         restaurants = takeaway_restaurants
     else:
-        restaurants = query.get_restaurants()
+        restaurants = query.get_restaurants() # restaurants sorted by rating and then by most recent timestamp
     amount_restaurants = len(restaurants)
 
     if words_received and 'top' in words_received:
@@ -206,8 +206,7 @@ def get_restaurants(words_received=None):
     return_message = ""
     if 0 != amount_restaurants:
         for i in range(0, amount_restaurants if amount_restaurants < top_number else top_number):
-            return_message = "{}{}: {} - {}/10 - {}\n".format(return_message, i + 1,
-                                                              restaurants[i][0], restaurants[i][1], restaurants[i][2])
+            return_message = f"{return_message}{i+1}: *{restaurants[i][0].title()}* - {restaurants[i][1]}/10 - {restaurants[i][2]} _(last ordered on {restaurants[i][3]})_\n"
     else:
         return_message = "No restaurants available!"
     return return_message, restaurants
@@ -223,11 +222,14 @@ def set_restaurant(restaurant):
     r = requests.get("https://insult.mattbas.org/api/insult").text.split()
     adjective = r[3]
     noun = r[-1]
+
     for resto in restaurants:
         logger.debug('{} is {}? '.format(restaurant, resto[0].lower()))
         if restaurant == resto[0].lower():
+            # Set current food place, URL, and timestamp of when it was set (to sort by timestamp when viewing ratings).
             current_food_place = f"{resto[0].title()}"
             current_food_place_url = resto[2]
+            add_restaurant_timestamp(resto[0].lower())
             return f"Restaurant set to {current_food_place}. I heard they serve {adjective} {noun} :face_vomiting:"
     return ":no_entry_sign: Restaurant '{}' not in our database. " \
            "Add it NOW with the command 'food restaurant add < _restaurantname_ > < _url_ >', you {} {}!" \
@@ -267,3 +269,9 @@ def add_restaurant_rating(words_received, rating_trigger, food_trigger):
         msg = "you soab, that's a restaurant I do not know."
     logger.debug("Restaurant {} rated with a score of {}".format(restaurant_name, rating))
     return msg
+
+def add_restaurant_timestamp(restaurant_name):
+    """ Store a timestamp when a restaurant is set to the current restaurant in the db. This enable sorting of the restaurants by most recent."""
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S") # format e.g. 2023-12-20 21:00:00
+    logger.debug(f"Timestamp of restaurant {restaurant_name} set to {timestamp}.")
+    query.set_restaurant_timestamp(restaurant_name, timestamp)

@@ -46,7 +46,7 @@ def add_restaurant(restaurant, rating, url):
 
 
 def get_restaurants():
-    return database.sql_get('SELECT restaurant, rating, url FROM restaurant_database ORDER BY rating DESC')
+    return database.sql_get('SELECT restaurant, rating, url, timestamp FROM restaurant_database ORDER BY rating DESC, timestamp')
 
 
 def get_restaurant_rating(restaurant):
@@ -55,6 +55,9 @@ def get_restaurant_rating(restaurant):
 
 def set_restaurant_rating(restaurant, rating):
     database.sql_set('UPDATE restaurant_database SET rating=? WHERE restaurant LIKE ?', (rating, restaurant))
+
+def set_restaurant_timestamp(restaurant, timestamp):
+    database.sql_set('UPDATE restaurant_database SET timestamp=? WHERE restaurant LIKE ?', (timestamp, restaurant))
 
 
 """Bug Reports"""
